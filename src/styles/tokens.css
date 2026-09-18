@@ -1,0 +1,103 @@
+/* Token — valori verificati sui nodi Figma, non ritrascritti a memoria. */
+
+:root {
+  color-scheme: light;
+
+  /* Colore. I primi quattro da 255:762, il quinto da 247:60: non e' nei
+     documenti di handoff ma il file lo usa per i testimonial inattivi, i
+     placeholder del form, i bordi della Testimonial Row e il fondo del
+     Send button nel suo stato disabilitato. */
+  --black: #020202;
+  --purple: #603cff;
+  --off-white: #f7f6f9;
+  --dark-grey: #504d5c;
+  --light-grey: #b0adb9;
+
+  /* Griglia. --cols cambia una volta sola; il layout cambia tre volte. */
+  --cols: 10;
+  --grid-max: 1680px;
+  --line: 1px;
+  --line-color: var(--dark-grey);
+
+  /* Superfici. Il fondo dei blocchi e' al 50% su tutto il sito per decisione
+     del committente (NOTES.md D1): nel Figma e' misto. I blocchi viola
+     restano opachi (D2). */
+  --page-bg: var(--off-white);
+  --block-bg: rgb(247 246 249 / 0.5);
+  --accent-bg: var(--purple);
+  --accent-fg: var(--off-white);
+
+  /* Padding interni: valori assoluti presi dal Figma, mai derivati dalla
+     cella. A mobile la cella e' 39px e un padding proporzionale sparirebbe. */
+  --pad: 20px;
+  --pad-sm: 10px;
+  --pad-lg: 40px;
+
+  /* Tipografia */
+  --font-display: 'DT Getai Grotesk Display', 'Getai Fallback', system-ui, sans-serif;
+  --font-text: 'Poppins', 'Poppins Fallback', system-ui, sans-serif;
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --cols: 12;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Senza questa, aprire il megamenu con overflow:hidden fa sparire la
+     scrollbar, la pagina si allarga di ~15px e con la cella fluida l'intera
+     griglia si ricalcola e salta nel momento esatto dell'apertura. */
+  scrollbar-gutter: stable;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--black);
+  font-family: var(--font-text);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg,
+picture,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:where(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

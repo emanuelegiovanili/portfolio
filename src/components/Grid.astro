@@ -1,0 +1,65 @@
+---
+/**
+ * Il contenitore di griglia e le sue linee.
+ *
+ * Le linee sono figlie dello stesso grid dei blocchi, non di un secondo grid
+ * sovrapposto: un solo algoritmo di layout, un solo arrotondamento, e i bordi
+ * dei blocchi cadono sulle linee per costruzione. Il wrapper che le raccoglie
+ * ha display:contents proprio per non introdurre quel secondo livello.
+ */
+import { deriveRows, horizontalGroups, resolveTier, TIERS, verticalGroups, type LayoutMap } from '../lib/layout';
+
+interface Props {
+  /** La mappa di posizionamento della pagina. Da qui discende --rows. */
+  map: LayoutMap;
+  class?: string;
+}
+
+const { map, class: className } = Astro.props;
+
+const rows = deriveRows(map);
+
+// Tutti e tre i tier ricevono un valore, anche quando la pagina ne dichiara uno
+// solo: sotto 1200px le quattro pagine interne non hanno un disegno, e senza
+// --rows-base la griglia non avrebbe righe e collasserebbe.
+const rowVars = TIERS.map((tier) => `--rows-${tier}:${resolveTier(rows, tier)}`).join(';');
+
+const verticals = verticalGroups();
+const horizontals = horizontalGroups(rows);
+---
+
+<div class="grid-wrap">
+  <div class:list={['grid', className]} style={rowVars}>
+    <div class="grid-lines" aria-hidden="true">
+      {
+        verticals.map((group) => (
+          <>
+            {Array.from({ length: group.count }, (_, i) => (
+              <i class="grid-line grid-line--v" data-show={group.show} style={`--at:${i + 1}`} />
+            ))}
+            <i class="grid-line grid-line--v" data-show={group.show} data-edge style={`--at:${group.count}`} />
+          </>
+        ))
+      }
+      {
+        horizontals.map((group) => (
+          <>
+            {Array.from({ length: group.count }, (_, i) => (
+              <i class="grid-line grid-line--h" data-show={group.show} style={`--at:${i + 1}`} />
+            ))}
+            <i class="grid-line grid-line--h" data-show={group.show} data-edge style={`--at:${group.count}`} />
+          </>
+        ))
+      }
+    </div>
+    <slot />
+  </div>
+</div>
+
+<style is:global>
+  /* display:contents fa partecipare le linee al grid del genitore. Serve solo
+     ad avere un unico nodo aria-hidden invece di 250. */
+  .grid-lines {
+    display: contents;
+  }
+</style>

@@ -21,8 +21,9 @@ Deploy su Cloudflare Workers come static assets.
 ```
 npm install
 npm run dev       # sviluppo su :4321
-npm run build     # build statica in dist/
+npm run build     # build statica in dist/ (/grid viene rimossa)
 npm run check     # type check
+npm run verify    # misura l'invariante a 13 larghezze in Chromium
 npm run preview   # anteprima con wrangler
 ```
 

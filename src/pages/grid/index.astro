@@ -1,0 +1,191 @@
+---
+/**
+ * Route di debug. Esiste solo per verificare la griglia da sola, prima che ci
+ * sia una pagina sopra. Viene cancellata dalla build di produzione da
+ * astro.config.mjs; robots.txt la esclude comunque.
+ */
+import Base from '../../layouts/Base.astro';
+import Grid from '../../components/Grid.astro';
+import Block from '../../components/Block.astro';
+import { deriveRows, type LayoutMap } from '../../lib/layout';
+
+/**
+ * Blocchi sonda. Scelti per toccare i casi che rompono: gli angoli, il bordo
+ * destro dell'ultima colonna, il fondo dell'ultima riga, e posizioni diverse
+ * per tier cosi' che lo scambio di tier venga esercitato.
+ */
+const probes = {
+  topLeft: { base: [1, 1, 2, 2], md: [1, 1, 3, 2], lg: [1, 1, 4, 1] },
+  topRight: { base: [9, 1, 2, 2], md: [10, 1, 1, 1], lg: [12, 1, 1, 1] },
+  middle: { base: [2, 4, 7, 5], md: [2, 4, 6, 4], lg: [2, 3, 7, 4] },
+  rightEdge: { base: [3, 10, 8, 3], md: [5, 9, 6, 3], lg: [9, 3, 4, 3] },
+  accent: { base: [1, 14, 5, 2], md: [1, 14, 4, 1], lg: [10, 8, 2, 1] },
+  lastRow: { base: [1, 17, 10, 2], md: [1, 16, 10, 2], lg: [2, 10, 10, 2] },
+  baseOnly: { base: [6, 14, 5, 2] },
+  lgOnly: { lg: [1, 8, 4, 1] },
+} as const satisfies LayoutMap;
+
+const rows = deriveRows(probes);
+---
+
+<Base title="Griglia — debug" noindex>
+  <Grid map={probes}>
+    <Block at={probes.topLeft} clip><p class="label">top-left</p></Block>
+    <Block at={probes.topRight} clip><p class="label">TR</p></Block>
+    <Block at={probes.middle} clip><p class="label">middle</p></Block>
+    <Block at={probes.rightEdge} clip><p class="label">bordo destro</p></Block>
+    <Block at={probes.accent} surface="accent" clip><p class="label">accent</p></Block>
+    <Block at={probes.lastRow} clip><p class="label">ultima riga</p></Block>
+    <Block at={probes.baseOnly} clip><p class="label">solo base</p></Block>
+    <Block at={probes.lgOnly} clip><p class="label">solo lg</p></Block>
+  </Grid>
+
+  <aside id="readout" hidden>
+    <dl>
+      <dt>viewport</dt><dd id="r-vw">—</dd>
+      <dt>contenitore</dt><dd id="r-cw">—</dd>
+      <dt>tier</dt><dd id="r-tier">—</dd>
+      <dt>colonne</dt><dd id="r-cols">—</dd>
+      <dt>cella</dt><dd id="r-cell">—</dd>
+      <dt>righe</dt><dd id="r-rows">—</dd>
+      <dt>scarto max</dt><dd id="r-drift">—</dd>
+      <dt>blocchi che sforano</dt><dd id="r-overflow">—</dd>
+    </dl>
+    <div class="actions">
+      <button type="button" id="toggle-lines">linee</button>
+      <button type="button" id="toggle-lock">blocca scroll</button>
+    </div>
+    <p class="rows-map">base {rows.base} · md {rows.md} · lg {rows.lg}</p>
+  </aside>
+</Base>
+
+<style>
+  .label {
+    margin: 0;
+    padding: 4px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dark-grey);
+  }
+
+  .block[data-surface='accent'] .label {
+    color: var(--off-white);
+  }
+
+  #readout {
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    z-index: 100;
+    min-width: 200px;
+    padding: 10px 12px;
+    background: var(--black);
+    color: var(--off-white);
+    font-size: 11px;
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #readout dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 12px;
+    margin: 0;
+  }
+
+  #readout dt {
+    color: var(--light-grey);
+  }
+
+  #readout dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  #readout dd[data-state='bad'] {
+    color: #ff6b6b;
+  }
+
+  #readout dd[data-state='good'] {
+    color: #6bff9a;
+  }
+
+  .actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .actions button {
+    flex: 1;
+    padding: 4px;
+    border: 1px solid var(--light-grey);
+    background: none;
+    color: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .actions button[aria-pressed='true'] {
+    background: var(--purple);
+    border-color: var(--purple);
+  }
+
+  .rows-map {
+    margin: 8px 0 0;
+    color: var(--light-grey);
+  }
+
+  :global(html[data-lines='off']) :global(.grid-line) {
+    visibility: hidden;
+  }
+
+  :global(html[data-lock='on']) {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  import { probeGrid } from '../../scripts/grid-probe';
+
+  const readout = document.getElementById('readout')!;
+  readout.hidden = false;
+
+  const out = (id: string, value: string, state?: 'good' | 'bad') => {
+    const el = document.getElementById(id)!;
+    el.textContent = value;
+    if (state) el.dataset.state = state;
+    else delete el.dataset.state;
+  };
+
+  function refresh(): void {
+    const r = probeGrid();
+    if (!r) return;
+    out('r-vw', `${window.innerWidth}px`);
+    out('r-cw', `${r.containerWidth.toFixed(2)}px`);
+    out('r-tier', r.tier);
+    out('r-cols', String(r.cols));
+    out('r-cell', `${r.cell.toFixed(3)}px`);
+    out('r-rows', String(r.rows));
+    out('r-drift', `${r.maxDrift.toFixed(4)}px`, r.maxDrift <= r.tolerance ? 'good' : 'bad');
+    out('r-overflow', String(r.overflowing.length), r.overflowing.length === 0 ? 'good' : 'bad');
+  }
+
+  refresh();
+  window.addEventListener('resize', refresh, { passive: true });
+  document.fonts?.ready.then(refresh);
+
+  const toggle = (id: string, attr: string, on: string, off: string) => {
+    const button = document.getElementById(id) as HTMLButtonElement;
+    button.setAttribute('aria-pressed', 'false');
+    button.addEventListener('click', () => {
+      const pressed = button.getAttribute('aria-pressed') === 'true';
+      button.setAttribute('aria-pressed', String(!pressed));
+      document.documentElement.setAttribute(attr, !pressed ? on : off);
+      refresh();
+    });
+  };
+
+  toggle('toggle-lines', 'data-lines', 'off', 'on');
+  toggle('toggle-lock', 'data-lock', 'on', 'off');
+</script>

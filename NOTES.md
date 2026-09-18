@@ -114,6 +114,91 @@ Verificate sul file, sostituiscono quanto scritto negli handoff.
 
 ---
 
+## 6. Fase 1 — come il sistema garantisce l'invariante
+
+### D15. Linee e blocchi stanno nello stesso grid
+`grid-system-handoff` §4 proponeva un `.grid-lines` in `position: absolute; inset: 0` con un proprio
+`display: grid` e righe in `1fr`. Non e' stato fatto.
+
+Il motivo e' che sarebbero due griglie distinte: quella del contenuto posa tracce da `var(--cell)`,
+quella dell'overlay divide in parti uguali l'altezza *misurata* del contenitore. Con la cella
+frazionaria (a 1280px vale 105,4167px) i due algoritmi arrotondano in modo diverso, e su 105 righe
+lo scarto si accumula. E' lo stesso difetto che il documento attribuiva al `repeating-linear-gradient`,
+spostato di un livello.
+
+Qui le linee sono figlie dello **stesso** `.grid` dei blocchi, sotto di essi per `z-index`. Un solo
+algoritmo di layout, un solo arrotondamento. Il nodo `aria-hidden` che le raccoglie ha
+`display: contents`, quindi non introduce il livello che si voleva evitare.
+
+Per lo stesso motivo le colonne sono `repeat(var(--cols), var(--cell))` e non `repeat(var(--cols), 1fr)`:
+con `1fr` le colonne si dividono la larghezza reale, e basta una scrollbar o un padding perche'
+smettano di valere `100cqw / --cols`.
+
+### D16. Il blocco disegna solo il filo alto e sinistro
+Un `border` in CSS sta **dentro** la scatola. Se un blocco alle colonne 3-5 disegnasse anche il
+bordo destro, quel bordo occuperebbe l'ultimo pixel dentro la colonna 5, mentre la linea della
+colonna 6 occupa il primo pixel dentro la colonna 6: **due pixel scuri adiacenti invece di uno**.
+Il bordo alto e sinistro invece cade sullo stesso pixel della linea e ci si sovrappone senza
+ispessirla.
+
+Quindi il blocco disegna `border-top` e `border-left`; il lato basso e il lato destro sono la linea
+di griglia successiva, che cade esattamente li'. Questo funziona solo perche' le linee stanno anche
+sui bordi del contenitore (D3): e' quello che garantisce che una linea esista sempre a destra e
+sotto l'ultimo blocco. Se D3 cambiasse, cambierebbe anche questo.
+
+Visivamente il risultato e' identico al Figma: 1px scuro a ogni confine di blocco. Cambia il
+meccanismo, non il disegno.
+
+### D17. `--rows` e' derivato, non scritto
+Vedi §3.4 per gli errori che la tabella scritta a mano conteneva. `deriveRows()` in
+`src/lib/layout.ts` lo calcola come `max(riga + span - 1)` sui blocchi reali, tier per tier. Se un
+blocco scende, la pagina cresce e l'ultima linea scende con lui.
+
+La stessa funzione valida le posizioni: un blocco che sforerebbe l'ultima colonna del proprio tier
+fa fallire la build con il nome del blocco, invece di creare una colonna implicita che allarga la
+griglia e disallinea tutte le linee.
+
+### D18. Interlinea 1.5 ovunque per Poppins, anche dove l'handoff diceva altro
+`home-handoff` §2 dava una tabella con `Meta / location 12px / 24px`. Sul nodo reale (`257:834`,
+alto 36px per due righe da 12px) sono **12px/18px**, cioe' 1.5 come tutto il resto. Verificato
+anche su `255:763` (72px per due righe da 24px) e `255:794` (72px per tre righe da 16px).
+
+L'unica eccezione e' la citazione dei testimonial, `266:1129`, che e' 24px con interlinea **1.75**.
+
+Nessuna `line-height: normal` nel CSS.
+
+### D19. Query a intervallo per le sole regole di visibilita'
+`grid-system-handoff` §2 chiede breakpoint in `min-width`, mobile-first. Vale per tutto tranne due
+regole: quella che nasconde un blocco nei tier in cui non esiste, e quella che accende il gruppo di
+linee giusto. Li' le tre condizioni devono essere **mutuamente esclusive**, altrimenti un blocco
+visibile riceve comunque una dichiarazione di `display` e il suo componente non puo' piu' essere
+`grid` o `flex`. Sono scritte con la sintassi a intervallo (`720px <= width < 1200px`).
+
+### D20. Font
+- **Poppins**: self-hostato da Google Fonts, sottoinsieme **latino**, solo i pesi **500 e 700**, che
+  sono i due che il Figma usa. Il fallback metrico e' calcolato dai woff2 reali con
+  `scripts/font-metrics.mjs`, non stimato: senza, durante il caricamento il testo va a capo in un
+  punto diverso, i blocchi cambiano numero di righe e la griglia sembra rotta per mezzo secondo.
+  Il `size-adjust` del peso 700 e' calcolato contro Arial Regular e non Arial Bold, perche' Arial
+  Bold non e' misurabile da qui: e' un'approssimazione che riguarda solo il testo in grassetto
+  durante lo swap.
+- **DT Getai Grotesk Display**: manca, vedi B8.
+
+### Verifica
+`npm run verify` apre `/grid` in Chromium a 320 · 390 · 430 · 719 · 720 · 768 · 1024 · 1199 · 1200 ·
+1280 · 1440 · 1680 · 1920, a tre posizioni di scroll, e misura quanto distano i bordi dei blocchi
+dai confini di griglia. Non guarda screenshot: legge le coordinate, perche' uno screenshot a 1440
+non mostra uno scarto di 0,3px.
+
+Il metodo non sa nulla della mappa di posizionamento: raccoglie i confini disegnati dalle linee
+visibili e per ogni bordo di ogni blocco cerca il confine piu' vicino. Se qualcosa si rompe a monte,
+si vede comunque.
+
+Include 719/720 e 1199/1200 perche' il salto di tier e' il punto in cui il sistema ha piu'
+probabilita' di sbagliare.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
@@ -125,3 +210,5 @@ Verificate sul file, sostituiscono quanto scritto negli handoff.
 | B5 | Stati hover e focus | Non progettati per nessun componente. Il disabilitato del Send e l'attivo del filtro invece esistono (§4.4, §4.5) |
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
+| B8 | **`getai-black.woff2`** | Font commerciale, non scaricabile. Finche' manca, `font-display: optional` fa cadere tutti i titoli sul fallback di sistema: il layout regge, il disegno no. Vedi `public/fonts/README.md` |
+| B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |

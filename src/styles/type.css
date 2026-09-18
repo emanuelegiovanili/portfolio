@@ -1,0 +1,159 @@
+/* Tipografia.
+ *
+ * Nessuna line-height: normal. Il valore dipende dalle metriche del font e
+ * differisce fra Figma e browser, il che manda fuori griglia i blocchi di
+ * testo. Dove il Figma dice `normal`, qui c'e' 1.5: e' quello che Poppins
+ * rende a `normal`, verificato contando le righe sui nodi (255:763 e' alto
+ * 72px per due righe da 24px, 257:834 e' alto 36px per due righe da 12px).
+ *
+ * Nota: la tabella in home-handoff §2 dava 12px/24px per il testo meta. Sul
+ * nodo reale sono 12px/18px, cioe' 1.5 come tutto il resto.
+ */
+
+/* ---------- Poppins, self-hosted ---------- */
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/poppins-500.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/poppins-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Fallback metricamente allineato. Senza, durante il caricamento il testo va a
+   capo in un punto diverso, i blocchi cambiano numero di righe e la griglia
+   sembra rotta per mezzo secondo.
+   Valori calcolati dai woff2 reali: node scripts/font-metrics.mjs public/fonts/*.woff2 */
+
+@font-face {
+  font-family: 'Poppins Fallback';
+  font-style: normal;
+  font-weight: 500;
+  src: local('Arial');
+  size-adjust: 125.37%;
+  ascent-override: 83.75%;
+  descent-override: 27.92%;
+  line-gap-override: 7.98%;
+}
+
+@font-face {
+  font-family: 'Poppins Fallback';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Arial');
+  size-adjust: 130.33%;
+  ascent-override: 80.57%;
+  descent-override: 26.86%;
+  line-gap-override: 7.67%;
+}
+
+/* ---------- DT Getai Grotesk Display ---------- */
+
+/* Il file non e' ancora nel repo: vedi public/fonts/README.md. font-display:
+   optional e non swap perche' i titoli sono gli elementi piu' vincolati alla
+   griglia, e mostrarli mezzo secondo con le metriche sbagliate si vede piu' di
+   non mostrarli affatto. */
+@font-face {
+  font-family: 'DT Getai Grotesk Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: optional;
+  src: url('/fonts/getai-black.woff2') format('woff2');
+}
+
+/* ---------- Ruoli display ---------- */
+
+/*
+ * Sui titoli il Figma applica text-box-trim: e' cio' che fa atterrare la
+ * cap-height sulla linea di griglia invece della scatola di riga. Nel file e'
+ * applicato in modo irregolare (manca su 299:311 e 300:433): qui e' uniforme,
+ * vedi NOTES.md D10.
+ */
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 900;
+  line-height: 1;
+  text-box: trim-both cap alphabetic;
+}
+
+@supports not (text-box: trim-both cap alphabetic) {
+  .t-display {
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+  }
+}
+
+/* Titolo di pagina: About, voci del megamenu, In the kitchen. */
+.t-display--page {
+  font-size: 64px;
+}
+
+/* Titolo di sezione, logo, brand del footer, Now playing. */
+.t-display--section {
+  font-size: 40px;
+}
+
+/* Testo dei bottoni. */
+.t-display--button {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ---------- Ruoli testo ---------- */
+
+.t-title {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.5;
+}
+
+.t-body {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.t-link {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.t-tag {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.t-meta {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--dark-grey);
+}
+
+/* Citazione dei testimonial: e' l'unico testo con interlinea 1.75 (266:1129). */
+.t-quote {
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.75;
+}
+
+.t-role {
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--dark-grey);
+}

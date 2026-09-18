@@ -1,0 +1,197 @@
+/* La griglia.
+ *
+ * Un solo contenitore grid contiene sia le linee sia i blocchi. E' la scelta
+ * che rende l'invariante del progetto vero per costruzione invece che per
+ * coincidenza: se le linee stessero in un secondo grid sovrapposto in
+ * position:absolute, quel grid dividerebbe l'altezza misurata del contenitore
+ * mentre il grid del contenuto posa tracce da var(--cell), e i due
+ * arrotondamenti divergerebbero di una frazione di pixel per riga, che su 105
+ * righe si accumula.
+ *
+ * ATTENZIONE: i 720px e i 1200px qui sotto sono duplicati di BREAKPOINTS in
+ * src/lib/layout.ts. Le media query non leggono le custom property. Cambiarne
+ * uno solo non produce un errore, produce una griglia storta.
+ */
+
+.grid-wrap {
+  container-type: inline-size;
+  max-width: var(--grid-max);
+  margin-inline: auto;
+}
+
+.grid {
+  --cell: calc(100cqw / var(--cols));
+  --rows: var(--rows-base);
+
+  display: grid;
+  /* Tracce da var(--cell) e non da 1fr: con 1fr le colonne si dividono la
+     larghezza reale, e basta una scrollbar o un padding perche' smettano di
+     valere 100cqw/cols. Un numero solo, usato da tutti. */
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-template-rows: repeat(var(--rows), var(--cell));
+  gap: 0;
+  isolation: isolate;
+}
+
+@media (min-width: 720px) {
+  .grid {
+    --rows: var(--rows-md, var(--rows-base));
+  }
+}
+
+@media (min-width: 1200px) {
+  .grid {
+    --rows: var(--rows-lg, var(--rows-md, var(--rows-base)));
+  }
+}
+
+/* ---------- Le linee ---------- */
+
+.grid-line {
+  z-index: 0;
+  min-width: 0;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.grid-line--v {
+  grid-column: var(--at);
+  grid-row: 1 / -1;
+  border-left: var(--line) solid var(--line-color);
+}
+
+.grid-line--h {
+  grid-column: 1 / -1;
+  grid-row: var(--at);
+  border-top: var(--line) solid var(--line-color);
+}
+
+/* L'ultima linea di ogni asse cade sul bordo del contenitore, quindi si disegna
+   dal lato opposto della stessa cella. Le linee stanno anche sui bordi per
+   decisione del committente (NOTES.md D3): il frame desktop ha solo linee
+   interne, i frame 390 e 767 hanno anche quelle di bordo. */
+.grid-line--v[data-edge] {
+  border-left: 0;
+  border-right: var(--line) solid var(--line-color);
+}
+
+.grid-line--h[data-edge] {
+  border-top: 0;
+  border-bottom: var(--line) solid var(--line-color);
+}
+
+/* Quante linee servono dipende dal tier, e un selettore non sa fare aritmetica
+   su una custom property: i gruppi li calcola layout.ts e qui si accendono. */
+@media (width < 720px) {
+  .grid-line:not([data-show~='base']) {
+    display: none;
+  }
+}
+
+@media (720px <= width < 1200px) {
+  .grid-line:not([data-show~='md']) {
+    display: none;
+  }
+}
+
+@media (width >= 1200px) {
+  .grid-line:not([data-show~='lg']) {
+    display: none;
+  }
+}
+
+/* ---------- I blocchi ---------- */
+
+.block {
+  --col: var(--col-base);
+  --row: var(--row-base);
+  --c: var(--c-base);
+  --r: var(--r-base);
+
+  grid-column: var(--col) / span var(--c);
+  grid-row: var(--row) / span var(--r);
+  z-index: 1;
+  /* Le tracce sono fisse: un contenuto troppo lungo non puo' allargarle, quindi
+     la griglia non si sposta mai. Sfora invece il blocco, e si vede: e' il
+     comportamento voluto. /grid lo segnala, non lo nasconde. */
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (min-width: 720px) {
+  .block {
+    --col: var(--col-md, var(--col-base));
+    --row: var(--row-md, var(--row-base));
+    --c: var(--c-md, var(--c-base));
+    --r: var(--r-md, var(--r-base));
+  }
+}
+
+@media (min-width: 1200px) {
+  .block {
+    --col: var(--col-lg, var(--col-md, var(--col-base)));
+    --row: var(--row-lg, var(--row-md, var(--row-base)));
+    --c: var(--c-lg, var(--c-md, var(--c-base)));
+    --r: var(--r-lg, var(--r-md, var(--r-base)));
+  }
+}
+
+/* Un blocco che non esiste in un tier sparisce. Query a intervallo e non
+   min-width perche' le tre regole devono essere mutuamente esclusive: cosi'
+   un blocco visibile non riceve nessuna dichiarazione di display e il suo
+   componente resta libero di essere grid, flex o altro. */
+@media (width < 720px) {
+  .block:not([data-tiers~='base']) {
+    display: none;
+  }
+}
+
+@media (720px <= width < 1200px) {
+  .block:not([data-tiers~='md']) {
+    display: none;
+  }
+}
+
+@media (width >= 1200px) {
+  .block:not([data-tiers~='lg']) {
+    display: none;
+  }
+}
+
+/* ---------- Il bordo dei blocchi ---------- */
+
+/*
+ * Il blocco disegna solo il lato alto e il lato sinistro. Il lato basso e il
+ * lato destro sono la linea di griglia successiva, che cade esattamente li'.
+ *
+ * Il motivo e' che un border in CSS sta dentro la scatola. Se un blocco alle
+ * colonne 3-5 disegnasse anche il bordo destro, quel bordo occuperebbe
+ * l'ultimo pixel *dentro* la colonna 5, mentre la linea della colonna 6 occupa
+ * il primo pixel *dentro* la colonna 6: due pixel scuri adiacenti invece di
+ * uno. Il bordo alto e sinistro invece cade sullo stesso pixel della linea e
+ * ci si sovrappone senza ispessirla.
+ *
+ * Questo vale finche' le linee stanno anche sui bordi del contenitore (D3),
+ * perche' e' quello che garantisce che una linea esista sempre a destra e
+ * sotto l'ultimo blocco.
+ */
+.block[data-surface='line'] {
+  background: var(--block-bg);
+  border-top: var(--line) solid var(--line-color);
+  border-left: var(--line) solid var(--line-color);
+}
+
+/* I blocchi viola non hanno bordo: coprono la linea e non la rimpiazzano.
+   E' quello che fa il Figma, verificato su Primary-button-2x1. */
+.block[data-surface='accent'] {
+  background: var(--accent-bg);
+  color: var(--accent-fg);
+}
+
+.block[data-surface='bare'] {
+  background: none;
+}
+
+.block[data-clip] {
+  overflow: clip;
+}

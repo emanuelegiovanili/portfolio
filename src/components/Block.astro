@@ -1,0 +1,45 @@
+---
+/**
+ * Un blocco posizionato sulla griglia.
+ *
+ * Non accetta ne' larghezza ne' altezza: solo la posizione e lo span, tier per
+ * tier, presi dalla mappa della pagina. E' l'unico modo in cui un blocco puo'
+ * esistere.
+ */
+import { placementStyle, tiersOf, type BlockPlacements } from '../lib/layout';
+
+interface Props {
+  /** Dove sta il blocco, tier per tier. Viene dalla mappa della pagina. */
+  at: BlockPlacements;
+  /**
+   * `line`   fondo off-white al 50%, filo alto e sinistro sulla linea (default)
+   * `accent` fondo viola pieno, nessun filo: copre la linea e non la rimpiazza
+   * `bare`   nessun fondo, nessun filo
+   */
+  surface?: 'line' | 'accent' | 'bare';
+  /** Taglia il contenuto che sfora. Da usare solo dove lo fa il Figma. */
+  clip?: boolean;
+  as?: string;
+  class?: string;
+  style?: string;
+}
+
+const { at, surface = 'line', clip = false, as = 'div', class: className, style, ...rest } = Astro.props;
+
+// Il tag dinamico perde la tipizzazione degli attributi intrinseci: il cast
+// riguarda solo l'elemento emesso, le props restano tipizzate dall'interfaccia.
+const Tag = as as keyof astroHTML.JSX.DefinedIntrinsicElements;
+
+const placement = placementStyle(at);
+---
+
+<Tag
+  class:list={['block', className]}
+  data-surface={surface}
+  data-tiers={tiersOf(at)}
+  data-clip={clip ? '' : undefined}
+  style={style ? `${placement};${style}` : placement}
+  {...rest}
+>
+  <slot />
+</Tag>
