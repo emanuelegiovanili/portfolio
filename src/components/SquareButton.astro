@@ -1,0 +1,50 @@
+---
+/**
+ * Square-button 1x1 (258:867).
+ *
+ * Tre varianti nel Figma, non due: `menu` con lucide/menu, `mail` viola con
+ * lucide/send, e `profile` con lucide/user-round, che sta nel blocco bottoni
+ * dell'hero e non compare in nessuna mappa dei documenti di handoff.
+ *
+ * La variante `mail` e' l'unica viola, e come tutti i blocchi viola non ha
+ * bordo: copre la linea di griglia e non la rimpiazza.
+ */
+import Block from './Block.astro';
+import Icon from './Icon.astro';
+import type { BlockPlacements } from '../lib/layout';
+import type { IconName } from '../lib/icons';
+
+interface Props {
+  at: BlockPlacements;
+  variant: 'menu' | 'mail' | 'profile';
+  /** Nome accessibile del comando. L'icona da sola non ne fornisce uno. */
+  label: string;
+  href?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { at, variant, label, href, class: className, ...rest } = Astro.props;
+
+const ICON: Record<Props['variant'], IconName> = {
+  menu: 'menu',
+  mail: 'send',
+  profile: 'user-round',
+};
+
+const isLink = href !== undefined;
+---
+
+<Block
+  at={at}
+  as={isLink ? 'a' : 'button'}
+  surface={variant === 'mail' ? 'accent' : 'line'}
+  class:list={['square-button', className]}
+  data-variant={variant}
+  href={href}
+  type={isLink ? undefined : 'button'}
+  aria-label={label}
+  {...rest}
+>
+  <Icon name={ICON[variant]} />
+</Block>

@@ -1,0 +1,52 @@
+---
+/**
+ * Header, identico su tutte le pagine.
+ *
+ * Il logo ha tre dimensioni, lette dai nodi: Getai 40px a lg (257:798), 24px a
+ * md (321:2792), 20px a base (314:2305). A base il Figma spezza il nome su due
+ * righe esplicitamente, quindi le due parole sono due span e l'a capo e' una
+ * regola, non un caso.
+ *
+ * A desktop non c'e' nessun link di navigazione: la navigazione vive nel
+ * megamenu e nel footer.
+ *
+ * Il bottone di contatto e' la variante Mail del Square-button, viola con
+ * lucide/send, confermata sul frame About.
+ */
+import Block from './Block.astro';
+import SquareButton from './SquareButton.astro';
+import { headerMap } from '../lib/blocks/chrome';
+
+interface Props {
+  /** La pagina corrente: sul logo di casa il link diventa muto. */
+  current?: string;
+}
+
+const { current } = Astro.props;
+const isHome = current === '/';
+---
+
+<Block at={headerMap.logo} class="logo" clip>
+  {
+    isHome ? (
+      <span class="t-display logo__text">
+        <span class="logo__word">Emanuele</span> <span class="logo__word">Giovanili</span>
+      </span>
+    ) : (
+      <a href="/" class="t-display logo__text logo__link">
+        <span class="logo__word">Emanuele</span> <span class="logo__word">Giovanili</span>
+      </a>
+    )
+  }
+</Block>
+
+<SquareButton at={headerMap.headerContact} variant="mail" label="Scrivimi" href="/contact" />
+
+<SquareButton
+  at={headerMap.headerMenu}
+  variant="menu"
+  label="Apri il menu"
+  id="menu-toggle"
+  aria-expanded="false"
+  aria-controls="megamenu"
+/>

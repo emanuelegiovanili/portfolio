@@ -1,0 +1,89 @@
+---
+/**
+ * Anteprima dei componenti condivisi sulla griglia reale.
+ *
+ * SectionHeader e ContactSection sono dichiarati solo a lg. Il primo perche' le
+ * tre pagine su cui compare non hanno un disegno sotto 1200px. Il secondo
+ * perche' a md e base un disegno c'e', sulla home, ma con grandezze tipografiche
+ * e spaziature diverse (gap 20 invece di 40, textarea 156 invece di 220,
+ * etichette a 12px): si leggono dai frame in Fase 3, insieme al resto della home,
+ * invece di inventarle qui.
+ *
+ * Route di debug come /grid: esce da sola dalla build di produzione.
+ * Le posizioni qui sono di comodo, non vengono da un frame: servono a vedere i
+ * componenti tutti insieme e a farli misurare dalla sonda.
+ */
+import Base from '../../layouts/Base.astro';
+import Grid from '../../components/Grid.astro';
+import Block from '../../components/Block.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import GridProbe from '../../components/GridProbe.astro';
+import SectionHeader from '../../components/SectionHeader.astro';
+import ContactSection from '../../components/ContactSection.astro';
+import SquareButton from '../../components/SquareButton.astro';
+import PrimaryButton from '../../components/PrimaryButton.astro';
+import { headerMap, footerMap } from '../../lib/blocks/chrome';
+import type { LayoutMap } from '../../lib/layout';
+
+const page = {
+  sectionTitle: { lg: [2, 3, 4, 1] },
+  sectionIcon: { lg: [6, 3, 1, 1] },
+  btnMenu: { base: [2, 7, 2, 2], md: [2, 5, 1, 1], lg: [2, 5, 1, 1] },
+  btnMail: { base: [4, 7, 2, 2], md: [3, 5, 1, 1], lg: [3, 5, 1, 1] },
+  btnProfile: { base: [6, 7, 2, 2], md: [4, 5, 1, 1], lg: [4, 5, 1, 1] },
+  btnPrimary: { base: [2, 9, 5, 2], md: [6, 5, 3, 1], lg: [6, 5, 2, 1] },
+  contactForm: { lg: [3, 7, 5, 6] },
+  contactCta: { lg: [8, 8, 4, 3] },
+  contactSend: { lg: [8, 11, 2, 1] },
+} as const satisfies LayoutMap;
+
+// Il footer va dopo il contenuto: le sue righe di partenza dipendono da dove
+// finisce il resto, quindi si ricalcola invece di fidarsi dei numeri sopra.
+const footerRows = { base: 17, md: 12, lg: 13 };
+const footerAt = footerMap(footerRows);
+
+const map = { ...headerMap, ...page, ...footerAt } satisfies LayoutMap;
+---
+
+<Base title="Componenti — debug" noindex>
+  <Grid map={map}>
+    <Header current="/grid/components" />
+
+    <SectionHeader
+      at={{ title: page.sectionTitle, icon: page.sectionIcon }}
+      title="My work"
+      icon="flame"
+      level={1}
+    />
+
+    <SquareButton at={page.btnMenu} variant="menu" label="Menu di prova" />
+    <SquareButton at={page.btnMail} variant="mail" label="Contatto di prova" href="/contact" />
+    <SquareButton at={page.btnProfile} variant="profile" label="Profilo di prova" href="/about" />
+    <PrimaryButton at={page.btnPrimary} label="View all my work" href="/works" />
+
+    <ContactSection at={{ form: page.contactForm, cta: page.contactCta, send: page.contactSend }} />
+
+    <Block at={{ base: [2, 13, 8, 3], md: [2, 9, 8, 2], lg: [2, 12, 10, 1] }} surface="bare" class="preview-note" clip>
+      <p class="label t-meta">
+        Sotto 1200: header e footer.
+      </p>
+    </Block>
+
+    <Footer at={footerAt} current="/grid/components" />
+  </Grid>
+
+  <GridProbe />
+</Base>
+
+<style>
+  .preview-note {
+    display: flex;
+    align-items: center;
+  }
+
+  .preview-note .label {
+    margin: 0;
+    padding: var(--pad);
+  }
+</style>

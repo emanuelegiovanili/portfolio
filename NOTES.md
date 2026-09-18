@@ -248,6 +248,103 @@ dai text node, non da una formula riscritta.
 
 ---
 
+## 7. Fase 2 — componenti condivisi
+
+### D24. Il Send button e' davvero disabilitato, non dipinto di grigio
+`314:2226`, `310:1533` e `312:2199` hanno fondo `#B0ADB9` su tutte e tre le pagine. Non e' un
+bottone primario di un altro colore: e' lo **stato disabilitato**, disegnato con il form vuoto. E'
+l'unico stato oltre al default che il Figma contenga, insieme al filtro attivo su `/works`.
+
+Nel codice il bottone parte con l'attributo `disabled` nell'HTML, quindi senza JavaScript resta
+esattamente com'e' disegnato, e un piccolo listener lo accende quando il form diventa valido.
+Renderlo grigio e basta avrebbe riprodotto il pixel e perso il significato.
+
+Il colore del bottone **abilitato** non e' disegnato da nessuna parte: uso il viola degli altri
+bottoni primari. E' un'inferenza, segnalata qui perche' e' l'unico modo di avere un form usabile.
+
+### D25. lucide-static 1.47, non 0.544
+`blender` non esiste nella 0.x: e' stato aggiunto nella 1.x. Il Figma lo usa su `/about`
+(`299:332`), e il glifo renderizzato dal file e' una caraffa da frullatore, non le due
+circonferenze sovrapposte di `blend`, che sarebbe stata la sostituzione ovvia e sbagliata.
+
+Tutti e diciassette i glifi sono stati renderizzati e guardati uno per uno prima di considerarli
+equivalenti a quelli del Figma. `chef-hat` non e' cambiato fra le due versioni, quindi il favicon
+resta valido.
+
+### D26. Le icone sono diciassette, non sedici
+`pagine-interne` §5 ne conta sedici. Manca `user-round`, che sta nella variante **Profile** del
+`Square-button`, nel blocco bottoni dell'hero: un blocco che nessuna mappa degli handoff elenca.
+Resta statica.
+
+### D27. SVG inline, con elenco chiuso
+Le icone sono inline nel markup e non `<img src>`: un'immagine esterna non e' animabile, e sette di
+queste hanno un'animazione. L'elenco dei nomi ammessi sta in `src/lib/icons.ts` ed e' chiuso: un
+nome fuori da li' non compila, e un file lucide mancante fa fallire la build con il nome dell'icona
+invece di lasciare un buco scoperto in produzione.
+
+### D28. `max-width` in px sui testi, mai sui blocchi
+Il Figma vincola la larghezza di alcuni *testi* per imporre il punto di a capo: il titolo della CTA
+e' largo 376px dentro un blocco da 480. E' una proprieta' del testo, non del blocco, e non tocca la
+geometria della griglia. Se un testo dovesse sforare il proprio blocco, la sonda di `/grid` lo
+segnala fra i "blocchi che sforano".
+
+### D29. Il display scala con la cella a lg
+La scala del Figma e' tarata su una cella da 120px, cioe' su un contenitore da 1440. Sotto, la
+cella si stringe ma il testo no, e i blocchi piu' stretti non lo contengono piu'. Misurato sul
+blocco CTA, che e' 4x3 e ha il margine piu' sottile di tutti:
+
+| Viewport | Cella | Contenuto del blocco | Serve | Avanzo |
+|---|---|---|---|---|
+| 1200 | 98,75 | 355x256 | 351 | **-95** |
+| 1280 | 105,42 | 382x276 | 287 | **-11** |
+| 1320 | 108,75 | 395x286 | 287 | **-1** |
+| 1366 | 112,58 | 410x298 | 287 | +10 |
+| 1440 | 118,75 | 435x316 | 287 | +29 |
+
+Alla larghezza di disegno il margine e' 29px su 316, cioe' il 9%: e' un blocco fragile gia' nel
+Figma, e infatti il file lo taglia con `overflow-clip`.
+
+`grid-system-handoff` §2 direbbe di alzare il confine invece di ridurre il testo, ma qui il confine
+andrebbe a **1366** e i portatili da 1280 prenderebbero il layout disegnato per 767. Fra le due,
+scalare e' la deviazione piu' piccola: a 1280 il titolo e' 56px invece di 64, la composizione resta,
+e sopra 1440 il testo non cresce comunque.
+
+La formula e' `min(dimensione, calc(var(--cell) * dimensione / 120))`, applicata ai due ruoli
+display a lg. Sotto lg le dimensioni vengono dai frame 767 e 390.
+
+Due correzioni collegate, trovate dalla stessa misura:
+
+- Le larghezze dei testi della CTA sono `min(100%, 307px)` e `min(100%, 376px)`, non percentuali
+  pure. In percentuale il lead scendeva sotto i 307px del Figma gia' a 1400 e passava a tre righe:
+  era il lead, non il titolo, a far sforare il blocco.
+- Il `scrollbar-gutter: stable` che serve a non far saltare la griglia all'apertura del megamenu
+  costa **circa l'1% su ogni cella**: a 1440 di viewport il contenitore e' 1425 e la cella 118,75
+  invece di 120. E' un costo che nessuna alternativa evita, perche' qualunque blocco dello scroll
+  toglie la scrollbar, ma va saputo: il disegno a 1440 ha gia' l'1% in meno di quanto il Figma
+  assuma.
+
+### D30. Tre grandezze per il logo e per le voci del footer
+Lette dai nodi, non stimate.
+
+| Elemento | base (390) | md (767) | lg (1440) |
+|---|---|---|---|
+| Logo e brand del footer | Getai **20px**, nome su **due righe** | Getai 24px, una riga | Getai 40px, una riga |
+| Voce di navigazione del footer | Poppins Bold 12px | 16px | 16px |
+| Voce social del footer | 12px, **icona sopra** l'etichetta | 12px, icona sopra | 16px, icona di fianco |
+
+A base il Figma spezza il nome esplicitamente su "Emanuele" / "Giovanili", quindi nel markup sono
+due span e l'a capo e' una regola, non un caso.
+
+Le voci del footer non hanno padding sotto lg: nel Figma il testo usa tutta la cella e con 20px per
+lato "Instagram" non entra in una cella da 39px. Il gruppo icona piu' etichetta e' centrato invece
+che appoggiato in alto come nel file: sono 16px, in una cella che sotto i 390 il disegno non copre
+comunque.
+
+L'etichetta ha il tetto a 12px e scala sotto la larghezza di disegno, perche' a 320 (che e' sotto il
+frame base, che sta a 390) una voce da due colonne e' larga 61px e "Instagram" a 12px non ci entra.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
@@ -260,3 +357,5 @@ dai text node, non da una formula riscritta.
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |
+| B10 | **URL dei profili LinkedIn e Instagram** | Il Figma mostra le etichette ma non i link. Non li ho inventati: un link a un profilo sbagliato e' un bug che va online e che nessuno nota finche' non ci clicca qualcuno. Segnaposto in `src/lib/site.ts` |
+| B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |

@@ -23,7 +23,8 @@ npm install
 npm run dev       # sviluppo su :4321
 npm run build     # build statica in dist/ (/grid viene rimossa)
 npm run check     # type check
-npm run verify    # misura l'invariante a 13 larghezze in Chromium
+npm run verify    # verify:grid + verify:type
+npm run measure   # margine fra uno span e il suo contenuto, larghezza per larghezza
 npm run preview   # anteprima con wrangler
 ```
 

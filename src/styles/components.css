@@ -1,0 +1,350 @@
+/* Componenti condivisi.
+ *
+ * I valori sono presi dai nodi Figma. I padding sono assoluti in px e non
+ * derivati dalla cella: a mobile la cella e' 39px e un padding proporzionale
+ * sparirebbe.
+ *
+ * Dove compare una larghezza in px e' sempre su un *testo*, mai su un blocco:
+ * serve a riprodurre il punto di a capo che il Figma impone (il titolo della
+ * CTA e' largo 376 dentro un blocco da 480). La geometria resta della griglia,
+ * e se un testo sfora il proprio blocco la sonda di /grid lo segnala.
+ */
+
+.icon {
+  display: block;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+/* ---------- Header ---------- */
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+}
+
+/* Getai 40 / 24 / 20 px, dai nodi 257:798, 321:2792 e 314:2305. */
+.logo__text {
+  display: block;
+  font-size: 20px;
+  text-align: center;
+}
+
+/* A base il Figma spezza il nome su due righe: le due parole diventano blocchi
+   e lo spazio fra loro sparisce. */
+.logo__word {
+  display: block;
+}
+
+@media (min-width: 720px) {
+  .logo__text {
+    font-size: 24px;
+  }
+
+  .logo__word {
+    display: inline;
+  }
+}
+
+@media (min-width: 1200px) {
+  .logo__text {
+    font-size: 40px;
+  }
+}
+
+/* ---------- Square button ---------- */
+
+.square-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 0;
+  color: var(--black);
+  cursor: pointer;
+  appearance: none;
+}
+
+.square-button[data-variant='mail'] {
+  color: var(--accent-fg);
+}
+
+/* ---------- Primary button ---------- */
+
+.primary-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+  border: 0;
+  border-radius: 0;
+  color: var(--accent-fg);
+  text-align: center;
+  cursor: pointer;
+  appearance: none;
+}
+
+/* L'unico stato oltre al default che il Figma disegni: il Send button e'
+   --light-grey su tutte e tre le pagine perche' il form e' vuoto. */
+.primary-button:disabled {
+  background: var(--light-grey);
+  cursor: not-allowed;
+}
+
+/* ---------- Footer ---------- */
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+}
+
+/* Stesse tre dimensioni del logo di testa: 268:1255, 321:2895, 314:2408. */
+.footer-brand__text {
+  font-size: 20px;
+  text-align: center;
+}
+
+@media (min-width: 720px) {
+  .footer-brand__text {
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .footer-brand__text {
+    font-size: 40px;
+  }
+}
+
+.footer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+  text-align: center;
+}
+
+.footer-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pad);
+  /* Niente padding sotto lg. Nel Figma il testo della voce usa tutta la cella
+     (314:2419 e' largo 78 dentro un blocco da 78) e l'icona parte dal bordo
+     alto: con 20px per lato "Instagram" non entra in una cella da 39px, e
+     icona piu' etichetta non entrano nemmeno in altezza. Qui il gruppo e'
+     centrato invece che appoggiato in alto: e' l'unico scostamento, e riguarda
+     16px in una cella che il disegno non copre comunque sotto i 390. */
+  padding: 0;
+  text-align: center;
+}
+
+@media (min-width: 1200px) {
+  .footer-link {
+    padding: var(--pad);
+  }
+}
+
+/* Barra 4px al fondo della voce corrispondente alla pagina corrente. Nel Figma
+   e' larga quanto il blocco e sborda di mezzo pixel sul bordo: qui copre il
+   bordo basso, che e' la linea di griglia. */
+.footer-link__indicator {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--purple);
+}
+
+/* L'etichetta: 12px a base, 16px da md in su per le voci di navigazione.
+   Le voci social restano a 12px fino a lg, dove diventano 16px con l'icona di
+   fianco invece che sopra. Valori dai nodi 314:2412, 321:2899, 268:1288 per la
+   navigazione e 314:2419, 321:2997, 268:1262 per i social. */
+/*
+ * 12px alla larghezza di disegno, meno sotto.
+ *
+ * Il frame base e' a 390, dove la cella vale 37,5 (39 meno il varco della
+ * scrollbar) e una voce da 2 colonne e' larga 75px: "Instagram" a 12px ci entra
+ * per un pelo. A 320 la stessa voce e' larga 61 e non ci entra piu'. Il tetto a
+ * 12px fa si' che da 390 in su la dimensione sia esattamente quella del
+ * disegno, e che a scendere il testo si stringa invece di sfondare la cella.
+ */
+.footer-link__label {
+  font-weight: 700;
+  font-size: min(12px, calc(var(--cell) * 12 / 37.5));
+  line-height: 1.5;
+}
+
+/* Sotto lg l'icona sta sopra l'etichetta e la voce e' impilata: e' cosi' che il
+   Figma fa stare "Instagram" dentro una cella da 77px. */
+.footer-link:has(.footer-link__arrow) {
+  flex-direction: column;
+  gap: 4px;
+}
+
+@media (min-width: 720px) {
+  .footer-link__label {
+    font-size: 16px;
+  }
+
+  .footer-link:has(.footer-link__arrow) .footer-link__label {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .footer-link:has(.footer-link__arrow) {
+    flex-direction: row;
+    gap: var(--pad);
+  }
+
+  .footer-link:has(.footer-link__arrow) .footer-link__label {
+    font-size: 16px;
+  }
+}
+
+/* ---------- Section header ---------- */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: var(--pad);
+}
+
+.section-header__title {
+  margin: 0;
+}
+
+.icon-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+}
+
+/* ---------- Form ---------- */
+
+.contact-form-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--pad) 30px;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pad-lg);
+}
+
+.contact-form__row {
+  display: flex;
+  gap: var(--pad-lg);
+}
+
+.contact-form__row > .form-field {
+  flex: 1 0 0;
+  min-width: 0;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.form-field__label-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.form-field__required {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--light-grey);
+}
+
+.form-field__input {
+  width: 100%;
+  height: 60px;
+  padding: var(--pad-sm);
+  background: none;
+  border: var(--line) solid var(--dark-grey);
+  border-radius: 0;
+  color: var(--black);
+  appearance: none;
+}
+
+.form-field__input--area {
+  height: 220px;
+  padding: var(--pad);
+  resize: none;
+}
+
+.form-field__input::placeholder {
+  color: var(--light-grey);
+  opacity: 1;
+}
+
+.consent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.consent-row__box {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  background: none;
+  border: var(--line) solid var(--dark-grey);
+  border-radius: 0;
+  appearance: none;
+}
+
+.consent-row__box:checked {
+  background: var(--purple);
+  border-color: var(--purple);
+}
+
+.consent-row label {
+  color: var(--dark-grey);
+}
+
+/* ---------- CTA ---------- */
+
+.cta-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pad-lg);
+  padding: var(--pad);
+}
+
+/* Nel Figma questi due testi sono larghi 307 e 376 dentro un blocco da 480.
+   `min(100%, Npx)` tiene quel vincolo dove c'e' spazio, cosi' a 1440 il punto di
+   a capo e' quello del disegno, e lo lascia cadere dove non ce n'e', invece di
+   stringere il testo sotto la larghezza che gli serve.
+   In percentuale pura il lead scendeva sotto i 307px gia' a 1400 e passava a tre
+   righe, che e' il vero motivo per cui il blocco sforava. */
+.cta-section__lead {
+  max-width: min(100%, 307px);
+  margin: 0;
+}
+
+.cta-section__title {
+  max-width: min(100%, 376px);
+  margin: 0;
+}
+
+.cta-section__accent {
+  color: var(--purple);
+}

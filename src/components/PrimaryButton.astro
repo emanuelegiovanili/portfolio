@@ -1,0 +1,42 @@
+---
+/**
+ * Primary-button (314:2221). Fondo viola, nessun bordo, Getai Black 16px.
+ *
+ * Lo span cambia per tier e per punto d'uso: 2x1 a desktop, 3x1 a 767, 5x2 a
+ * mobile, 4x1 nel footer. Non e' una proprieta' del componente, e' la mappa
+ * della pagina a dirlo.
+ *
+ * Lo stato disabilitato usa --light-grey. E' l'unico stato oltre al default che
+ * il Figma disegni: il Send button e' grigio su tutte e tre le pagine in cui
+ * compare, perche' il form e' vuoto. Vedi NOTES.md D24.
+ */
+import Block from './Block.astro';
+import type { BlockPlacements } from '../lib/layout';
+
+interface Props {
+  at: BlockPlacements;
+  label: string;
+  href?: string;
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { at, label, href, type = 'button', disabled = false, class: className, ...rest } = Astro.props;
+
+const isLink = href !== undefined;
+---
+
+<Block
+  at={at}
+  as={isLink ? 'a' : 'button'}
+  surface="accent"
+  class:list={['primary-button', className]}
+  href={href}
+  type={isLink ? undefined : type}
+  disabled={isLink ? undefined : disabled || undefined}
+  {...rest}
+>
+  <span class="t-display t-display--button">{label}</span>
+</Block>

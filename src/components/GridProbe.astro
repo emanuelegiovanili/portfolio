@@ -1,0 +1,140 @@
+---
+/**
+ * Pannello di misura per le route di debug.
+ *
+ * Mostra in pagina la stessa misura che `npm run verify:grid` legge da fuori,
+ * ed espone `window.__probeGrid` perche' Playwright la chiami: una sola
+ * implementazione, cosi' il pannello e lo script non possono divergere.
+ */
+---
+
+<aside id="readout" hidden>
+  <dl>
+    <dt>viewport</dt><dd id="r-vw">—</dd>
+    <dt>contenitore</dt><dd id="r-cw">—</dd>
+    <dt>tier</dt><dd id="r-tier">—</dd>
+    <dt>colonne</dt><dd id="r-cols">—</dd>
+    <dt>cella</dt><dd id="r-cell">—</dd>
+    <dt>righe</dt><dd id="r-rows">—</dd>
+    <dt>scarto max</dt><dd id="r-drift">—</dd>
+    <dt>blocchi che sforano</dt><dd id="r-overflow">—</dd>
+  </dl>
+  <div class="actions">
+    <button type="button" id="toggle-lines">linee</button>
+    <button type="button" id="toggle-lock">blocca scroll</button>
+  </div>
+</aside>
+
+<style is:global>
+  #readout {
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    z-index: 100;
+    min-width: 200px;
+    padding: 10px 12px;
+    background: var(--black);
+    color: var(--off-white);
+    font-size: 11px;
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #readout dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 12px;
+    margin: 0;
+  }
+
+  #readout dt {
+    color: var(--light-grey);
+  }
+
+  #readout dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  #readout dd[data-state='bad'] {
+    color: #ff6b6b;
+  }
+
+  #readout dd[data-state='good'] {
+    color: #6bff9a;
+  }
+
+  #readout .actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  #readout .actions button {
+    flex: 1;
+    padding: 4px;
+    border: 1px solid var(--light-grey);
+    background: none;
+    color: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  #readout .actions button[aria-pressed='true'] {
+    background: var(--purple);
+    border-color: var(--purple);
+  }
+
+  html[data-lines='off'] .grid-line {
+    visibility: hidden;
+  }
+
+  html[data-lock='on'] {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  import { probeGrid } from '../scripts/grid-probe';
+
+  const readout = document.getElementById('readout')!;
+  readout.hidden = false;
+
+  const out = (id: string, value: string, state?: 'good' | 'bad') => {
+    const el = document.getElementById(id)!;
+    el.textContent = value;
+    if (state) el.dataset.state = state;
+    else delete el.dataset.state;
+  };
+
+  function refresh(): void {
+    const r = probeGrid();
+    if (!r) return;
+    out('r-vw', `${window.innerWidth}px`);
+    out('r-cw', `${r.containerWidth.toFixed(2)}px`);
+    out('r-tier', r.tier);
+    out('r-cols', String(r.cols));
+    out('r-cell', `${r.cell.toFixed(3)}px`);
+    out('r-rows', String(r.rows));
+    out('r-drift', `${r.maxDrift.toFixed(4)}px`, r.maxDrift <= r.tolerance ? 'good' : 'bad');
+    out('r-overflow', String(r.overflowing.length), r.overflowing.length === 0 ? 'good' : 'bad');
+  }
+
+  refresh();
+  window.addEventListener('resize', refresh, { passive: true });
+  document.fonts?.ready.then(refresh);
+
+  const toggle = (id: string, attr: string, on: string, off: string) => {
+    const button = document.getElementById(id) as HTMLButtonElement;
+    button.setAttribute('aria-pressed', 'false');
+    button.addEventListener('click', () => {
+      const pressed = button.getAttribute('aria-pressed') === 'true';
+      button.setAttribute('aria-pressed', String(!pressed));
+      document.documentElement.setAttribute(attr, !pressed ? on : off);
+      refresh();
+    });
+  };
+
+  toggle('toggle-lines', 'data-lines', 'off', 'on');
+  toggle('toggle-lock', 'data-lock', 'on', 'off');
+</script>

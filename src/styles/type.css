@@ -144,6 +144,32 @@
   font-size: 40px;
 }
 
+/*
+ * A lg il display scala con la cella, fino al valore di disegno.
+ *
+ * La scala del Figma e' tarata su una cella da 120px, che si ottiene a 1440 di
+ * contenitore. Sotto, la cella si stringe ma il testo no, e i blocchi piu'
+ * stretti non lo contengono piu': misurato, il blocco CTA (4x3) sfora di 11px a
+ * 1280 e di 95px a 1200, dove il titolo passa da tre righe a quattro.
+ *
+ * `grid-system-handoff` §2 direbbe di alzare il confine invece di ridurre il
+ * testo, ma qui il confine andrebbe a 1366 e i portatili da 1280 prenderebbero
+ * il layout disegnato per 767. Fra le due, scalare e' la deviazione piu'
+ * piccola: a 1280 il titolo e' 56px invece di 64, e la composizione resta.
+ *
+ * Il fattore e' (dimensione di disegno / 120) x cella, con il tetto alla
+ * dimensione di disegno: sopra i 1440 il testo non cresce.
+ */
+@media (min-width: 1200px) {
+  .t-display--page {
+    font-size: min(64px, calc(var(--cell) * 64 / 120));
+  }
+
+  .t-display--section {
+    font-size: min(40px, calc(var(--cell) * 40 / 120));
+  }
+}
+
 /* Testo dei bottoni. */
 .t-display--button {
   font-size: 16px;

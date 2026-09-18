@@ -11,16 +11,18 @@
     "deploy": "wrangler deploy",
     "verify": "npm run verify:grid && npm run verify:type",
     "verify:type": "node scripts/verify-type.mjs",
-    "verify:grid": "node scripts/verify-grid.mjs"
+    "verify:grid": "node scripts/verify-grid.mjs",
+    "measure": "node scripts/measure-fit.mjs"
   },
   "dependencies": {
     "astro": "^5.14.1",
     "gsap": "^3.13.0",
-    "lucide-static": "^0.544.0",
+    "lucide-static": "^1.47.0",
     "sharp": "^0.34.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@types/node": "^26.6.1",
     "fontkit": "^2.0.4",
     "playwright": "^1.63.0",
     "typescript": "^5.9.2",

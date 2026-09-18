@@ -1,0 +1,69 @@
+---
+/**
+ * Footer.
+ *
+ * Nel Figma l'indicatore di link attivo e' sotto "Home" su tutte e cinque le
+ * pagine, perche' il blocco e' stato ricopiato senza aggiornarne lo stato. Qui
+ * discende dalla route corrente.
+ *
+ * A base la composizione cambia: sei voci invece di cinque, brand alto due
+ * righe, e il "Let's work together" che scende a fondo pagina come bottone
+ * invece di stare nella prima riga.
+ */
+import Block from './Block.astro';
+import Icon from './Icon.astro';
+import PrimaryButton from './PrimaryButton.astro';
+import { FOOTER_LINKS } from '../lib/blocks/chrome';
+import { SITE_NAME, isPlaceholder } from '../lib/site';
+import type { LayoutMap } from '../lib/layout';
+
+interface Props {
+  /** La mappa restituita da footerMap(), gia' fusa in quella della pagina. */
+  at: LayoutMap;
+  /** Il path corrente, per l'indicatore di voce attiva. */
+  current: string;
+}
+
+const { at, current } = Astro.props;
+
+const WORK_TOGETHER = "Let’s work together";
+---
+
+<Block at={at.footerBrand!} class="footer-brand" clip>
+  <span class="t-display footer-brand__text">{SITE_NAME}</span>
+</Block>
+
+{
+  at.footerWorkTogether && (
+    <Block at={at.footerWorkTogether} as="a" surface="accent" class="footer-cta" href="/contact" clip>
+      <span class="t-display t-display--button">{WORK_TOGETHER}</span>
+    </Block>
+  )
+}
+
+{
+  FOOTER_LINKS.map((link) => {
+    const placement = at[link.key];
+    if (!placement) return null;
+    const isCurrent = !link.external && link.href === current;
+    return (
+      <Block
+        at={placement}
+        as="a"
+        class:list={['footer-link', isCurrent && 'is-current']}
+        href={link.href}
+        aria-current={isCurrent ? 'page' : undefined}
+        target={link.external ? '_blank' : undefined}
+        rel={link.external ? 'noopener noreferrer' : undefined}
+        aria-disabled={link.external && isPlaceholder(link.href) ? 'true' : undefined}
+        clip
+      >
+        {link.external && <Icon name="arrow-up-right" class="footer-link__arrow" />}
+        <span class="footer-link__label">{link.label}</span>
+        {isCurrent && <span class="footer-link__indicator" aria-hidden="true" />}
+      </Block>
+    );
+  })
+}
+
+{at.footerCta && <PrimaryButton at={at.footerCta} label={WORK_TOGETHER} href="/contact" />}

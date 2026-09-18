@@ -19,7 +19,7 @@ import { startDevServer, CHROMIUM } from './dev-server.mjs';
 
 const WIDTHS = [320, 390, 430, 719, 720, 768, 1024, 1199, 1200, 1280, 1440, 1680, 1920];
 const SCROLLS = ['top', 'middle', 'bottom'];
-const PATH = '/grid';
+const PATHS = ['/grid', '/grid/components'];
 const SHOT_DIR = '.verify';
 
 const args = process.argv.slice(2);
@@ -30,7 +30,7 @@ const value = (name, fallback) => {
 };
 
 const explicitUrl = value('--url', null);
-const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await startDevServer({ probePath: PATH });
+const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await startDevServer({ probePath: PATHS[0] });
 
 if (flag('--shots') && !existsSync(SHOT_DIR)) await mkdir(SHOT_DIR, { recursive: true });
 
@@ -39,6 +39,7 @@ const rows = [];
 let failures = 0;
 
 try {
+  for (const route of PATHS)
   for (const width of WIDTHS) {
     const context = await browser.newContext({
       viewport: { width, height: 900 },
@@ -49,7 +50,7 @@ try {
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     page.on('pageerror', (e) => errors.push(String(e)));
 
-    await page.goto(server.base + PATH, { waitUntil: 'networkidle' });
+    await page.goto(server.base + route, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
 
     for (const where of SCROLLS) {
@@ -63,16 +64,17 @@ try {
 
       const ok = result.maxDrift <= result.tolerance && result.overflowing.length === 0;
       if (!ok) failures += 1;
-      rows.push({ width, where, ...result, ok, errors: errors.length });
+      rows.push({ route, width, where, ...result, ok, errors: errors.length });
 
       if (flag('--shots') && where === 'top') {
-        await page.screenshot({ path: `${SHOT_DIR}/grid-${width}.png`, fullPage: false });
+        const name = route.replace(/\//g, '-').replace(/^-/, '');
+        await page.screenshot({ path: `${SHOT_DIR}/${name}-${width}.png`, fullPage: false });
       }
     }
 
     if (errors.length > 0) {
       failures += 1;
-      console.error(`  errori in console a ${width}px:`, errors.slice(0, 3));
+      console.error(`  errori in console su ${route} a ${width}px:`, errors.slice(0, 3));
     }
 
     await context.close();
@@ -83,12 +85,13 @@ try {
 }
 
 const pad = (v, n) => String(v).padEnd(n);
-const head = `${pad('larghezza', 10)}${pad('scroll', 8)}${pad('tier', 6)}${pad('col', 5)}${pad('righe', 7)}${pad('cella', 12)}${pad('scarto', 11)}${pad('sfora', 7)}esito`;
+const head = `${pad('route', 19)}${pad('larghezza', 10)}${pad('scroll', 8)}${pad('tier', 6)}${pad('col', 5)}${pad('righe', 7)}${pad('cella', 12)}${pad('scarto', 11)}${pad('sfora', 7)}esito`;
 console.log('\n' + head);
 console.log('-'.repeat(head.length));
 for (const r of rows) {
   console.log(
-    pad(r.width + 'px', 10) +
+    pad(r.route, 19) +
+      pad(r.width + 'px', 10) +
       pad(r.where, 8) +
       pad(r.tier, 6) +
       pad(r.cols, 5) +
@@ -96,14 +99,17 @@ for (const r of rows) {
       pad(r.cell.toFixed(4), 12) +
       pad(r.maxDrift.toFixed(4) + 'px', 11) +
       pad(r.overflowing.length, 7) +
-      (r.ok ? 'ok' : `FALLITO ${r.worst ? `(${r.worst.block} ${r.worst.edge})` : ''}`),
+      (r.ok
+        ? 'ok'
+        : `FALLITO ${r.worst ? `(${r.worst.block} ${r.worst.edge} ${r.worst.delta.toFixed(3)}px)` : ''}` +
+          (r.overflowing.length ? ` sfora: ${r.overflowing.join(', ')}` : '')),
   );
 }
 
 const worst = rows.reduce((a, b) => (b.maxDrift > a.maxDrift ? b : a), rows[0]);
 console.log(
-  `\n${rows.length} misure · scarto massimo ${worst.maxDrift.toFixed(4)}px a ${worst.width}px` +
-    ` · tolleranza ${worst.tolerance}px`,
+  `\n${rows.length} misure su ${PATHS.length} route · scarto massimo ${worst.maxDrift.toFixed(4)}px` +
+    ` a ${worst.width}px su ${worst.route} · tolleranza ${worst.tolerance}px`,
 );
 
 await writeFile(`${SHOT_DIR}/report.json`, JSON.stringify(rows, null, 2)).catch(() => {});

@@ -1,0 +1,140 @@
+---
+/**
+ * La sezione contatto: form, CTA opzionale, bottone di invio.
+ *
+ * Compare su home, works e contact. Su /contact la CTA non c'e'.
+ *
+ * Il copy e' quello reale del Figma (312:2170), errore di lingua compreso:
+ * "I agree with the processing my personal data" manca una preposizione. Non
+ * si corregge in silenzio, si riproduce e si segnala (NOTES.md §3.5).
+ *
+ * Il form non ha ancora un backend, vedi NOTES.md B3.
+ */
+import Block from './Block.astro';
+import PrimaryButton from './PrimaryButton.astro';
+import type { BlockPlacements } from '../lib/layout';
+
+interface Props {
+  at: { form: BlockPlacements; cta?: BlockPlacements; send: BlockPlacements };
+}
+
+const { at } = Astro.props;
+
+const FIELDS = [
+  { id: 'name', label: 'Your name', placeholder: 'How can I call you?', required: true, type: 'text', autocomplete: 'name', width: 'half' },
+  { id: 'company', label: 'Your company name', placeholder: 'Where do you work?', required: false, type: 'text', autocomplete: 'organization', width: 'half' },
+  { id: 'email', label: 'Your email address', placeholder: 'example@mail.com', required: true, type: 'email', autocomplete: 'email', width: 'full' },
+] as const;
+
+const CONSENT = 'I agree with the processing my personal data';
+---
+
+<Block at={at.form} class="contact-form-block" clip>
+  <form class="contact-form" id="contact-form" novalidate>
+    <div class="contact-form__row">
+      {
+        FIELDS.filter((f) => f.width === 'half').map((field) => (
+          <p class="form-field">
+            <span class="form-field__label-row">
+              <label class="t-link" for={`cf-${field.id}`}>
+                {field.label}
+              </label>
+              {field.required && (
+                <span class="form-field__required" aria-hidden="true">
+                  *
+                </span>
+              )}
+            </span>
+            <input
+              class="form-field__input t-tag"
+              id={`cf-${field.id}`}
+              name={field.id}
+              type={field.type}
+              placeholder={field.placeholder}
+              autocomplete={field.autocomplete}
+              required={field.required}
+            />
+          </p>
+        ))
+      }
+    </div>
+
+    {
+      FIELDS.filter((f) => f.width === 'full').map((field) => (
+        <p class="form-field">
+          <span class="form-field__label-row">
+            <label class="t-link" for={`cf-${field.id}`}>
+              {field.label}
+            </label>
+            {field.required && (
+              <span class="form-field__required" aria-hidden="true">
+                *
+              </span>
+            )}
+          </span>
+          <input
+            class="form-field__input t-tag"
+            id={`cf-${field.id}`}
+            name={field.id}
+            type={field.type}
+            placeholder={field.placeholder}
+            autocomplete={field.autocomplete}
+            required={field.required}
+          />
+        </p>
+      ))
+    }
+
+    <p class="form-field">
+      <span class="form-field__label-row">
+        <label class="t-link" for="cf-details">Add some details</label>
+        <span class="form-field__required" aria-hidden="true">*</span>
+      </span>
+      <textarea
+        class="form-field__input form-field__input--area t-tag"
+        id="cf-details"
+        name="details"
+        placeholder="Help me understand"
+        required></textarea>
+    </p>
+
+    <p class="consent-row">
+      <input class="consent-row__box" id="cf-consent" name="consent" type="checkbox" required />
+      <label class="t-meta" for="cf-consent">{CONSENT}</label>
+    </p>
+  </form>
+</Block>
+
+{
+  at.cta && (
+    <Block at={at.cta} class="cta-section" clip>
+      <p class="t-title cta-section__lead">Don’t let your ideas sit and simmer for too long</p>
+      <p class="t-display t-display--page cta-section__title">
+        Let’s <span class="cta-section__accent">bake</span> something together
+      </p>
+    </Block>
+  )
+}
+
+<PrimaryButton at={at.send} label="Send" type="submit" form="contact-form" disabled class="send-button" />
+
+<script>
+  /**
+   * Il Send button e' grigio in tutti e tre i frame in cui compare: e' lo stato
+   * disabilitato, disegnato con il form vuoto. Renderlo vero invece che dipinto
+   * significa accenderlo quando il form diventa valido.
+   *
+   * Parte disabilitato nell'HTML, quindi senza JS resta com'e' disegnato.
+   */
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const send = document.querySelector<HTMLButtonElement>('.send-button');
+
+  if (form && send) {
+    const sync = () => {
+      send.disabled = !form.checkValidity();
+    };
+    form.addEventListener('input', sync);
+    form.addEventListener('change', sync);
+    sync();
+  }
+</script>

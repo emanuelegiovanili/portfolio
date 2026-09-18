@@ -1,0 +1,33 @@
+---
+/**
+ * Titolo di sezione con la cella icona accanto.
+ *
+ * Ricorre su tre pagine ma non con la stessa geometria: su /works l'icona sta a
+ * destra del titolo (col 6, riga 3), su /contact sta sotto l'ultima colonna del
+ * titolo (col 5, riga 5). Le posizioni arrivano quindi dalla mappa della
+ * pagina, non da una regola di adiacenza che sarebbe falsa in un caso su due.
+ */
+import Block from './Block.astro';
+import Icon from './Icon.astro';
+import type { BlockPlacements } from '../lib/layout';
+import type { IconName } from '../lib/icons';
+
+interface Props {
+  at: { title: BlockPlacements; icon: BlockPlacements };
+  title: string;
+  icon: IconName;
+  /** Il livello del titolo nella pagina. Di norma 1 sulle pagine interne. */
+  level?: 1 | 2;
+}
+
+const { at, title, icon, level = 2 } = Astro.props;
+const Heading = `h${level}` as 'h1' | 'h2';
+---
+
+<Block at={at.title} class="section-header" clip>
+  <Heading class="t-display t-display--page section-header__title">{title}</Heading>
+</Block>
+
+<Block at={at.icon} class="icon-cell" clip>
+  <Icon name={icon} />
+</Block>

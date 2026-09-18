@@ -1,0 +1,59 @@
+---
+/**
+ * Un'icona lucide, inline nel markup.
+ *
+ * Inline e non `<img src>`: un'immagine esterna non e' animabile, e sette di
+ * queste icone hanno un'animazione. Nemmeno gli URL asset del Figma, che
+ * scadono in sette giorni.
+ *
+ * L'SVG mantiene le proprie `width` e `height` a 24: il contenitore e' fisso,
+ * mai `auto`, perche' un'icona che si ridimensiona da sola sposta il contenuto
+ * del blocco che la ospita.
+ */
+import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import type { IconName } from '../lib/icons';
+
+interface Props {
+  name: IconName;
+  /**
+   * Nome accessibile. Va messo solo quando l'icona e' l'unico contenuto di un
+   * comando e non c'e' testo a spiegarlo; altrimenti l'icona e' decorativa e
+   * ripeterla a voce e' rumore.
+   */
+  title?: string;
+  class?: string;
+}
+
+const { name, title, class: className } = Astro.props;
+
+const require = createRequire(import.meta.url);
+const iconsDir = join(dirname(require.resolve('lucide-static/package.json')), 'icons');
+
+let svg: string;
+try {
+  svg = readFileSync(join(iconsDir, `${name}.svg`), 'utf8');
+} catch {
+  throw new Error(`Icon: "${name}" non esiste in lucide-static. Aggiungerlo a src/lib/icons.ts non basta.`);
+}
+
+const attrs = [
+  `data-icon="${name}"`,
+  `class="icon${className ? ` ${className}` : ''}"`,
+  title ? 'role="img"' : 'aria-hidden="true"',
+  title ? '' : 'focusable="false"',
+]
+  .filter(Boolean)
+  .join(' ');
+
+const markup = svg
+  .replace(/<!--[\s\S]*?-->\s*/, '')
+  .replace(/\n\s+/g, ' ')
+  .replace(/\s*class="lucide[^"]*"/, '')
+  .replace('<svg', `<svg ${attrs}`)
+  .replace(/(<svg[^>]*>)/, title ? `$1<title>${title}</title>` : '$1')
+  .trim();
+---
+
+<Fragment set:html={markup} />
