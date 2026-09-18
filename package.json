@@ -9,7 +9,9 @@
     "preview": "wrangler dev",
     "check": "astro check",
     "deploy": "wrangler deploy",
-    "verify": "node scripts/verify-grid.mjs"
+    "verify": "npm run verify:grid && npm run verify:type",
+    "verify:type": "node scripts/verify-type.mjs",
+    "verify:grid": "node scripts/verify-grid.mjs"
   },
   "dependencies": {
     "astro": "^5.14.1",

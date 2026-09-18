@@ -1,25 +1,24 @@
 # Font
 
-## Presenti
+| File | Famiglia | Peso | Origine |
+|---|---|---|---|
+| `poppins-500.woff2` | Poppins | 500 | Google Fonts, sottoinsieme latino |
+| `poppins-700.woff2` | Poppins | 700 | Google Fonts, sottoinsieme latino |
+| `getai-black.woff2` | DT Getai Grotesk Display Black | 900 | licenza web del committente |
 
-- `poppins-500.woff2`, `poppins-700.woff2` — sottoinsieme latino, da Google Fonts.
-  Solo i due pesi che il Figma usa davvero: Medium per il testo di lettura,
-  Bold per titoli di blocco, etichette e link.
+Solo i pesi che il Figma usa davvero: Poppins Medium per il testo di lettura, Poppins Bold per
+titoli di blocco, etichette e link, Getai Black per i display.
 
-## Mancante
+## Se un font cambia
 
-- `getai-black.woff2` — **DT Getai Grotesk Display Black**.
-
-E' un font commerciale, non scaricabile. Serve il woff2 della licenza web.
-Finche' manca, `font-display: optional` fa cadere tutti i titoli sul fallback
-di sistema: il layout regge (le altezze dei blocchi sono in celle, non in
-righe di testo) ma il disegno non e' quello.
-
-Quando arriva, mettere il file qui e rigenerare le metriche del fallback:
+Ricalcolare gli override del fallback dal file reale e incollarli in `src/styles/type.css`:
 
 ```
-node scripts/font-metrics.mjs public/fonts/getai-black.woff2
+node scripts/font-metrics.mjs --match width public/fonts/poppins-500.woff2
+node scripts/font-metrics.mjs --match cap   public/fonts/getai-black.woff2
 ```
 
-e incollare il blocco stampato in `src/styles/type.css`, aggiungendo
-`'Getai Fallback'` allo stack di `--font-display` in `tokens.css` (c'e' gia').
+`--match width` per il testo di lettura, `--match cap` per i display. Il perche' e' in `NOTES.md` D21.
+
+Poi `npm run verify:type`, che controlla sia le altezze dei titoli contro i text node Figma, sia
+che il fallback resti dentro la propria cella quando il font definitivo non arriva.

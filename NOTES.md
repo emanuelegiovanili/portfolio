@@ -176,13 +176,47 @@ visibile riceve comunque una dichiarazione di `display` e il suo componente non 
 
 ### D20. Font
 - **Poppins**: self-hostato da Google Fonts, sottoinsieme **latino**, solo i pesi **500 e 700**, che
-  sono i due che il Figma usa. Il fallback metrico e' calcolato dai woff2 reali con
-  `scripts/font-metrics.mjs`, non stimato: senza, durante il caricamento il testo va a capo in un
-  punto diverso, i blocchi cambiano numero di righe e la griglia sembra rotta per mezzo secondo.
-  Il `size-adjust` del peso 700 e' calcolato contro Arial Regular e non Arial Bold, perche' Arial
-  Bold non e' misurabile da qui: e' un'approssimazione che riguarda solo il testo in grassetto
-  durante lo swap.
-- **DT Getai Grotesk Display**: manca, vedi B8.
+  sono i due che il Figma usa.
+- **DT Getai Grotesk Display Black**: fornito dal committente, 16 KB, 135 glifi, nessun carattere
+  mancante sul copy del sito. `unitsPerEm` 1000, **cap-height 740**.
+
+Il fallback metrico di entrambi e' calcolato dai woff2 reali con `scripts/font-metrics.mjs`, non
+stimato. Il `size-adjust` del peso 700 di Poppins e' calcolato contro Arial Regular e non Arial
+Bold, perche' Arial Bold non e' misurabile da qui.
+
+### D21. I due font si pareggiano su grandezze diverse
+`size-adjust` puo' pareggiare la larghezza media dei glifi **oppure** la cap-height, non entrambe.
+Quale conti dipende dal ruolo del font, e sbagliare non e' una sfumatura:
+
+- **Poppins** e' testo di lettura che va a capo davvero. Conta la **larghezza**: pareggiandola, il
+  numero di righe non cambia e il blocco di testo resta alto uguale. `size-adjust: 125.37%` per il
+  Medium, `130.33%` per il Bold.
+- **Getai** sta sotto `text-box-edge: cap alphabetic`, dove la scatola del titolo vale
+  `cap-height x font-size` e **nessun override CSS agisce sulla cap-height**: la puo' spostare solo
+  `size-adjust`. Pareggiando la larghezza (140,21%) la scatola di un titolo da 64px passerebbe da
+  47px a **64px** e il titolo sfonderebbe la propria cella. Pareggiando la cap-height (**103,31%**)
+  cambia invece dove va a capo, che su titoli brevi e quasi tutti `nowrap` si nota molto meno.
+
+`scripts/font-metrics.mjs --match cap|width` calcola l'uno o l'altro.
+
+### D22. La catena di `local()` nei fallback
+Gli override sono tarati su Arial, che non esiste ovunque. Il `src` elenca quindi
+`Arial, Helvetica Neue, Helvetica, Liberation Sans, Arimo`: Helvetica copre macOS, Liberation Sans e
+Arimo coprono Linux e hanno le stesse larghezze di avanzamento di Arial.
+
+Se il `src` non risolve **nessun** font, il `@font-face` e' invalido e gli override non vengono
+applicati affatto. E' il modo silenzioso in cui questa tecnica smette di funzionare, e nel primo
+giro e' successo davvero: con il solo `local('Arial')` il fallback misurava 41,91px invece di 47,36,
+cioe' il font di sistema nudo. `npm run verify:type` lo intercetta.
+
+### D23. `font-display: optional` per Getai, con preload
+`swap` sposterebbe i titoli a pagina gia' disegnata, e sotto `text-box-trim` lo spostamento sarebbe
+di parecchi pixel (vedi D21). `optional` non fa nessuno scambio a meta' strada: usa Getai se e'
+pronto al primo paint, altrimenti tiene il fallback per tutta la vita della pagina. CLS zero in
+entrambi i casi. Il `preload` in `Base.astro` fa partire la richiesta insieme all'HTML, cosi'
+"pronto al primo paint" e' il caso normale.
+
+Poppins resta su `swap`: li' il fallback e' pareggiato in larghezza e lo scambio non muove niente.
 
 ### Verifica
 `npm run verify` apre `/grid` in Chromium a 320 · 390 · 430 · 719 · 720 · 768 · 1024 · 1199 · 1200 ·
@@ -197,6 +231,21 @@ si vede comunque.
 Include 719/720 e 1199/1200 perche' il salto di tier e' il punto in cui il sistema ha piu'
 probabilita' di sbagliare.
 
+`npm run verify:type` verifica che i titoli display abbiano **esattamente** l'altezza dei text node
+Figma. Con `line-height: 1` e `text-box: trim-both cap alphabetic` la scatola vale
+`cap-height x font-size` per la prima riga piu' un `font-size` pieno per ogni riga successiva, e la
+cap-height di Getai e' 0,74em:
+
+| Nodo | Caso | Atteso (Figma) | Misurato |
+|---|---|---|---|
+| `310:1336` | "My work", 64px, 1 riga | 47 | 47,36 |
+| `266:1126` | "People with good taste", 64px, 2 righe | 111 | 111,36 |
+| `264:968` | "What's in the mix", 64px, 2 righe | 111 | 111,36 |
+| `266:1101` | hero, 204px, 2 righe | 355 | 354,95 |
+
+E' la conferma che `text-box-trim` e' davvero quello che il Figma applica: i quattro numeri vengono
+dai text node, non da una formula riscritta.
+
 ---
 
 ## 5. Blocchi aperti
@@ -210,5 +259,4 @@ probabilita' di sbagliare.
 | B5 | Stati hover e focus | Non progettati per nessun componente. Il disabilitato del Send e l'attivo del filtro invece esistono (§4.4, §4.5) |
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
-| B8 | **`getai-black.woff2`** | Font commerciale, non scaricabile. Finche' manca, `font-display: optional` fa cadere tutti i titoli sul fallback di sistema: il layout regge, il disegno no. Vedi `public/fonts/README.md` |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |

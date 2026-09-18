@@ -13,17 +13,14 @@
  */
 
 import { chromium } from 'playwright';
-import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { startDevServer, CHROMIUM } from './dev-server.mjs';
 
 const WIDTHS = [320, 390, 430, 719, 720, 768, 1024, 1199, 1200, 1280, 1440, 1680, 1920];
 const SCROLLS = ['top', 'middle', 'bottom'];
 const PATH = '/grid';
 const SHOT_DIR = '.verify';
-
-/** In questo ambiente playwright non trova il proprio Chromium: c'e' solo questo. */
-const EXECUTABLE = '/opt/pw-browsers/chromium';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -32,37 +29,12 @@ const value = (name, fallback) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 
-async function waitForServer(url, timeoutMs = 60_000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
-      if (res.ok) return;
-    } catch {
-      // il server non e' ancora su
-    }
-    await new Promise((r) => setTimeout(r, 300));
-  }
-  throw new Error(`il server non ha risposto entro ${timeoutMs}ms: ${url}`);
-}
-
-async function startDevServer() {
-  const port = 4331;
-  const child = spawn('npx', ['astro', 'dev', '--port', String(port), '--host', '127.0.0.1'], {
-    stdio: ['ignore', 'ignore', 'inherit'],
-    env: { ...process.env, INCLUDE_GRID: '1' },
-  });
-  const base = `http://127.0.0.1:${port}`;
-  await waitForServer(base + PATH);
-  return { base, stop: () => child.kill('SIGTERM') };
-}
-
 const explicitUrl = value('--url', null);
-const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await startDevServer();
+const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await startDevServer({ probePath: PATH });
 
 if (flag('--shots') && !existsSync(SHOT_DIR)) await mkdir(SHOT_DIR, { recursive: true });
 
-const browser = await chromium.launch({ executablePath: EXECUTABLE });
+const browser = await chromium.launch({ executablePath: CHROMIUM });
 const rows = [];
 let failures = 0;
 

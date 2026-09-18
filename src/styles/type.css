@@ -35,13 +35,20 @@
 /* Fallback metricamente allineato. Senza, durante il caricamento il testo va a
    capo in un punto diverso, i blocchi cambiano numero di righe e la griglia
    sembra rotta per mezzo secondo.
-   Valori calcolati dai woff2 reali: node scripts/font-metrics.mjs public/fonts/*.woff2 */
+   Valori calcolati dai woff2 reali: node scripts/font-metrics.mjs public/fonts/*.woff2
+
+   La catena di local() serve perche' gli override sono tarati su Arial, che non
+   esiste ovunque: Helvetica la sostituisce su macOS, Liberation Sans e Arimo su
+   Linux, entrambe con le stesse larghezze di avanzamento di Arial. Se il src
+   non risolve nessun font, il @font-face e' invalido e gli override non vengono
+   applicati affatto: e' il modo silenzioso in cui questa tecnica smette di
+   funzionare, ed e' quello che verifica scripts/verify-type.mjs. */
 
 @font-face {
   font-family: 'Poppins Fallback';
   font-style: normal;
   font-weight: 500;
-  src: local('Arial');
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica'), local('Liberation Sans'), local('Arimo');
   size-adjust: 125.37%;
   ascent-override: 83.75%;
   descent-override: 27.92%;
@@ -52,7 +59,7 @@
   font-family: 'Poppins Fallback';
   font-style: normal;
   font-weight: 700;
-  src: local('Arial');
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica'), local('Liberation Sans'), local('Arimo');
   size-adjust: 130.33%;
   ascent-override: 80.57%;
   descent-override: 26.86%;
@@ -61,16 +68,41 @@
 
 /* ---------- DT Getai Grotesk Display ---------- */
 
-/* Il file non e' ancora nel repo: vedi public/fonts/README.md. font-display:
-   optional e non swap perche' i titoli sono gli elementi piu' vincolati alla
-   griglia, e mostrarli mezzo secondo con le metriche sbagliate si vede piu' di
-   non mostrarli affatto. */
+/* font-display: optional, non swap. I titoli sono gli elementi piu' vincolati
+   alla griglia: con `swap` il passaggio dal fallback al font definitivo li
+   sposta a pagina gia' disegnata. Con `optional` il browser usa Getai se e'
+   pronto al primo paint e altrimenti tiene il fallback per tutta la pagina,
+   quindi nessuno scambio a meta' strada e CLS zero in entrambi i casi.
+   Il preload in Base.astro fa partire la richiesta insieme all'HTML, cosi'
+   "pronto al primo paint" e' il caso normale e non l'eccezione. */
 @font-face {
   font-family: 'DT Getai Grotesk Display';
   font-style: normal;
   font-weight: 900;
   font-display: optional;
   src: url('/fonts/getai-black.woff2') format('woff2');
+}
+
+/* Fallback allineato sulla CAP-HEIGHT, non sulla larghezza media.
+   Con `text-box-edge: cap alphabetic` la scatola di un titolo vale
+   cap-height x font-size, e nessun override CSS agisce sulla cap-height: la
+   puo' spostare solo size-adjust. Pareggiando la larghezza (140.21%) la
+   scatola di un titolo da 64px passerebbe da 47px a 64px e il titolo
+   sfonderebbe la propria cella. Pareggiando la cap-height (103.31%) cambia
+   invece dove va a capo, che su titoli brevi e quasi tutti nowrap si nota
+   molto meno.
+   Il contrario vale per Poppins, dove il testo di lettura va a capo davvero e
+   il numero di righe governa l'altezza del blocco: li' si pareggia la
+   larghezza. Vedi scripts/font-metrics.mjs --match. */
+@font-face {
+  font-family: 'Getai Fallback';
+  font-style: normal;
+  font-weight: 900;
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica'), local('Liberation Sans'), local('Arimo');
+  size-adjust: 103.31%;
+  ascent-override: 95.35%;
+  descent-override: 20.81%;
+  line-gap-override: 30.98%;
 }
 
 /* ---------- Ruoli display ---------- */
@@ -80,6 +112,13 @@
  * cap-height sulla linea di griglia invece della scatola di riga. Nel file e'
  * applicato in modo irregolare (manca su 299:311 e 300:433): qui e' uniforme,
  * vedi NOTES.md D10.
+ *
+ * line-height: 1 con trim-both cap alphabetic riproduce esattamente le altezze
+ * dei text node. La cap-height di Getai e' 740/1000 = 0.74em, quindi una riga
+ * sola misura 0.74 x font-size e ogni riga in piu' aggiunge font-size pieno:
+ *   64px  x1 riga  -> 47.4px   (310:1336 "My work" e' alto 47)
+ *   64px  x2 righe -> 111.4px  (266:1126 e 264:968 sono alti 111)
+ *   204px x2 righe -> 355.0px  (266:1101, l'hero, e' alto 355)
  */
 .t-display {
   font-family: var(--font-display);
