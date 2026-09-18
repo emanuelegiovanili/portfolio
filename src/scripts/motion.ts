@@ -17,6 +17,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { DURATION, EASE, SMOOTH } from '../motion/tokens';
+import { clearRules, traceRules } from '../motion/trace';
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
@@ -53,8 +54,9 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
  *
  * I bordi dei blocchi sono un caso a parte. Cadono sulla stessa linea di
  * griglia, ma il fondo del blocco e' al 50% e la smorza: il bordo serve a
- * riportarla piena. Non e' un `border`, che non si puo' accorciare, ma una
- * coppia di gradienti la cui lunghezza sta in `--rule-x` e `--rule-y`.
+ * riportarla piena. Non e' un `border`, che non si puo' accorciare, ma quattro
+ * gradienti percorsi da un tratto solo che gira attorno alla sagoma e si chiude
+ * dov'e' partito. Vedi `src/motion/trace.ts`.
  */
 function revealRules(): void {
   // Il megamenu ha la sua timeline, legata all'apertura e non allo scroll: la
@@ -68,7 +70,7 @@ function revealRules(): void {
 
   gsap.set(horizontals, { scaleX: 0, transformOrigin: 'left center' });
   gsap.set(verticals, { transformOrigin: 'center top' });
-  gsap.set(ruled, { '--rule-x': 0, '--rule-y': 0 });
+  clearRules(ruled);
 
   ScrollTrigger.batch(horizontals, {
     start: 'top bottom',
@@ -102,18 +104,17 @@ function revealRules(): void {
     },
   );
 
+  // Un giro per blocco, e non un tween solo su tutto il gruppo: la ripartizione
+  // fra i quattro lati dipende dalle misure di **quel** blocco.
   ScrollTrigger.batch(ruled, {
     start: 'top bottom',
     once: true,
     onEnter: (batch) =>
-      gsap.to(batch, {
-        '--rule-x': 1,
-        '--rule-y': 1,
-        duration: DURATION.rule,
-        ease: EASE.rule,
-        stagger: DURATION.ruleStagger,
-        overwrite: true,
-      }),
+      // `batch` arriva tipizzato come Element[]: gli elementi sono quelli di
+      // `ruled`, che e' una lista di HTMLElement.
+      (batch as HTMLElement[]).forEach((block, i) =>
+        traceRules(block, DURATION.rule, EASE.rule).delay(i * DURATION.ruleStagger),
+      ),
   });
 }
 

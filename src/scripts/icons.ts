@@ -226,31 +226,39 @@ function disc(svg: SVGElement): Controller {
 /**
  * Menu -> X, al click e non all'hover.
  *
- * Lo pilota `aria-expanded` sul bottone: uno stato solo, lo stesso che legge
- * uno screen reader, che non puo' desincronizzarsi da quello che si vede.
+ * Lo pilota `aria-expanded` sulla hamburger: uno stato solo, lo stesso che
+ * legge uno screen reader, che non puo' desincronizzarsi da quello che si vede.
+ *
+ * Le icone `menu` in pagina sono **due**: quella della hamburger e quella del
+ * bottone in alto a destra del megamenu, che occupa la stessa cella. Le due si
+ * danno il cambio nel momento in cui la tendina passa su quel quadrato, quindi
+ * devono trovarsi allo stesso punto del morph: una sorgente di stato sola,
+ * letta da tutte e due.
  *
  * Le due linee ruotano attorno ai due angoli destri del viewBox — (24,0) e
  * (24,24) — e non attorno al proprio centro: e' questo che da' al gesto il
  * carattere di una chiusura a forbice invece del solito incrocio.
  */
 function bindMenuMorph(): void {
-  for (const svg of document.querySelectorAll<SVGElement>('[data-icon="menu"]')) {
-    const button = svg.closest('button');
-    if (!button) continue;
+  const state = document.getElementById('menu-toggle');
+  if (!state) return;
 
-    const tl = menuMorph(svg);
-    const sync = () => {
-      const open = button.getAttribute('aria-expanded') === 'true';
+  const morphs = [...document.querySelectorAll<SVGElement>('[data-icon="menu"]')].map(menuMorph);
+  if (morphs.length === 0) return;
+
+  const sync = () => {
+    const open = state.getAttribute('aria-expanded') === 'true';
+    for (const tl of morphs) {
       // Sotto reduced motion il morph diventa uno scambio istantaneo: la forma
       // giusta c'e' comunque, e' il percorso che sparisce.
       if (reduced.matches) tl.progress(open ? 1 : 0).pause();
       else if (open) tl.play();
       else tl.reverse();
-    };
+    }
+  };
 
-    new MutationObserver(sync).observe(button, { attributes: true, attributeFilter: ['aria-expanded'] });
-    sync();
-  }
+  new MutationObserver(sync).observe(state, { attributes: true, attributeFilter: ['aria-expanded'] });
+  sync();
 }
 
 function menuMorph(svg: SVGElement): gsap.core.Timeline {

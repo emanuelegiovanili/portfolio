@@ -47,13 +47,23 @@ import { SITE_NAME } from '../lib/site';
           <span class="t-display t-display--button">Let’s work together</span>
         </Block>
 
+        {/*
+          L'icona e' `menu`, non `x`.
+
+          Questo bottone sta nella stessa cella della hamburger di pagina, e la
+          tendina entrando da destra lo scopre per primo: a schermo e' lo stesso
+          quadrato che non si e' mosso, con dentro la stessa icona che sta
+          diventando una X. Il morph lo pilota `aria-expanded` della hamburger,
+          che e' l'unico stato: le due icone non possono discordare.
+        */}
         <SquareButton
           at={megamenuMap.menuClose}
-          icon="x"
+          icon="menu"
           surface="bare"
           label="Chiudi il menu"
           class="menu-close"
           id="menu-close"
+          aria-controls="megamenu"
         />
 
         {

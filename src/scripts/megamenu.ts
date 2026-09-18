@@ -18,6 +18,7 @@
 import gsap from 'gsap';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { DURATION, EASE, MENU } from '../motion/tokens';
+import { clearRules, traceRules } from '../motion/trace';
 
 const menu = document.getElementById('megamenu');
 const toggle = document.getElementById('menu-toggle');
@@ -91,7 +92,19 @@ function wipe(menu: HTMLElement): gsap.core.Timeline {
   const panel = menu.querySelector<HTMLElement>('.megamenu__panel');
   const inner = menu.querySelector<HTMLElement>('.megamenu__inner');
   const blocks = gsap.utils.toArray<HTMLElement>('.block', menu);
+
+  /*
+   * Il bottone in alto a destra e' l'unica cosa che non cambia.
+   *
+   * Occupa la stessa cella della hamburger di pagina, e la tendina entrando da
+   * destra lo scopre per primo: resta li' dov'era, a opacita' piena dal primo
+   * fotogramma, mentre l'icona si trasforma in X. Tutto il resto della pagina
+   * viene coperto, lui no. Per questo e' fuori dalla dissolvenza.
+   */
+  const fading = blocks.filter((block) => !block.classList.contains('menu-close'));
   const ruled = blocks.filter((block) => block.dataset.surface === 'line');
+
+  clearRules(ruled);
 
   const tl = gsap.timeline({ paused: true, defaults: { ease: MENU.ease } });
 
@@ -100,24 +113,16 @@ function wipe(menu: HTMLElement): gsap.core.Timeline {
   tl.fromTo(inner, { xPercent: -100 }, { xPercent: 0, duration: MENU.wipe }, 0);
 
   tl.fromTo(
-    blocks,
+    fading,
     { opacity: 0 },
     { opacity: 1, duration: MENU.fade, stagger: MENU.stagger, ease: 'none' },
     MENU.contentAt,
   );
 
-  tl.fromTo(
-    ruled,
-    { '--rule-x': 0, '--rule-y': 0 },
-    {
-      '--rule-x': 1,
-      '--rule-y': 1,
-      duration: DURATION.rule,
-      ease: EASE.rule,
-      stagger: DURATION.ruleStagger,
-    },
-    MENU.contentAt,
-  );
+  // Un giro di filo per blocco, sfalsati come le linee di pagina.
+  ruled.forEach((block, i) => {
+    tl.add(traceRules(block, DURATION.rule, EASE.rule), MENU.contentAt + i * DURATION.ruleStagger);
+  });
 
   return tl;
 }

@@ -9,7 +9,14 @@
  *
  * Il terzo punto e' quello che conta: un'animazione che non si completa lascia
  * un bordo a meta' su una griglia a vista, e si vede da tre metri.
+ *
+ * Si guarda la griglia di **pagina**. Il megamenu ha la sua timeline, legata
+ * all'apertura e non allo scroll: a menu chiuso i suoi fili sono a zero per
+ * costruzione, ed e' giusto cosi'.
  */
+
+/** La griglia di pagina, che non e' quella del megamenu. */
+const PAGE_GRID = '.grid:not(.megamenu__grid)';
 
 import { chromium } from 'playwright';
 import { startDevServer, CHROMIUM } from './dev-server.mjs';
@@ -46,17 +53,25 @@ try {
   console.log('prefers-reduced-motion: reduce');
   {
     const { context, page, errors } = await open('reduce');
-    const state = await page.evaluate(() => {
-      const line = document.querySelector('.grid-line--h');
-      const block = document.querySelector('.block[data-surface="line"]');
+    const state = await page.evaluate((grid) => {
+      const line = document.querySelector(`${grid} .grid-line--h`);
+      const block = document.querySelector(`${grid} .block[data-surface="line"]`);
       return {
         transform: line ? getComputedStyle(line).transform : null,
-        ruleX: block ? getComputedStyle(block).getPropertyValue('--rule-x').trim() : null,
+        rules: block
+          ? ['--rule-t', '--rule-r', '--rule-b', '--rule-l'].map((n) =>
+              getComputedStyle(block).getPropertyValue(n).trim(),
+            )
+          : null,
         wrapperPosition: getComputedStyle(document.getElementById('smooth-wrapper')).position,
       };
-    });
+    }, PAGE_GRID);
     check('le linee sono intere', state.transform === 'none' || state.transform === 'matrix(1, 0, 0, 1, 0, 0)', state.transform ?? '');
-    check('i fili dei blocchi sono interi', state.ruleX === '1', state.ruleX ?? '');
+    check(
+      'i fili dei blocchi sono interi su tutti e quattro i lati',
+      state.rules?.every((v) => v === '1') === true,
+      (state.rules ?? []).join(' '),
+    );
     check('nessun wrapper fisso: lo scroll e\' del browser', state.wrapperPosition !== 'fixed', state.wrapperPosition);
     check('nessun errore in console', errors.length === 0, errors[0] ?? '');
     await context.close();
@@ -65,8 +80,8 @@ try {
   console.log('\nsenza preferenza');
   {
     const { context, page, errors } = await open('no-preference');
-    const before = await page.evaluate(() => {
-      const lines = [...document.querySelectorAll('.grid-line--h')].filter((l) => l.offsetHeight > 0);
+    const before = await page.evaluate((grid) => {
+      const lines = [...document.querySelectorAll(`${grid} .grid-line--h`)].filter((l) => l.offsetHeight > 0);
       const last = lines[lines.length - 1];
       const rect = last.getBoundingClientRect();
       return {
@@ -75,7 +90,7 @@ try {
         lastTop: rect.top,
         count: lines.length,
       };
-    });
+    }, PAGE_GRID);
     check('ScrollSmoother attivo', before.smootherActive);
     check(
       'l\'ultima linea parte corta',
@@ -87,27 +102,38 @@ try {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(2500);
 
-    const after = await page.evaluate(() => {
-      const lines = [...document.querySelectorAll('.grid-line--h')].filter((l) => l.offsetHeight > 0);
+    const after = await page.evaluate((sel) => {
+      const lines = [...document.querySelectorAll(`${sel} .grid-line--h`)].filter((l) => l.offsetHeight > 0);
       const widths = lines.map((l) => l.getBoundingClientRect().width);
-      const grid = document.querySelector('.grid');
+      const grid = document.querySelector(sel);
       const full = grid.getBoundingClientRect().width;
-      const blocks = [...document.querySelectorAll('.block[data-surface="line"]')];
-      const rules = blocks.map((b) => Number.parseFloat(getComputedStyle(b).getPropertyValue('--rule-x')));
-      const verticals = [...document.querySelectorAll('.grid-line--v')].filter((l) => l.offsetWidth > 0);
+      const blocks = [...document.querySelectorAll(`${sel} .block[data-surface="line"]`)];
+      // Tutti e quattro i lati: il filo gira, e un giro che si ferma a tre quarti
+      // lascia un lato scoperto proprio dove l'occhio lo cerca.
+      const rules = blocks.flatMap((b) => {
+        const cs = getComputedStyle(b);
+        return ['--rule-t', '--rule-r', '--rule-b', '--rule-l'].map((n) =>
+          Number.parseFloat(cs.getPropertyValue(n)),
+        );
+      });
+      const verticals = [...document.querySelectorAll(`${sel} .grid-line--v`)].filter((l) => l.offsetWidth > 0);
       const vScale = verticals.map((v) => v.getBoundingClientRect().height / v.offsetHeight);
       return {
         shortest: Math.min(...widths) / full,
         minRule: Math.min(...rules),
         minVertical: Math.min(...vScale),
       };
-    });
+    }, PAGE_GRID);
     check(
       'tutte le orizzontali sono arrivate a fondo corsa',
       after.shortest > 0.99,
       `la piu' corta e' al ${(after.shortest * 100).toFixed(1)}%`,
     );
-    check('tutti i fili dei blocchi sono interi', after.minRule > 0.99, `il piu' corto e' ${after.minRule.toFixed(3)}`);
+    check(
+      'tutti i fili dei blocchi hanno chiuso il giro',
+      after.minRule > 0.99,
+      `il lato piu' corto e' a ${after.minRule.toFixed(3)}`,
+    );
     check(
       'le verticali arrivano in fondo alla pagina',
       after.minVertical > 0.99,

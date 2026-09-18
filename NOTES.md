@@ -711,6 +711,56 @@ come ripiego per chi stesse fuori da una griglia.
 | `recipe-card`, `playlist` (`/about`) | +12h, +3h | spariti |
 
 
+### D56. Il filo gira attorno alla sagoma, non si gonfia
+Prima erano due variabili, `--rule-x` e `--rule-y`: i quattro lati crescevano **insieme**, i due
+orizzontali da sinistra e i due verticali dall'alto. Vista da fuori non era una linea che si
+disegnava, era una cornice che si apriva a ventaglio da due angoli.
+
+Ora le variabili sono quattro — `--rule-t`, `--rule-r`, `--rule-b`, `--rule-l` — e ciascun lato e'
+ancorato all'angolo da cui il tratto **arriva**: alto a sinistra, destro in alto, basso a destra,
+sinistro in basso. Il filo parte dall'angolo in alto a sinistra, gira in senso orario e si chiude
+dov'era partito. E' un trim path fatto con quattro gradienti invece che con un `stroke-dashoffset`.
+
+**Perche' non un `<svg><rect>` con `stroke-dasharray`**, che sarebbe la via ovvia: lo stroke di un
+SVG e' centrato sul tracciato, quindi mezzo pixel cadrebbe fuori dalla scatola e mezzo dentro, e il
+bordo non starebbe piu' dove sta la linea di griglia. Rientrarci vorrebbe dire un `viewBox` in
+pixel, cioe' misurare ogni blocco in JavaScript e rimisurarlo a ogni resize. I gradienti stanno gia'
+esattamente sul border box, ed e' quello che `verify:grid` misura a 0,0000px.
+
+**L'avanzamento e' uno solo**, da 0 a 1 sul perimetro, ripartito fra i quattro lati in proporzione
+alla loro lunghezza (`src/motion/trace.ts`). Quattro tween in sequenza avrebbero percorso un lato da
+120px e uno da 960px nello stesso tempo, e ogni angolo sarebbe stato uno scatto: con un avanzamento
+solo la velocita' e' costante lungo il giro e l'ease vale sul giro intero.
+
+Le misure si prendono alla partenza e non alla costruzione, perche' il megamenu costruisce la
+propria timeline al caricamento della pagina e si apre molto dopo.
+
+### D57. Il bottone del menu e' l'unica cosa che non cambia
+Richiesta del committente. La tendina entra da destra, quindi il **primo** quadrato che scopre e'
+proprio quello in alto a destra, dove sta la hamburger: a 1440 la cella e' la stessa, colonna 12
+riga 1, sia nella griglia di pagina sia in quella del menu.
+
+Tre conseguenze:
+
+1. Il bottone del megamenu porta l'icona `menu`, non `x`. La X e' il punto d'arrivo del morph, non
+   un'icona diversa.
+2. Quel blocco e' **fuori dalla dissolvenza** dei blocchi: e' a opacita' piena dal primo fotogramma.
+   Tutto il resto della pagina viene coperto, lui resta.
+3. Le due icone `menu` in pagina — quella della hamburger e quella del menu — sono pilotate dalla
+   **stessa** sorgente di stato, l'`aria-expanded` della hamburger. Si danno il cambio nell'istante
+   in cui il bordo della tendina attraversa quel quadrato, quindi devono trovarsi allo stesso punto
+   del morph: due timeline indipendenti si sarebbero sfasate di qualche fotogramma e si sarebbe
+   visto un salto.
+
+Misurato: la tendina scopre la dodicesima colonna a circa 0,19s su 0,7, mentre il morph (0,45s) e'
+ancora in corso. Quel che si vede e' un quadrato che non si muove, con dentro un'icona che si sta
+trasformando, e il resto dello schermo che diventa nero attorno.
+
+Sotto i 1200 le due celle non coincidono per larghezza — la pagina ha dieci colonne, il menu dodici
+— ma stanno tutte e due all'estremita' destra della prima riga, quindi il gesto regge. E' un altro
+effetto di B2.
+
+
 ---
 
 ## 5. Blocchi aperti

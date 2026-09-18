@@ -36,20 +36,38 @@
 }
 
 /*
- * Quanto sono lunghi i due fili del blocco, da 0 a 1.
+ * Quanto e' disegnato ciascuno dei quattro lati del blocco, da 0 a 1.
+ *
+ * Quattro e non due perche' il filo **gira**: parte dall'angolo in alto a
+ * sinistra, corre lungo l'alto, scende a destra, torna indietro lungo il basso
+ * e risale a sinistra fino a chiudersi dov'era partito. Con due sole variabili
+ * i quattro lati crescevano insieme da due origini, e non era un tratto: era
+ * una cornice che si gonfiava.
  *
  * Registrate come numeri perche' GSAP possa interpolarle: una custom property
- * non registrata e' una stringa, e una stringa non si anima. Il valore
- * iniziale e' 1, cioe' filo intero: senza JavaScript la pagina resta quella di
- * sempre, ed e' l'animazione ad accorciarli prima di ridisegnarli.
+ * non registrata e' una stringa, e una stringa non si anima. Il valore iniziale
+ * e' 1, cioe' filo intero: senza JavaScript la pagina resta quella di sempre,
+ * ed e' l'animazione ad accorciarli prima di ridisegnarli.
  */
-@property --rule-x {
+@property --rule-t {
   syntax: '<number>';
   inherits: false;
   initial-value: 1;
 }
 
-@property --rule-y {
+@property --rule-r {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+@property --rule-b {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+@property --rule-l {
   syntax: '<number>';
   inherits: false;
   initial-value: 1;
@@ -252,7 +270,7 @@
 /* ---------- Il bordo dei blocchi ---------- */
 
 /*
- * Il blocco disegna tutti e quattro i fili, in --dark-grey.
+ * Il blocco disegna tutti e quattro i fili, in --rule-color.
  *
  * Fino alla Fase 4 ne disegnava due, alto e sinistro, perche' linee e bordi
  * erano dello stesso colore e gli altri due lati poteva prestarli la griglia.
@@ -265,7 +283,13 @@
  * trasparenti per tenere il modello di scatola, e `background-origin:
  * border-box` fa partire i gradienti esattamente dove starebbero.
  *
- * Il valore iniziale di --rule-x e --rule-y e' 1: senza JavaScript i fili sono
+ * L'ancoraggio di ciascun lato e' l'angolo da cui il tratto **arriva**, non un
+ * angolo qualsiasi: alto ancorato a sinistra, destro in alto, basso a destra,
+ * sinistro in basso. Cosi' i quattro segmenti si susseguono in senso orario e
+ * il filo si chiude dove e' partito. Cambiare uno di questi quattro valori
+ * spezza il giro e lo fa ripartire da un'altra parte.
+ *
+ * Il valore iniziale delle quattro variabili e' 1: senza JavaScript i fili sono
  * interi.
  */
 .block[data-surface='line'] {
@@ -279,16 +303,17 @@
   background-origin: border-box;
   background-clip: border-box;
   background-repeat: no-repeat;
+  /*        alto        destro      basso         sinistro */
   background-position:
     left top,
-    left bottom,
-    left top,
-    right top;
+    right top,
+    right bottom,
+    left bottom;
   background-size:
-    calc(100% * var(--rule-x)) var(--line),
-    calc(100% * var(--rule-x)) var(--line),
-    var(--line) calc(100% * var(--rule-y)),
-    var(--line) calc(100% * var(--rule-y));
+    calc(100% * var(--rule-t)) var(--line),
+    var(--line) calc(100% * var(--rule-r)),
+    calc(100% * var(--rule-b)) var(--line),
+    var(--line) calc(100% * var(--rule-l));
 }
 
 .block[data-surface='accent'] {
