@@ -32,6 +32,16 @@ export interface GridProbeResult {
   overflowing: Overflow[];
   /** Gli sfori gia' presenti nel Figma, dichiarati sul blocco con `data-known-overflow`. */
   known: Overflow[];
+  /**
+   * Blocchi che non sono figli diretti della griglia.
+   *
+   * Un `.block` annidato dentro un contenitore flex non e' un elemento di
+   * griglia: le sue custom property di posizione non fanno niente e la sua
+   * larghezza la decide il flex, che della griglia non sa nulla. E' cosi' che
+   * il quadrato accanto a "Discover more" finiva due pixel fuori. Non e' una
+   * questione di misura, e' un errore di struttura, quindi si conta a parte.
+   */
+  misplaced: string[];
   tolerance: number;
 }
 
@@ -123,10 +133,11 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
   const overflowing: Overflow[] = [];
   const known: Overflow[] = [];
 
-  // Solo i figli diretti: un blocco annidato dentro un contenitore flex non e'
-  // un elemento di griglia, la sua posizione la decide il flex e confrontarla
-  // con le linee non vuol dire niente.
-  const blocks = [...grid.querySelectorAll(':scope > .block')].filter(isVisible);
+  const all = [...grid.querySelectorAll('.block')];
+  const blocks = all.filter((el) => el.parentElement === grid).filter(isVisible);
+  const misplaced = all
+    .filter((el) => el.parentElement !== grid && isVisible(el))
+    .map((el, i) => labelOf(el, i));
   blocks.forEach((block, i) => {
     const rect = block.getBoundingClientRect();
     const name = labelOf(block, i);
@@ -177,6 +188,7 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
     worst,
     overflowing,
     known,
+    misplaced,
     tolerance: TOLERANCE,
   };
 }

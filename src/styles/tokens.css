@@ -12,12 +12,19 @@
   --off-white: #f7f6f9;
   --dark-grey: #504d5c;
   --light-grey: #b0adb9;
+  /* Il grigio delle linee di griglia. Non e' nell'elenco stili del file, ma e'
+     disegnato dentro l'asset della copertina Spotify (301:522), che porta la
+     griglia di pagina al proprio interno. grid-system-handoff §3 dava
+     --dark-grey anche per le linee: sbagliato, e con un colore solo la griglia
+     e i componenti si confondevano. */
+  --grid-line: #d8d6dd;
 
   /* Griglia. --cols vive su .grid, perche' una pagina disegnata solo a
      desktop tiene le sue dodici colonne anche sotto i 1200. */
   --grid-max: 1680px;
   --line: 1px;
-  --line-color: var(--dark-grey);
+  /* Le linee della griglia. I bordi dei componenti usano --dark-grey. */
+  --line-color: var(--grid-line);
 
   /* Superfici. Il fondo dei blocchi e' al 50% su tutto il sito per decisione
      del committente (NOTES.md D1): nel Figma e' misto. I blocchi viola

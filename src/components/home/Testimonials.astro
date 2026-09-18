@@ -18,7 +18,7 @@ import type { BlockPlacements } from '../../lib/layout';
 import type { Testimonial } from '../../data/testimonials';
 
 interface Props {
-  at: { row: BlockPlacements; details: BlockPlacements; nav?: BlockPlacements };
+  at: { row: BlockPlacements; details: BlockPlacements; prev?: BlockPlacements; next?: BlockPlacements };
   items: Testimonial[];
 }
 
@@ -64,11 +64,5 @@ const shown = items[active];
   </div>
 </Block>
 
-{
-  at.nav && (
-    <Block at={at.nav} class="testimonials-nav" surface="bare">
-      <SquareButton at={at.nav} icon="chevron-left" label="Testimonianza precedente" data-testimonial-prev />
-      <SquareButton at={at.nav} icon="chevron-right" label="Testimonianza successiva" data-testimonial-next />
-    </Block>
-  )
-}
+{at.prev && <SquareButton at={at.prev} icon="chevron-left" label="Testimonianza precedente" data-testimonial-prev />}
+{at.next && <SquareButton at={at.next} icon="chevron-right" label="Testimonianza successiva" data-testimonial-next />}

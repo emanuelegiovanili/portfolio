@@ -18,6 +18,7 @@
     <dt>righe</dt><dd id="r-rows">—</dd>
     <dt>scarto max</dt><dd id="r-drift">—</dd>
     <dt>blocchi che sforano</dt><dd id="r-overflow">—</dd>
+    <dt>fuori griglia</dt><dd id="r-misplaced">—</dd>
   </dl>
   <div class="actions">
     <button type="button" id="toggle-lines">linee</button>
@@ -118,7 +119,9 @@
     out('r-rows', String(r.rows));
     out('r-drift', `${r.maxDrift.toFixed(4)}px`, r.maxDrift <= r.tolerance ? 'good' : 'bad');
     out('r-overflow', String(r.overflowing.length), r.overflowing.length === 0 ? 'good' : 'bad');
+    out('r-misplaced', String(r.misplaced.length), r.misplaced.length === 0 ? 'good' : 'bad');
     if (r.overflowing.length) console.warn('blocchi che sforano', r.overflowing);
+    if (r.misplaced.length) console.warn('blocchi fuori dalla griglia', r.misplaced);
   }
 
   refresh();

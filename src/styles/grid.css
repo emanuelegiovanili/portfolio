@@ -221,44 +221,45 @@
 /* ---------- Il bordo dei blocchi ---------- */
 
 /*
- * Il blocco disegna solo il lato alto e il lato sinistro. Il lato basso e il
- * lato destro sono la linea di griglia successiva, che cade esattamente li'.
+ * Il blocco disegna tutti e quattro i fili, in --dark-grey.
  *
- * Il motivo e' che un border in CSS sta dentro la scatola. Se un blocco alle
- * colonne 3-5 disegnasse anche il bordo destro, quel bordo occuperebbe
- * l'ultimo pixel *dentro* la colonna 5, mentre la linea della colonna 6 occupa
- * il primo pixel *dentro* la colonna 6: due pixel scuri adiacenti invece di
- * uno. Il bordo alto e sinistro invece cade sullo stesso pixel della linea e
- * ci si sovrappone senza ispessirla.
+ * Fino alla Fase 4 ne disegnava due, alto e sinistro, perche' linee e bordi
+ * erano dello stesso colore e gli altri due lati poteva prestarli la griglia.
+ * Con la griglia in --grid-line, che e' molto piu' chiaro, quel prestito non
+ * regge piu': un blocco con due lati scuri e due chiari e' sbilenco. Ora e'
+ * quello che fa il Figma, `border: 1px solid #504D5C` su tutti e quattro.
  *
- * Questo vale finche' le linee stanno anche sui bordi del contenitore (D3),
- * perche' e' quello che garantisce che una linea esista sempre a destra e
- * sotto l'ultimo blocco.
+ * Non sono `border` ma gradienti, perche' un border non si puo' accorciare e
+ * questi fili si disegnano allo scroll. I bordi restano dichiarati e
+ * trasparenti per tenere il modello di scatola, e `background-origin:
+ * border-box` fa partire i gradienti esattamente dove starebbero.
+ *
+ * Il valore iniziale di --rule-x e --rule-y e' 1: senza JavaScript i fili sono
+ * interi.
  */
 .block[data-surface='line'] {
-  /* I due bordi restano nel modello di scatola ma trasparenti: il filo visibile
-     lo disegnano due gradienti, che a differenza di un border si possono
-     accorciare. `background-origin: border-box` li fa partire dall'angolo del
-     bordo, cioe' esattamente dove stava il border. */
-  border-top: var(--line) solid transparent;
-  border-left: var(--line) solid transparent;
+  border: var(--line) solid transparent;
   background-color: var(--block-bg);
   background-image:
-    linear-gradient(var(--line-color), var(--line-color)),
-    linear-gradient(var(--line-color), var(--line-color));
+    linear-gradient(var(--dark-grey), var(--dark-grey)),
+    linear-gradient(var(--dark-grey), var(--dark-grey)),
+    linear-gradient(var(--dark-grey), var(--dark-grey)),
+    linear-gradient(var(--dark-grey), var(--dark-grey));
   background-origin: border-box;
   background-clip: border-box;
   background-repeat: no-repeat;
   background-position:
-    0 0,
-    0 0;
+    left top,
+    left bottom,
+    left top,
+    right top;
   background-size:
     calc(100% * var(--rule-x)) var(--line),
+    calc(100% * var(--rule-x)) var(--line),
+    var(--line) calc(100% * var(--rule-y)),
     var(--line) calc(100% * var(--rule-y));
 }
 
-/* I blocchi viola non hanno bordo: coprono la linea e non la rimpiazzano.
-   E' quello che fa il Figma, verificato su Primary-button-2x1. */
 .block[data-surface='accent'] {
   background: var(--accent-bg);
   color: var(--accent-fg);

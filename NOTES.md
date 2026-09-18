@@ -135,6 +135,9 @@ con `1fr` le colonne si dividono la larghezza reale, e basta una scrollbar o un 
 smettano di valere `100cqw / --cols`.
 
 ### D16. Il blocco disegna solo il filo alto e sinistro
+> **Superata da D44 e D45.** Valeva finche' le linee di griglia e i bordi dei componenti erano dello
+> stesso colore. Il ragionamento sul modello di scatola resta valido e spiega perche' i fili non
+> sono `border`.
 Un `border` in CSS sta **dentro** la scatola. Se un blocco alle colonne 3-5 disegnasse anche il
 bordo destro, quel bordo occuperebbe l'ultimo pixel dentro la colonna 5, mentre la linea della
 colonna 6 occupa il primo pixel dentro la colonna 6: **due pixel scuri adiacenti invece di uno**.
@@ -504,6 +507,68 @@ prima di ridisegnarli.
 `verify:grid` continua a passare con il movimento attivo, e non e' un caso: le orizzontali si
 scalano dal lato sinistro e le verticali dall'alto, quindi il bordo che la sonda legge non si
 sposta mai.
+
+---
+
+## 10. Correzioni dopo la prima revisione
+
+### D44. Due grigi, non uno
+`grid-system-handoff` §3 dava `--line-color: var(--dark-grey)`, cioe' **#504D5C anche per le linee
+di griglia**. E' sbagliato, e con un colore solo la griglia e i componenti si confondevano: non si
+distingueva piu' un bordo di blocco da una linea di fondo.
+
+I valori corretti, indicati dal committente:
+
+| Ruolo | Colore |
+|---|---|
+| Linee di griglia | **#D8D6DD** |
+| Bordi dei componenti | **#504D5C** |
+
+Il primo non compare nell'elenco stili che il Figma restituisce, ma e' disegnato **dentro l'asset
+della copertina Spotify** (`301:522`), che si porta dietro la griglia di pagina: sedici `<line>` in
+`#D8D6DD`. E' la prova che il colore delle linee e' quello, ed e' anche il motivo per cui da
+quell'SVG la griglia era stata tolta (vedi `src/assets/README.md`).
+
+### D45. Il blocco disegna tutti e quattro i fili
+Conseguenza diretta di D44. Finche' linee e bordi erano dello stesso colore, il blocco poteva
+disegnare solo il filo alto e sinistro e prendere in prestito dalla griglia gli altri due. Con la
+griglia molto piu' chiara quel prestito non regge: un blocco con due lati scuri e due chiari e'
+sbilenco.
+
+Ora sono quattro, come nel Figma (`border: 1px solid #504D5C`). Restano gradienti e non `border`
+per il motivo di D16: un border non si puo' accorciare, e questi fili si disegnano allo scroll.
+
+Due blocchi adiacenti producono quindi 2px di scuro, esattamente come nel file, dove ogni componente
+ha il proprio bordo interno.
+
+### D46. Un `.block` che non e' figlio della griglia e' rotto per costruzione
+Il quadrato accanto a "Discover more" era annidato in un contenitore flex insieme al bottone
+primario. Le sue custom property di posizione non facevano niente, la larghezza la decideva il flex,
+e il flex non sa niente della griglia: la riga era larga quanto il **contenuto** del blocco che la
+ospitava, cioe' due pixel meno del blocco, e il confine fra i due bottoni cadeva fuori colonna.
+
+Nel Figma sono annidati davvero (`257:818` sta dentro `255:762`), ma geometricamente stanno su
+colonne intere. Qui sono blocchi a se':
+
+| | base | md | lg |
+|---|---|---|---|
+| Quadrato profilo | `[3,15,2,2]` | `[5,10,1,1]` | `[9,5,1,1]` |
+| "Discover more" | `[5,15,5,2]` | `[6,10,4,1]` | `[10,5,2,1]` |
+
+Stessa cosa per le frecce dei testimonial, che erano figlie di un blocco `Testimonials Navigation`
+e ora sono due celle alle colonne 10 e 11.
+
+**La sonda ora conta i blocchi che non sono figli diretti della griglia e li fa fallire a qualunque
+larghezza.** Non e' una questione di misura, e' un errore di struttura: non dipende dal disegno,
+dipende da dove sta il blocco nel markup. Con il controllo attivo, sulle sette route non ne resta
+nessuno.
+
+Nello stesso giro il titolo della card progetto e' passato da larghezza-del-testo a un numero intero
+di celle (sei a base, quattro a md, tre a lg): con `white-space: nowrap` il suo bordo destro cadeva
+dove finiva la parola invece che su una colonna.
+
+### D47. Inerzia dello scroll a 0,8s
+Era 0,9. Sta in `src/motion/tokens.ts`.
 
 ---
 

@@ -64,16 +64,10 @@ const SKILLS = [
         Based in San Benedetto del Tronto, Italy<br />Working remotely
       </p>
 
-      <div class="hero-desc__actions">
-        <SquareButton
-          at={homeBlocks.heroDescription}
-          variant="profile"
-          label="Scopri chi sono"
-          href="/about"
-        />
-        <PrimaryButton at={homeBlocks.heroDescription} label="Discover more" href="#about" />
-      </div>
     </Block>
+
+    <SquareButton at={homeBlocks.heroProfile} variant="profile" label="Scopri chi sono" href="/about" />
+    <PrimaryButton at={homeBlocks.heroDiscover} label="Discover more" href="#about" />
 
     <Block at={homeBlocks.marquee} surface="bare" class="marquee" data-bleed>
       <div class="marquee__bleed">
@@ -147,7 +141,8 @@ const SKILLS = [
       at={{
         row: homeBlocks.testimonialsRow,
         details: homeBlocks.testimonialsContainer,
-        nav: homeBlocks.testimonialsNav,
+        prev: homeBlocks.testimonialsPrev,
+        next: homeBlocks.testimonialsNext,
       }}
       items={TESTIMONIALS}
     />

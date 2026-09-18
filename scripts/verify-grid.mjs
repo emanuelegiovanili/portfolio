@@ -106,7 +106,12 @@ try {
       // disegno con cui confrontarsi. L'allineamento delle linee invece deve
       // reggere ovunque, e resta un errore.
       const belowDesign = width < SMALLEST_DESIGNED_WIDTH || (DESKTOP_ONLY.includes(route) && width < 1200);
-      const ok = result.maxDrift <= result.tolerance && (belowDesign || result.overflowing.length === 0);
+      // Un blocco fuori dalla griglia e' sempre un errore, a qualunque larghezza:
+      // non dipende dal disegno, dipende da dove sta nel markup.
+      const ok =
+        result.maxDrift <= result.tolerance &&
+        result.misplaced.length === 0 &&
+        (belowDesign || result.overflowing.length === 0);
       if (!ok) failures += 1;
       rows.push({ route, width, where, ...result, ok, belowDesign, errors: errors.length });
 
@@ -147,7 +152,8 @@ for (const r of rows) {
         ? r.belowDesign && r.overflowing.length > 0
           ? `ok (sotto ${SMALLEST_DESIGNED_WIDTH}: ${r.overflowing.map((o) => o.block).join(', ')})`
           : 'ok'
-        : `FALLITO ${r.worst ? `(${r.worst.block} ${r.worst.edge} ${r.worst.delta.toFixed(3)}px)` : ''}` +
+        : `FALLITO ${r.misplaced.length ? `fuori griglia: ${r.misplaced.join(', ')} · ` : ''}` +
+          `${r.worst && r.maxDrift > r.tolerance ? `(${r.worst.block} ${r.worst.edge} ${r.worst.delta.toFixed(3)}px)` : ''}` +
           (r.overflowing.length
             ? ` sfora: ${r.overflowing.map((o) => `${o.block} ${o.dx ? `+${o.dx}w` : ''}${o.dy ? `+${o.dy}h` : ''}`).join(', ')}`
             : '')),

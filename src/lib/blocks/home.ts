@@ -17,6 +17,11 @@ export const HOME_FOOTER_ROWS = { base: 100, md: 62, lg: 41 };
 export const homeBlocks = {
   heroText: { base: [2, 4, 8, 4], md: [2, 3, 6, 4], lg: [2, 2, 7, 4] },
   heroDescription: { base: [3, 8, 7, 9], md: [5, 7, 5, 4], lg: [9, 3, 3, 3] },
+  // L'ultima riga del blocco descrizione: il quadrato e il bottone primario.
+  // Sono blocchi a se' e non figli in flex, cosi' cadono sulle colonne invece
+  // che sui bordi interni del blocco che li ospita (257:818, 321:2785, 314:2298).
+  heroProfile: { base: [3, 15, 2, 2], md: [5, 10, 1, 1], lg: [9, 5, 1, 1] },
+  heroDiscover: { base: [5, 15, 5, 2], md: [6, 10, 4, 1], lg: [10, 5, 2, 1] },
 
   // A md il marquee e' largo 1440 su una viewport da 767: sfora di proposito da
   // entrambi i lati. Il committente ha deciso il full bleed a tutti i tier
@@ -46,7 +51,9 @@ export const homeBlocks = {
   // span resta quello della griglia mentre il contenitore sborda. Vedi D32.
   testimonialsRow: { base: [2, 61, 8, 2], md: [2, 40, 8, 1], lg: [2, 27, 8, 1] },
   testimonialsContainer: { base: [2, 63, 8, 10], md: [2, 41, 8, 4], lg: [2, 28, 10, 3] },
-  testimonialsNav: { lg: [2, 31, 10, 1] },
+  // 266:1178 e 266:1181: due celle in fondo a destra della riga di navigazione.
+  testimonialsPrev: { lg: [10, 31, 1, 1] },
+  testimonialsNext: { lg: [11, 31, 1, 1] },
 
   contactForm: { base: [2, 80, 8, 16], md: [3, 51, 7, 8], lg: [3, 33, 5, 6] },
   contactCta: { base: [2, 75, 7, 5], md: [2, 47, 6, 5], lg: [8, 34, 4, 3] },
