@@ -85,3 +85,53 @@ export const FOOTER_LINKS = [
   { key: 'footerLinkedin', label: 'LinkedIn', href: SOCIAL.linkedin, external: true },
   { key: 'footerInstagram', label: 'Instagram', href: SOCIAL.instagram, external: true },
 ] as const;
+
+/* ---------- Megamenu ---------- */
+
+/**
+ * Megamenu (268:1498).
+ *
+ * Il frame e' 1440x840: dodici colonne da 120 e sette righe, ma la settima e'
+ * vuota. Qui le righe sono sei e il nero del pannello copre da solo il resto
+ * della finestra, che e' esattamente cio' che si vede nel file.
+ *
+ * Esiste solo a lg. Come le quattro pagine interne tiene le dodici colonne a
+ * ogni larghezza (NOTES.md B2): sotto i 1200 diventa un desktop rimpicciolito.
+ * Sul telefono e' l'unica navigazione a schermo insieme al footer, quindi la
+ * cosa e' segnalata e non nascosta (B15).
+ *
+ *   logo    x=0    y=0    480x120   -> 1,1 span 4x1
+ *   cta     x=840  y=0    480x120   -> 8,1 span 4x1
+ *   chiudi  x=1320 y=0    120x120   -> 12,1 span 1x1
+ *   Work    x=120  y=120  1200x240  -> 2,2 span 10x2
+ *   About   x=120  y=360  1200x240  -> 2,4 span 10x2
+ *   LinkedIn  x=840  y=600 240x120  -> 8,6 span 2x1
+ *   Instagram x=1080 y=600 240x120  -> 10,6 span 2x1
+ */
+export const megamenuMap = {
+  menuLogo: { lg: [1, 1, 4, 1] },
+  menuCta: { lg: [8, 1, 4, 1] },
+  menuClose: { lg: [12, 1, 1, 1] },
+  menuWork: { lg: [2, 2, 10, 2] },
+  menuAbout: { lg: [2, 4, 10, 2] },
+  menuLinkedin: { lg: [8, 6, 2, 1] },
+  menuInstagram: { lg: [10, 6, 2, 1] },
+} as const satisfies LayoutMap;
+
+/**
+ * Le due voci del megamenu.
+ *
+ * Il file scrive "Work" al singolare qui e "Works" al plurale nel footer, per
+ * la stessa pagina. Le copie si riproducono come stanno (NOTES.md B7).
+ * Manca "Home": non la aggiungo, il logo in alto a sinistra porta li'.
+ */
+export const MENU_LINKS = [
+  { key: 'menuWork', label: 'Work', href: '/works' },
+  { key: 'menuAbout', label: 'About', href: '/about' },
+] as const;
+
+/** I due social del megamenu, nell'ordine del file. */
+export const MENU_SOCIALS = [
+  { key: 'menuLinkedin', label: 'LinkedIn', href: SOCIAL.linkedin },
+  { key: 'menuInstagram', label: 'Instagram', href: SOCIAL.instagram },
+] as const;

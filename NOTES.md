@@ -572,11 +572,152 @@ Era 0,9. Sta in `src/motion/tokens.ts`.
 
 ---
 
+## 11. Fase 5 — il megamenu
+
+Il frame e' `268:1498`, 1440x840: dodici colonne da 120 e **sette** righe, l'ultima vuota. Qui le
+righe sono sei e il nero del pannello copre da solo il resto della finestra. A schermo e' identico,
+e una riga vuota dichiarata sarebbe una riga che qualcuno un giorno prova a riempire.
+
+| Blocco | Figma | Posizione |
+|---|---|---|
+| Logo | x=0 y=0 480x120 | `[1,1,4,1]` |
+| Let's work together | x=840 y=0 480x120 | `[8,1,4,1]` |
+| Chiudi | x=1320 y=0 120x120 | `[12,1,1,1]` |
+| Work | x=120 y=120 1200x240 | `[2,2,10,2]` |
+| About | x=120 y=360 1200x240 | `[2,4,10,2]` |
+| LinkedIn | x=840 y=600 240x120 | `[8,6,2,1]` |
+| Instagram | x=1080 y=600 240x120 | `[10,6,2,1]` |
+
+### D48. Tre variabili, non un tema
+Il megamenu e' lo stesso sistema con tre valori diversi, dichiarati su `.megamenu__panel`:
+
+| | Sito | Megamenu | Perche' |
+|---|---|---|---|
+| `--rule-color` | `#504D5C` | `#F7F6F9` | Sul nero il grigio dei componenti sparisce |
+| `--block-bg` | off-white 50% | `transparent` | Mezzo off-white sul nero sarebbe una foschia che nel file non c'e' |
+| `color` | `#020202` | `#F7F6F9` | — |
+
+Le tinte del frame sono tre: White, Black, Purple. Non ce n'e' una quarta, ed e' il motivo per cui
+`--rule-color` era stato separato da `--dark-grey` prima ancora di scrivere il componente:
+`--dark-grey` e' anche un colore di testo, e ribaltarlo avrebbe schiarito i `.t-meta` di mezzo sito.
+
+**Nessuna griglia di sfondo** (`<Grid lines={false}>`): sul nero il file disegna solo i blocchi
+bordati. E' l'unica griglia del progetto senza linee.
+
+### D49. Il bottone di chiusura non ha filo
+`268:1503` e' l'istanza di `Square-button 1x1` con `lucide/x`, e sul nero non mostra nessun bordo,
+mentre la stessa variante sul sito ce l'ha come tutti i blocchi. Il componente ha ora una prop
+`surface` che scavalca la variante, usata solo qui.
+
+### D50. Il logo del megamenu porta a casa
+Nel file e' un frame di testo, non un link. Il menu non ha una voce "Home" (B7) e un logo muto
+dentro una navigazione a tutto schermo e' un vicolo cieco: qui e' un link a `/`. Non e' una voce in
+piu' (D12 resta), e' l'unico elemento gia' disegnato che possa portarci.
+
+### D51. La tendina si muove, i blocchi no
+Il pannello entra da destra (`xPercent` 100 -> 0) e il suo contenuto si contro-trasla della stessa
+quantita' (`xPercent` -100 -> 0), con la stessa durata e la stessa curva. Il risultato a schermo e'
+che **si muove il ritaglio, non i blocchi**: ogni bordo resta dove sara' alla fine, per tutta
+l'animazione. E' l'unico modo di far entrare un pannello senza violare la regola zero.
+
+Dietro alla tendina i fili si disegnano (`--rule-x`/`--rule-y` da 0) e il contenuto compare in
+opacita', con lo stesso stagger delle linee di pagina: 0,04s fra un blocco e il successivo.
+
+Sotto `prefers-reduced-motion: reduce` non si costruisce nessuna timeline. Il pannello compare e
+sparisce, e tutto il resto — fuoco, `inert`, blocco dello scroll — funziona identico.
+
+### D52. La trappola del fuoco e' `inert`, non un ciclo di keydown
+All'apertura `#smooth-wrapper` diventa `inert`: tutto cio' che sta dietro esce dall'ordine di
+tabulazione e dall'albero di accessibilita' in un colpo solo. Il fuoco va al bottone di chiusura e
+alla chiusura torna alla hamburger — dopo aver tolto `inert`, perche' `focus()` su un elemento
+inerte non fa niente. Esc chiude; il resto della tastiera resta del browser.
+
+Lo scroll lo ferma `ScrollSmoother.paused(true)`, che e' chi lo governa. Senza smoother (reduced
+motion, o GSAP che non arriva) si torna a `overflow: hidden` sulla radice, che non fa saltare niente
+perche' il varco della scrollbar e' gia' riservato da `scrollbar-gutter: stable`.
+
+Senza JavaScript il pannello resta chiuso e la hamburger non fa niente: la navigazione vive comunque
+nel footer, che sta su ogni pagina.
+
+### D53. La sonda misura anche una griglia senza linee
+Il megamenu non ne disegna nessuna, quindi non ci sarebbero confini da confrontare. Invece di
+fidarsi, la sonda legge le **tracce risolte** di `grid-template-columns`/`rows` e le somma dal bordo
+del contenitore: sono le stesse coordinate che una linea occuperebbe, lette dal layout del browser e
+non ricalcolate da me. `verify:grid` apre il menu su `/` a tutte e tredici le larghezze e lo misura
+aperto, a entrata finita.
+
+### D54. Le pagine disegnate solo a lg sparivano sotto i 1200
+Trovato aprendo il megamenu a 320px, ma non e' del megamenu: c'era dalla Fase 4 su tutte e quattro
+le pagine interne.
+
+`placementStyle()` emette solo i tier che il blocco dichiara, e la catena in `grid.css` guardava solo
+verso il basso:
+
+```css
+.block { --col: var(--col-base); }
+@media (min-width: 720px)  { .block { --col: var(--col-md, var(--col-base)); } }
+@media (min-width: 1200px) { .block { --col: var(--col-lg, var(--col-md, var(--col-base))); } }
+```
+
+Su un blocco che esiste solo a lg, sotto i 1200 `--col-base` e `--col-md` non esistono: `--col` resta
+senza valore, `grid-column: var(--col) / span var(--c)` diventa invalido e il blocco cade in
+posizionamento automatico. Misurato a 1024 su `/about`: `grid-column: auto`, rettangolo **0x0**.
+L'intero contenuto delle quattro pagine interne, sotto i 1200, non c'era. Restava l'header, che i
+tre tier li dichiara tutti.
+
+La catena ora va in tutte e due le direzioni, nello stesso ordine di `resolveTier`: tier corrente,
+poi il piu' vicino verso il basso, infine quello verso l'alto.
+
+**Perche' nessuna misura se ne era accorta.** La sonda considerava spento un elemento con rettangolo
+nullo — serviva a saltare i blocchi messi a `display: none` da una media query — e quei blocchi
+erano accesi e nulli. Venivano scartati tutti, e restava misurato il solo header, che e' allineato:
+scarto 0,0000px su una pagina vuota. Ora la prova e' sul `display` calcolato, che e' il meccanismo
+vero: un blocco acceso viene misurato anche se misura zero.
+
+E' il secondo caso in cui una verifica passava misurando la cosa sbagliata (il primo era
+`scrollHeight` contro `text-box-trim`, D40). Tutte e due le volte il rimedio e' stato misurare il
+meccanismo invece del sintomo.
+
+### D55. Il padding non ha mai scalato con la cella
+Trovato misurando il megamenu a 320px, e vale per tutto il sito da sempre.
+
+I tre token stavano su `:root`:
+
+```css
+:root { --u: 1px; --pad: calc(var(--u) * 20); }
+```
+
+Dentro una custom property il `var()` si risolve **sull'elemento che la dichiara**, non su quello che
+la usa. Su `:root`, dove `--u` vale 1px, `--pad` diventa `20px` e da li' in giu' eredita **20px
+fissi**: `.grid` cambia `--u` tier per tier, ma `--pad` era gia' un numero e non se ne accorgeva.
+L'uso diretto (`font-size: calc(var(--u) * 40)` su una regola qualsiasi) e' sempre stato corretto,
+perche' li' il `var()` si risolve sull'elemento che lo usa. Era rotta solo l'indirezione.
+
+Non e' un problema di spaziatura. Con `box-sizing: border-box` una scatola non puo' essere piu' bassa
+del proprio padding piu' i bordi: in una cella da 26,7px un blocco con 20px di padding per lato era
+alto **42px comunque**, cioe' quindici fuori dalla propria traccia, e il suo bordo cadeva a meta' di
+un'altra riga. E' cosi' che il megamenu sforava a 320, 390 e 430.
+
+I tre token sono ora ridichiarati su `.grid`, dove `--u` ha il valore del tier. Su `:root` restano
+come ripiego per chi stesse fuori da una griglia.
+
+**Effetto sugli sfori gia' noti**, senza toccare nient'altro:
+
+| Blocco | Prima | Dopo |
+|---|---|---|
+| `about-section` (home) | +44h | +30h |
+| `prose` (`/about`) | +18h | +7h |
+| `hero-text` (home) | +9h | +5h |
+| `recipe-card`, `playlist` (`/about`) | +12h, +3h | spariti |
+
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
 |---|---|---|
-| B1 | **Accesso di rete a `figma.com`** da questa sessione | La policy di egress risponde 403 al CONNECT. Nessun asset immagine scaricabile. Vedi `README.md` |
+| B1 | **Accesso di rete a `figma.com`** da questa sessione | La policy di egress risponde 403 al CONNECT: nessun asset immagine scaricabile (vedi `README.md`). Dalla Fase 5 il server MCP di Figma legge il file — nodi, misure, variabili, anteprime — quindi le misure si verificano alla fonte; restano fuori portata solo gli URL degli asset |
 | B2 | Frame mobile e md per `/about`, `/works`, `/works/[slug]`, `/contact` e megamenu | Sotto 1200px quelle quattro route non hanno disegno |
 | B3 | Backend del form, stati di errore / invio / conferma, privacy policy | Il form non è inviabile |
 | B4 | Blocco Spotify: "32 songs" e "Now playing" sono dati vivi o uno snapshot | Scritto a mano sarà sbagliato entro un mese |
@@ -587,3 +728,4 @@ Era 0,9. Sta in `src/motion/tokens.ts`.
 | B14 | **`/about` si stringe fra 1200 e 1365** | Quattro blocchi di testo tengono a 1440 e chiedono fino a 17px in piu' a 1200. Dichiarati con `data-known-overflow`. Si risolve allargando qualche span o alzando il confine lg: e' una decisione di disegno |
 | B13 | **Tre testimonial su quattro non hanno un testo** | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |
+| B15 | **Il megamenu sul telefono e' un desktop rimpicciolito** | Il Figma ha solo il frame a 1440. Sotto i 1200 tiene le dodici colonne come le pagine interne (B2), quindi a 390px le voci "Work" e "About" scendono a ~17px. Sul telefono la hamburger e' meta' della navigazione: qui serve un disegno, non una scala |

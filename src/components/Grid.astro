@@ -12,10 +12,12 @@ import { deriveRows, horizontalGroups, resolveTier, TIERS, verticalGroups, type 
 interface Props {
   /** La mappa di posizionamento della pagina. Da qui discende --rows. */
   map: LayoutMap;
+  /** Il megamenu non ha griglia di sfondo: solo blocchi bordati su fondo pieno. */
+  lines?: boolean;
   class?: string;
 }
 
-const { map, class: className } = Astro.props;
+const { map, lines = true, class: className } = Astro.props;
 
 const rows = deriveRows(map);
 
@@ -43,6 +45,8 @@ const horizontals = horizontalGroups(rows);
 <div class="grid-wrap">
   <div class:list={['grid', className]} style={rowVars} data-tiers={declaredTiers.join(' ')}>
     <div class="grid-lines" aria-hidden="true">
+      {lines && (
+      <>
       {
         verticals.map((group) => (
           <>
@@ -63,6 +67,7 @@ const horizontals = horizontalGroups(rows);
           </>
         ))
       }
+      </>)}
     </div>
     <slot />
   </div>

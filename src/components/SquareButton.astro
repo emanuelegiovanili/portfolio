@@ -28,12 +28,20 @@ interface Props {
   icon?: IconName;
   /** Nome accessibile del comando. L'icona da sola non ne fornisce uno. */
   label: string;
+  /**
+   * Scavalca la superficie della variante.
+   *
+   * Serve al bottone di chiusura del megamenu: nel file (268:1503) sta su nero
+   * senza filo, mentre la variante `menu` sul sito ha il filo di tutti i
+   * blocchi.
+   */
+  surface?: 'line' | 'accent' | 'bare';
   href?: string;
   class?: string;
   [key: string]: unknown;
 }
 
-const { at, variant, icon, label, href, class: className, ...rest } = Astro.props;
+const { at, variant, icon, label, href, surface, class: className, ...rest } = Astro.props;
 
 const VARIANT_ICON: Record<Variant, IconName> = {
   menu: 'menu',
@@ -50,7 +58,7 @@ const isLink = href !== undefined;
 <Block
   at={at}
   as={isLink ? 'a' : 'button'}
-  surface={variant === 'mail' ? 'accent' : 'line'}
+  surface={surface ?? (variant === 'mail' ? 'accent' : 'line')}
   class:list={['square-button', className]}
   data-variant={variant}
   href={href}

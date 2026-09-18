@@ -53,10 +53,25 @@ export interface GridProbeResult {
  */
 const TOLERANCE = 0.02;
 
-/** Un elemento e' spento se una media query lo ha messo a display:none. */
+/**
+ * Un elemento e' spento se una media query lo ha messo a display:none.
+ *
+ * Si guarda il `display` e non il rettangolo. Un blocco puo' essere acceso e
+ * misurare 0x0 lo stesso — succedeva a tutti i blocchi delle pagine disegnate
+ * solo a lg quando `grid-column` diventava invalido sotto i 1200 — e con la
+ * prova sul rettangolo la sonda lo scartava come se non ci fosse: un intero
+ * contenuto di pagina spariva senza che nessuna misura se ne accorgesse.
+ */
 function isVisible(el: Element): boolean {
-  const rect = el.getBoundingClientRect();
-  return rect.width > 0 || rect.height > 0;
+  return getComputedStyle(el).display !== 'none';
+}
+
+/** Le tracce di `grid-template-*` risolte, in pixel. */
+function tracks(value: string): number[] {
+  return value
+    .split(' ')
+    .map((part) => Number.parseFloat(part))
+    .filter((n) => Number.isFinite(n));
 }
 
 function nearest(value: number, candidates: number[]): number {
@@ -126,6 +141,21 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
     const edge = line.hasAttribute('data-edge');
     if (line.classList.contains('grid-line--v')) xs.push(edge ? rect.right : rect.left);
     else ys.push(edge ? rect.bottom : rect.top);
+  }
+
+  // Il megamenu non disegna linee: sul nero il file mette solo i blocchi
+  // bordati. I confini restano misurabili lo stesso, perche' sono le tracce del
+  // grid cosi' come il browser le ha risolte: sommandole dal bordo del contenitore si
+  // ottengono le stesse coordinate che una linea occuperebbe. Non e' una
+  // scorciatoia, e' la stessa geometria senza l'inchiostro.
+  if (xs.length === 0 && ys.length === 0) {
+    const bounds = grid.getBoundingClientRect();
+    let x = bounds.left;
+    xs.push(x);
+    for (const track of tracks(style.gridTemplateColumns)) xs.push((x += track));
+    let y = bounds.top;
+    ys.push(y);
+    for (const track of tracks(style.gridTemplateRows)) ys.push((y += track));
   }
 
   let maxDrift = 0;

@@ -1,0 +1,86 @@
+---
+/**
+ * Megamenu (268:1498).
+ *
+ * Sta fuori da #smooth-content, nello slot `fixed` di Base: ScrollSmoother
+ * trasla il contenuto, e una trasformazione rende l'elemento traslato il
+ * contenitore di riferimento dei propri discendenti in position: fixed. Dentro
+ * al contenuto, il pannello smetterebbe di essere ancorato alla finestra.
+ *
+ * Nessuna griglia di sfondo: sul nero il file disegna solo i blocchi bordati,
+ * quindi <Grid lines={false}>. I fili passano da --dark-grey a --off-white e il
+ * fondo dei blocchi da mezzo off-white a niente: sono le uniche tre variabili
+ * che cambiano, il resto del sistema e' lo stesso.
+ *
+ * L'apertura e la chiusura stanno in src/scripts/megamenu.ts. Senza JavaScript
+ * il pannello resta chiuso e il bottone non fa niente: la navigazione vive
+ * comunque nel footer, che e' su ogni pagina.
+ */
+import Grid from './Grid.astro';
+import Block from './Block.astro';
+import Icon from './Icon.astro';
+import SquareButton from './SquareButton.astro';
+import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
+import { SITE_NAME } from '../lib/site';
+---
+
+<div
+  id="megamenu"
+  class="megamenu"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Menu"
+  aria-hidden="true"
+  inert
+>
+  <div class="megamenu__panel">
+    <div class="megamenu__inner">
+      <Grid map={megamenuMap} lines={false} class="megamenu__grid">
+        {/* Nel file e' un frame di testo, non un link. Qui porta a casa: il menu
+            non ha una voce "Home" e un logo muto dentro una navigazione a tutto
+            schermo e' un vicolo cieco. Vedi NOTES.md D48. */}
+        <Block at={megamenuMap.menuLogo} as="a" href="/" class="menu-logo" clip>
+          <span class="t-display t-display--section">{SITE_NAME}</span>
+        </Block>
+
+        <Block at={megamenuMap.menuCta} as="a" surface="accent" class="menu-cta" href="/contact" clip>
+          <span class="t-display t-display--button">Let’s work together</span>
+        </Block>
+
+        <SquareButton
+          at={megamenuMap.menuClose}
+          icon="x"
+          surface="bare"
+          label="Chiudi il menu"
+          class="menu-close"
+          id="menu-close"
+        />
+
+        {
+          MENU_LINKS.map((link) => (
+            <Block at={megamenuMap[link.key]} as="a" class="menu-voice" href={link.href} clip>
+              <span class="t-display t-display--page">{link.label}</span>
+            </Block>
+          ))
+        }
+
+        {
+          MENU_SOCIALS.map((social) => (
+            <Block
+              at={megamenuMap[social.key]}
+              as="a"
+              class="menu-social"
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              clip
+            >
+              <span class="t-link">{social.label}</span>
+              <Icon name="arrow-up-right" />
+            </Block>
+          ))
+        }
+      </Grid>
+    </div>
+  </div>
+</div>

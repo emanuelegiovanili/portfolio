@@ -68,6 +68,24 @@
   /* La cella del frame base e' 39px: qui --u vale 1 a 390 di viewport. */
   --u: min(1px, calc(var(--cell) / 39));
 
+  /*
+   * I padding si ridichiarano qui, dove `--u` ha il valore del tier.
+   *
+   * Un `var()` dentro una custom property si risolve sull'elemento che la
+   * dichiara. Su `:root`, dove `--u` vale 1px, `calc(var(--u) * 20)` diventa
+   * 20px fissi ed eredita cosi' fino in fondo. Su `.grid`, dove `--u` vale
+   * quanto il tier chiede, diventa il padding di disegno scalato con la cella.
+   *
+   * Non e' un dettaglio di spaziatura: con `box-sizing: border-box` una scatola
+   * non puo' essere piu' bassa del proprio padding piu' i bordi. In una cella
+   * da 26px un blocco con 20px di padding per lato era alto 42 comunque, cioe'
+   * sedici pixel fuori dalla propria traccia, e il bordo non cadeva piu' sulla
+   * linea. Vedi NOTES.md D55.
+   */
+  --pad: calc(var(--u) * 20);
+  --pad-sm: calc(var(--u) * 10);
+  --pad-lg: calc(var(--u) * 40);
+
   display: grid;
   /* Tracce da var(--cell) e non da 1fr: con 1fr le colonne si dividono la
      larghezza reale, e basta una scrollbar o un padding perche' smettano di
@@ -160,11 +178,24 @@
 
 /* ---------- I blocchi ---------- */
 
+/*
+ * La catena dei tier va in tutte e due le direzioni.
+ *
+ * Un blocco disegnato **solo** a lg — le quattro pagine interne, il megamenu —
+ * non ha ne' `--col-base` ne' `--col-md`. Con una catena che guardasse solo
+ * verso il basso, sotto i 1200 `--col` resterebbe senza valore, `grid-column`
+ * diventerebbe invalido e il blocco cadrebbe in posizionamento automatico: nei
+ * fatti si riduceva a 0x0 e spariva, e la sonda non lo vedeva perche' scartava
+ * i blocchi di dimensione nulla come se fossero a display:none.
+ *
+ * L'ordine e' lo stesso di `resolveTier` in layout.ts: prima il tier corrente,
+ * poi il piu' vicino verso il basso, infine quello verso l'alto.
+ */
 .block {
-  --col: var(--col-base);
-  --row: var(--row-base);
-  --c: var(--c-base);
-  --r: var(--r-base);
+  --col: var(--col-base, var(--col-md, var(--col-lg)));
+  --row: var(--row-base, var(--row-md, var(--row-lg)));
+  --c: var(--c-base, var(--c-md, var(--c-lg)));
+  --r: var(--r-base, var(--r-md, var(--r-lg)));
 
   grid-column: var(--col) / span var(--c);
   grid-row: var(--row) / span var(--r);
@@ -178,10 +209,10 @@
 
 @media (min-width: 720px) {
   .block {
-    --col: var(--col-md, var(--col-base));
-    --row: var(--row-md, var(--row-base));
-    --c: var(--c-md, var(--c-base));
-    --r: var(--r-md, var(--r-base));
+    --col: var(--col-md, var(--col-base, var(--col-lg)));
+    --row: var(--row-md, var(--row-base, var(--row-lg)));
+    --c: var(--c-md, var(--c-base, var(--c-lg)));
+    --r: var(--r-md, var(--r-base, var(--r-lg)));
   }
 }
 
@@ -241,10 +272,10 @@
   border: var(--line) solid transparent;
   background-color: var(--block-bg);
   background-image:
-    linear-gradient(var(--dark-grey), var(--dark-grey)),
-    linear-gradient(var(--dark-grey), var(--dark-grey)),
-    linear-gradient(var(--dark-grey), var(--dark-grey)),
-    linear-gradient(var(--dark-grey), var(--dark-grey));
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color));
   background-origin: border-box;
   background-clip: border-box;
   background-repeat: no-repeat;

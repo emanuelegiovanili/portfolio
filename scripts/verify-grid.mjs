@@ -33,6 +33,8 @@ const DESKTOP_ONLY = ['/about', '/works', '/works/seezy', '/contact'];
  */
 const SMALLEST_DESIGNED_WIDTH = 390;
 const SCROLLS = ['top', 'middle', 'bottom'];
+/** Il megamenu e' lo stesso su ogni pagina: si apre e si misura su una sola. */
+const MENU_ROUTE = '/';
 const PATHS = ['/grid', '/grid/components', '/', '/about', '/works', '/works/seezy', '/contact'];
 const SHOT_DIR = '.verify';
 
@@ -119,6 +121,37 @@ try {
         const name = route.replace(/\//g, '-').replace(/^-/, '');
         await page.screenshot({ path: `${SHOT_DIR}/${name}-${width}.png`, fullPage: false });
       }
+    }
+
+    /*
+     * Il megamenu si misura aperto, e si misura davvero.
+     *
+     * E' l'unica griglia del sito senza linee disegnate — sul nero il file mette
+     * solo i blocchi bordati — quindi la sonda ne legge le tracce invece dei
+     * pixel dipinti. E' identico su tutte le route, e si misura su una sola:
+     * dodici misure in piu', non ottantaquattro.
+     */
+    if (route === MENU_ROUTE) {
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.click('#menu-toggle');
+      // La tendina dura 0,7s e il contenuto finisce di comparire a 0,85: si
+      // misura a entrata finita, quando il pannello e' dove restera'.
+      await page.waitForTimeout(1400);
+
+      const result = await page.evaluate(
+        () => window.__probeGrid?.(document.getElementById('megamenu')) ?? null,
+      );
+      if (!result) throw new Error(`megamenu non trovato a ${width}px`);
+
+      const ok = result.maxDrift <= result.tolerance && result.misplaced.length === 0;
+      if (!ok) failures += 1;
+      rows.push({ route: 'megamenu', width, where: 'aperto', ...result, ok, belowDesign: width < 1200, errors: errors.length });
+
+      if (flag('--shots')) {
+        await page.screenshot({ path: `${SHOT_DIR}/megamenu-${width}.png`, fullPage: false });
+      }
+
+      await page.keyboard.press('Escape');
     }
 
     if (errors.length > 0) {

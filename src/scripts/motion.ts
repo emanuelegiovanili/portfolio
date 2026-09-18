@@ -57,7 +57,9 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
  * coppia di gradienti la cui lunghezza sta in `--rule-x` e `--rule-y`.
  */
 function revealRules(): void {
-  const grid = document.querySelector('.grid');
+  // Il megamenu ha la sua timeline, legata all'apertura e non allo scroll: la
+  // pagina qui e' la prima griglia che non sia la sua.
+  const grid = document.querySelector('.grid:not(.megamenu__grid)');
   if (!(grid instanceof HTMLElement)) return;
 
   const horizontals = gsap.utils.toArray<HTMLElement>('.grid-line--h', grid).filter(isVisible);

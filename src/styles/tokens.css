@@ -23,8 +23,10 @@
      desktop tiene le sue dodici colonne anche sotto i 1200. */
   --grid-max: 1680px;
   --line: 1px;
-  /* Le linee della griglia. I bordi dei componenti usano --dark-grey. */
+  /* Le linee della griglia. */
   --line-color: var(--grid-line);
+  /* I fili dei componenti. Il megamenu lo ribalta in chiaro su fondo nero. */
+  --rule-color: var(--dark-grey);
 
   /* Superfici. Il fondo dei blocchi e' al 50% su tutto il sito per decisione
      del committente (NOTES.md D1): nel Figma e' misto. I blocchi viola
@@ -49,7 +51,17 @@
    */
   --u: 1px;
 
-  /* Padding interni: i valori del Figma, in pixel di disegno. */
+  /*
+   * Padding interni: i valori del Figma, in pixel di disegno.
+   *
+   * Questi tre sono il ripiego per chi sta fuori da una griglia. I valori buoni
+   * li dichiara `.grid`, ed e' obbligatorio che sia li': dentro una custom
+   * property il `var()` si risolve **sull'elemento che la dichiara**, non su
+   * quello che la usa. Dichiarata qui, `calc(var(--u) * 20)` si risolve con il
+   * `--u` di `:root`, che vale 1px, e il risultato e' 20px fissi che ereditano
+   * ovunque: il padding non scendeva mai sotto i 20px nemmeno dove la cella
+   * valeva 26. Vedi NOTES.md D55.
+   */
   --pad: calc(var(--u) * 20);
   --pad-sm: calc(var(--u) * 10);
   --pad-lg: calc(var(--u) * 40);
