@@ -25,6 +25,7 @@ const { work, eager = false, sizes = '(min-width: 1200px) 67vw, 90vw' } = Astro.
 
 <Picture
   class="works-card__media"
+  data-reveal
   src={work.data.cover}
   alt={work.data.coverAlt}
   widths={[640, 960, 1400, 1920]}

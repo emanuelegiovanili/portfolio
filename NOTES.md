@@ -324,7 +324,7 @@ Due correzioni collegate, trovate dalla stessa misura:
 - Le larghezze dei testi della CTA sono `min(100%, 307px)` e `min(100%, 376px)`, non percentuali
   pure. In percentuale il lead scendeva sotto i 307px del Figma gia' a 1400 e passava a tre righe:
   era il lead, non il titolo, a far sforare il blocco.
-- Il `scrollbar-gutter: stable` che serve a non far saltare la griglia all'apertura del megamenu
+- Il `scrollbar-gutter: stable` che serviva a non far saltare la griglia all'apertura del megamenu (**superato da D58**: la scrollbar di sistema ora e' nascosta e non occupa larghezza)
   costa **circa l'1% su ogni cella**: a 1440 di viewport il contenitore e' 1425 e la cella 118,75
   invece di 120. E' un costo che nessuna alternativa evita, perche' qualunque blocco dello scroll
   toglie la scrollbar, ma va saputo: il disegno a 1440 ha gia' l'1% in meno di quanto il Figma
@@ -759,6 +759,68 @@ trasformando, e il resto dello schermo che diventa nero attorno.
 Sotto i 1200 le due celle non coincidono per larghezza — la pagina ha dieci colonne, il menu dodici
 — ma stanno tutte e due all'estremita' destra della prima riga, quindi il gesto regge. E' un altro
 effetto di B2.
+
+
+### D58. Niente scrollbar di sistema
+La scrollbar occupava una quindicina di pixel sul lato destro, e quei pixel non sono una cella: la
+griglia partiva a filo a sinistra e lasciava una striscia scoperta a destra. Misurato: a 1440 la
+griglia era larga 1425, a 1366 era 1351, e la striscia era sempre 15px.
+
+Per decisione del committente lo schermo deve contenere **solo celle intere**, quindi la scrollbar
+sparisce (`scrollbar-width: none` piu' il selettore WebKit per Safari sotto la 18.2). Non e' una
+perdita di funzione — lo scroll qui lo governa ScrollSmoother, e rotella, tastiera, touch e trackpad
+funzionano identici — ma si perde l'indicatore di posizione, e quello e' il prezzo.
+
+**Effetto che vale piu' della richiesta.** A 1440 la cella torna a valere **esattamente 120px**,
+cioe' la cella del frame Figma. Con il varco riservato ne valeva 118,75: tutto il sito stava un
+punto percentuale sotto la scala di disegno, e `--u` con lui.
+
+Cade anche `scrollbar-gutter: stable`, che esisteva solo per non far saltare la griglia quando il
+megamenu bloccava lo scroll: senza scrollbar non c'e' niente che possa saltare.
+
+### D59. L'ingresso e' mezza schermata, non il varco sotto la piega
+Il committente non riusciva a vedere il filo disegnarsi. Non era una questione di durata: la
+finestra era sbagliata.
+
+Con `start: 'top bottom'` il tratto comincia quando il bordo alto del blocco tocca il fondo della
+finestra, cioe' quando il blocco e' ancora **tutto sotto la piega**. Campionato su una skill card:
+meta' del giro succedeva fuori schermo, e quando il blocco diventava visibile il filo era gia' fatto
+per tre quarti. Con la finestra che finiva a "blocco entrato per intero", il giro si chiudeva
+nell'istante esatto in cui il bordo basso spuntava: il rettangolo intero non si vedeva mai.
+
+Ora la finestra va da `top 90%` a `top 40%` — mezza schermata di scroll, uguale per tutti i blocchi,
+alti o bassi — ed e' **agganciata allo scroll** invece che lanciata a tempo. Il filo si disegna
+mentre il blocco sale dentro lo schermo, dove lo si vede.
+
+Due dettagli che sono costati due giri di verifica:
+
+1. **I blocchi della prima schermata non hanno un ingresso da fare.** La loro finestra si chiude
+   prima dello scroll zero, quindi il trigger non viene mai disegnato e i fili restano a zero, cioe'
+   invisibili, per sempre. Un `ScrollTrigger.refresh()` non basta: il trigger non e' in ritardo, e'
+   fuori corsa. Quei blocchi si disegnano **a tempo** all'apertura, sfalsati fra loro, che e' anche
+   quello che si vuole vedere quando la pagina si apre.
+2. **I blocchi dell'ultima schermata non arrivano mai a quattro decimi**: sotto di loro la pagina e'
+   finita. `clamp()` sulle due posizioni tiene la finestra dentro la corsa disponibile.
+
+Un blocco spento da una media query non riceve ne' azzeramento ne' trigger: nasce con i fili interi,
+cosi' una rotazione dello schermo non lo scopre senza bordo.
+
+### D60. Le immagini si scoprono dall'alto
+Richiesta del committente: un reveal allo scroll dall'alto verso il basso, come se il contenitore si
+espandesse.
+
+E' un `clip-path: inset(0 0 100% 0)` che si apre da sopra, sulla **stessa finestra** del filo che
+gira attorno al blocco: cornice e contenuto si riempiono insieme, e quando il blocco e' entrato
+l'immagine c'e' tutta.
+
+Il clip sta **sull'immagine** e non sul blocco. Un blocco bordato non cambia misura nemmeno per un
+fotogramma, che e' la regola zero; ma siccome l'immagine occupa tutta la cella, quel che si vede e'
+comunque un riquadro che si riempie. La finestra pero' e' quella del blocco che la contiene, non
+dell'immagine: e' il contenitore a dettare il tempo.
+
+Le immagini marcate sono le cinque di contenuto (`data-reveal` sui `<Picture>` di `WorkCard`,
+`/about` e `/works/[slug]`). La copertina Spotify e' esclusa: ha gia' una rotazione sua, e un taglio
+orizzontale su un oggetto ruotato non vuol dire niente.
 
 
 ---

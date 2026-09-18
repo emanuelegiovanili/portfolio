@@ -78,16 +78,36 @@
 }
 
 html {
-  /* Senza questa, aprire il megamenu con overflow:hidden fa sparire la
-     scrollbar, la pagina si allarga di ~15px e con la cella fluida l'intera
-     griglia si ricalcola e salta nel momento esatto dell'apertura. */
-  scrollbar-gutter: stable;
-  /* Gli elementi full bleed sono larghi 100vw, che con il varco della scrollbar
-     riservato eccede la larghezza utile di una quindicina di pixel. `clip` la
-     assorbe senza creare un contenitore di scorrimento, quindi senza toccare
-     ne' lo scroll verticale ne' gli elementi in position: fixed. */
-  overflow-x: clip;
+  /*
+   * Niente scrollbar di sistema.
+   *
+   * Occupava una quindicina di pixel sul lato destro, e quei pixel non sono una
+   * cella: la griglia partiva a filo a sinistra e lasciava una striscia scoperta
+   * a destra. Per decisione del committente lo schermo deve contenere **solo
+   * celle intere**, e l'unico modo e' che la griglia arrivi fino al bordo.
+   *
+   * Non e' una perdita di funzione: lo scroll qui lo governa ScrollSmoother, e
+   * rotella, tastiera, touch e trackpad funzionano identici. Si perde
+   * l'indicatore di posizione, che e' il prezzo.
+   *
+   * Effetto collaterale che vale la pena scrivere: a 1440 la cella torna a
+   * valere **esattamente 120px**, cioe' la cella del frame Figma. Con il varco
+   * riservato ne valeva 118,75, e tutto il sito stava un punto percentuale
+   * sotto la scala di disegno.
+   */
+  scrollbar-width: none;
   -webkit-text-size-adjust: 100%;
+  /* Gli elementi full bleed sono larghi 100vw. Senza scrollbar 100vw e la
+     larghezza utile coincidono, ma `clip` resta: assorbe gli arrotondamenti
+     senza creare un contenitore di scorrimento, quindi senza toccare ne' lo
+     scroll verticale ne' gli elementi in position: fixed. */
+  overflow-x: clip;
+}
+
+/* Safari sotto la 18.2 e i browser WebKit piu' vecchi non conoscono
+   scrollbar-width: qui la scrollbar si nasconde dall'altra parte. */
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {

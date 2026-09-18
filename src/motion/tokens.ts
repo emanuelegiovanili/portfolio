@@ -3,6 +3,15 @@
 export const DURATION = {
   /** Il disegno di una linea di griglia. */
   rule: 0.55,
+  /**
+   * Il giro del filo attorno a un blocco, dove a muoverlo e' una timeline e
+   * non lo scroll: nel megamenu.
+   *
+   * E' il doppio di `rule` perche' il percorso e' il doppio: il filo fa tutto
+   * il perimetro invece di due lati soli. Sulle pagine questa durata non serve,
+   * perche' li' l'avanzamento lo detta lo scroll.
+   */
+  trace: 1.1,
   /** Lo scarto fra una linea e la successiva dentro lo stesso gruppo. */
   ruleStagger: 0.04,
 } as const;

@@ -13,6 +13,9 @@
  * angolo sarebbe stato uno scatto. Con un avanzamento solo l'ease vale sul
  * giro intero e gli angoli non si sentono.
  *
+ * Chi lo chiama decide cosa muove l'avanzamento: lo scroll, sulle pagine, o una
+ * timeline, nel megamenu.
+ *
  * Le quattro variabili sono registrate in `grid.css`, e i quattro gradienti del
  * blocco sono ancorati agli angoli giusti perche' il giro torni.
  */
@@ -33,30 +36,35 @@ export function clearRules(blocks: HTMLElement[]): void {
  * Il tween e' su un oggetto di appoggio e non sull'elemento: le quattro
  * variabili non sono indipendenti, sono quattro finestre sullo stesso
  * avanzamento, e animarle separatamente vorrebbe dire tenerle in accordo a
- * mano. Le misure si prendono alla partenza e non alla costruzione, perche' il
- * megamenu costruisce la propria timeline molto prima di aprirsi.
+ * mano.
+ *
+ * Le misure si prendono al primo fotogramma utile e non alla costruzione: il
+ * megamenu costruisce la propria timeline al caricamento della pagina e si apre
+ * molto dopo, e un blocco agganciato allo scroll puo' essere costruito mentre
+ * e' ancora fuori vista.
  */
-export function traceRules(block: HTMLElement, duration: number, ease: string): gsap.core.Tween {
+export function traceRules(block: HTMLElement, vars: gsap.TweenVars): gsap.core.Tween {
   const at = { p: 0 };
-  let lengths: number[] = [1, 1, 1, 1];
-  let perimeter = 4;
+  let lengths: number[] | null = null;
+  let perimeter = 1;
+
+  const measure = () => {
+    const w = block.offsetWidth;
+    const h = block.offsetHeight;
+    lengths = [w, h, w, h];
+    // Mai zero: un blocco alto o largo zero dividerebbe per niente, e il giro
+    // finirebbe prima di cominciare.
+    perimeter = 2 * (w + h) || 1;
+  };
 
   return gsap.to(at, {
+    ...vars,
     p: 1,
-    duration,
-    ease,
-    onStart: () => {
-      const w = block.offsetWidth;
-      const h = block.offsetHeight;
-      lengths = [w, h, w, h];
-      // Mai zero: un blocco alto o largo zero dividerebbe per niente, e il giro
-      // finirebbe prima di cominciare.
-      perimeter = 2 * (w + h) || 1;
-    },
     onUpdate: () => {
+      if (!lengths) measure();
       let drawn = at.p * perimeter;
       SIDES.forEach((side, i) => {
-        const length = lengths[i] || 1;
+        const length = lengths![i] || 1;
         block.style.setProperty(side, String(clamp(drawn / length)));
         drawn -= length;
       });

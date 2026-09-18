@@ -73,11 +73,10 @@ try {
   for (const route of PATHS)
   for (const width of WIDTHS) {
 
-    // Sotto il confine md si emula un telefono. Non e' un dettaglio: con la
-    // scrollbar classica il varco riservato da `scrollbar-gutter: stable`
-    // toglie 15px su 390, cioe' il 4% della larghezza, e i blocchi di testo
-    // guadagnano una riga che sul dispositivo reale non hanno. I telefoni
-    // hanno scrollbar a sovrapposizione e il varco vale zero.
+    // Sotto il confine md si emula un telefono: densita' 3, touch, niente
+    // hover. Da quando la scrollbar di sistema e' nascosta (tokens.css) la
+    // larghezza utile e' la stessa nei due casi, ma l'emulazione resta perche'
+    // le animazioni di icona non devono partire dove non c'e' un puntatore.
     const mobile = width < 720;
     const context = await browser.newContext({
       viewport: { width, height: mobile ? 844 : 900 },

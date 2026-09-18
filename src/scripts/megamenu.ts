@@ -121,7 +121,10 @@ function wipe(menu: HTMLElement): gsap.core.Timeline {
 
   // Un giro di filo per blocco, sfalsati come le linee di pagina.
   ruled.forEach((block, i) => {
-    tl.add(traceRules(block, DURATION.rule, EASE.rule), MENU.contentAt + i * DURATION.ruleStagger);
+    tl.add(
+      traceRules(block, { duration: DURATION.trace, ease: EASE.rule }),
+      MENU.contentAt + i * DURATION.ruleStagger,
+    );
   });
 
   return tl;
@@ -140,8 +143,8 @@ function fade(menu: HTMLElement): gsap.core.Timeline {
  *
  * Con lo scroll morbido attivo lo ferma ScrollSmoother, che e' chi lo governa.
  * Senza — sotto reduced motion, o se GSAP non arriva — si torna a `overflow:
- * hidden` sull'elemento radice, che non fa saltare niente perche' il varco
- * della scrollbar e' gia' riservato da `scrollbar-gutter: stable`.
+ * hidden` sull'elemento radice, che non fa saltare niente perche' la scrollbar
+ * di sistema e' nascosta e non occupa larghezza (vedi tokens.css).
  */
 function lock(locked: boolean): void {
   const smoother = ScrollSmoother.get();

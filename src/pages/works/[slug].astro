@@ -63,6 +63,7 @@ const map = {
 
     <Block at={workBlocks.workCover} class="media-block" clip>
       <Picture
+        data-reveal
         src={work.data.cover}
         alt={work.data.coverAlt}
         widths={[960, 1400, 1920]}
@@ -94,6 +95,7 @@ const map = {
       blocks.map((image, i) => (
         <Block at={galleryPlacements[i]} class="media-block" clip>
           <Picture
+            data-reveal
             src={image.src}
             alt={image.alt}
             widths={[640, 960, 1400, 1920]}
