@@ -1,0 +1,67 @@
+---
+/**
+ * Il carosello Selected Works.
+ *
+ * Una sola immagine 8x5 con paginazione e frecce. Qui e' statico: mostra la
+ * prima slide e porta gia' i data-attribute che l'interazione usera' in Fase 5.
+ *
+ * La paginazione e' calcolata dalla collection. Nel Figma dice "1/5" con tre
+ * progetti in elenco: e' un numero rimasto indietro, vedi NOTES.md §3.2.
+ */
+import { Picture } from 'astro:assets';
+import Block from '../Block.astro';
+import SquareButton from '../SquareButton.astro';
+import type { BlockPlacements } from '../../lib/layout';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  at: { card: BlockPlacements; pagination: BlockPlacements; prev: BlockPlacements; next: BlockPlacements };
+  works: CollectionEntry<'works'>[];
+}
+
+const { at, works } = Astro.props;
+---
+
+<Block at={at.card} class="works-card" data-carousel="works" clip>
+  {
+    works.map((work, i) => (
+      <a
+        class="works-card__slide"
+        href={`/works/${work.id}`}
+        data-slide={i}
+        hidden={i > 0}
+        aria-hidden={i > 0 ? 'true' : undefined}
+        tabindex={i > 0 ? -1 : undefined}
+      >
+        <Picture
+          class="works-card__media"
+          src={work.data.cover}
+          alt={work.data.coverAlt}
+          widths={[640, 960, 1400, 1920]}
+          sizes="(min-width: 1200px) 67vw, 90vw"
+          formats={['avif', 'webp']}
+          loading={i === 0 ? 'eager' : 'lazy'}
+        />
+        <span class="works-card__tags">
+          <span class="works-card__title">{work.data.title}</span>
+          {work.data.tags.map((tag) => (
+            <span class="works-card__tag">{tag}</span>
+          ))}
+        </span>
+      </a>
+    ))
+  }
+</Block>
+
+<Block at={at.pagination} class="works-pagination" data-carousel-count clip>
+  <span data-carousel-current>1</span>/<span>{works.length}</span>
+</Block>
+
+<SquareButton
+  at={at.prev}
+  icon="chevron-left"
+  label="Progetto precedente"
+  class="works-arrow"
+  data-carousel-prev
+/>
+<SquareButton at={at.next} icon="chevron-right" label="Progetto successivo" class="works-arrow" data-carousel-next />

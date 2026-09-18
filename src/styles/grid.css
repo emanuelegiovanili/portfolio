@@ -13,6 +13,28 @@
  * uno solo non produce un errore, produce una griglia storta.
  */
 
+/*
+ * --cell e' registrata come lunghezza apposta.
+ *
+ * Senza registrazione `100cqw` dentro una custom property si risolve sul
+ * contenitore dell'elemento che la *usa*, non di quello che la dichiara:
+ * basterebbe un `container-type` su un blocco qualsiasi perche' tutti i suoi
+ * discendenti si ritrovino una cella diversa. Registrata, si risolve una volta
+ * sola su .grid e da li' in giu' e' un numero.
+ */
+@property --cell {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* Registrata per lo stesso motivo di --cell: deve risolversi una volta sola. */
+@property --u {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 1px;
+}
+
 .grid-wrap {
   container-type: inline-size;
   max-width: var(--grid-max);
@@ -22,6 +44,8 @@
 .grid {
   --cell: calc(100cqw / var(--cols));
   --rows: var(--rows-base);
+  /* La cella del frame base e' 39px: qui --u vale 1 a 390 di viewport. */
+  --u: min(1px, calc(var(--cell) / 39));
 
   display: grid;
   /* Tracce da var(--cell) e non da 1fr: con 1fr le colonne si dividono la
@@ -36,12 +60,16 @@
 @media (min-width: 720px) {
   .grid {
     --rows: var(--rows-md, var(--rows-base));
+    /* Cella del frame md: 767 / 10. */
+    --u: min(1px, calc(var(--cell) / 76.7));
   }
 }
 
 @media (min-width: 1200px) {
   .grid {
     --rows: var(--rows-lg, var(--rows-md, var(--rows-base)));
+    /* Cella del frame lg: 1440 / 12. */
+    --u: min(1px, calc(var(--cell) / 120));
   }
 }
 

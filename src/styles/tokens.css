@@ -27,11 +27,25 @@
   --accent-bg: var(--purple);
   --accent-fg: var(--off-white);
 
-  /* Padding interni: valori assoluti presi dal Figma, mai derivati dalla
-     cella. A mobile la cella e' 39px e un padding proporzionale sparirebbe. */
-  --pad: 20px;
-  --pad-sm: 10px;
-  --pad-lg: 40px;
+  /*
+   * --u e' quanto vale, in questa cella, un pixel del frame.
+   *
+   * Vale 1px alla larghezza per cui il tier e' disegnato (390, 767, 1440) e
+   * scende in proporzione sotto, senza mai salire sopra. Serve perche' ogni
+   * layout regge bene sopra la propria larghezza di disegno e male sotto: e' il
+   * principio scritto in grid-system-handoff §2, che pero' fissava i confini a
+   * 680 e 1200, cioe' proprio sotto. Misurato, a 1200 il form di contatto
+   * chiede 580px di contenuto a misura fissa dentro un blocco che ne offre 552.
+   *
+   * Scala le spaziature e i display, non il corpo del testo: a 1200 il fattore
+   * e' 0,82 e un corpo a 13px non sarebbe piu' leggibile. Vedi NOTES.md D33.
+   */
+  --u: 1px;
+
+  /* Padding interni: i valori del Figma, in pixel di disegno. */
+  --pad: calc(var(--u) * 20);
+  --pad-sm: calc(var(--u) * 10);
+  --pad-lg: calc(var(--u) * 40);
 
   /* Tipografia */
   --font-display: 'DT Getai Grotesk Display', 'Getai Fallback', system-ui, sans-serif;
@@ -55,6 +69,11 @@ html {
      scrollbar, la pagina si allarga di ~15px e con la cella fluida l'intera
      griglia si ricalcola e salta nel momento esatto dell'apertura. */
   scrollbar-gutter: stable;
+  /* Gli elementi full bleed sono larghi 100vw, che con il varco della scrollbar
+     riservato eccede la larghezza utile di una quindicina di pixel. `clip` la
+     assorbe senza creare un contenitore di scorrimento, quindi senza toccare
+     ne' lo scroll verticale ne' gli elementi in position: fixed. */
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
 }
 

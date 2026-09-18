@@ -1,0 +1,605 @@
+/* La home.
+ *
+ * Le grandezze tipografiche sono esplicite per tier, non derivate da una scala:
+ * il Figma non ne usa una. A md i display restano quelli del desktop (64px per
+ * i titoli di sezione, 40 per Selected Works, 32 per il marquee) e solo l'hero
+ * cambia, da 204 a 106. E' a base che tutto si dimezza.
+ *
+ * Nodi di riferimento nei commenti, tier per tier.
+ */
+
+/* ---------- Hero ---------- */
+
+/*
+ * 314:2438 · 321:2790 · 266:1101
+ *
+ * L'hero e' l'unico testo che nel Figma riempie esattamente la larghezza utile
+ * del proprio blocco, con `nowrap`: qualunque restringimento lo fa sforare, e a
+ * base sfora gia' nel file. Quindi non si dimensiona in pixel di disegno ma in
+ * frazione della larghezza interna del blocco, che e' la grandezza da cui
+ * dipende davvero.
+ *
+ * 25,5% e' il rapporto letto dal frame a 1440: testo largo 800 dentro 800 di
+ * spazio utile, corpo 204. Il tetto per tier tiene il valore di disegno dove
+ * c'e' spazio.
+ */
+.hero-text {
+  container-type: inline-size;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--pad);
+}
+
+.hero-text__title {
+  margin: 0;
+  font-size: min(calc(var(--u) * 72), 25.5cqi);
+}
+
+@media (min-width: 720px) {
+  .hero-text {
+    justify-content: flex-start;
+  }
+
+  .hero-text__title {
+    font-size: min(calc(var(--u) * 106), 25.5cqi);
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero-text__title {
+    font-size: min(calc(var(--u) * 204), 25.5cqi);
+  }
+}
+
+/* 314:2292 · 321:2779 · 255:762 */
+.hero-desc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-top: var(--pad);
+}
+
+.hero-desc__copy {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 8);
+  width: 100%;
+  padding-inline: var(--pad) calc(var(--u) * 32);
+}
+
+.hero-desc__lead {
+  margin: 0;
+  font-weight: 700;
+  font-size: calc(var(--u) * 20);
+  line-height: 1.5;
+}
+
+.hero-desc__body {
+  margin: 0;
+}
+
+@media (min-width: 720px) {
+  .hero-desc__lead {
+    font-size: calc(var(--u) * 24);
+  }
+}
+
+.hero-desc__location {
+  width: 100%;
+  margin: 0;
+  padding-inline: var(--pad) calc(var(--u) * 16);
+}
+
+/* La riga bottoni: il quadrato e' alto quanto la riga e largo uguale, il
+   primario prende il resto. Le proporzioni del Figma vengono da sole: a lg
+   1+2 celle, a md 1+4, a base 2+5. */
+.hero-desc__actions {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  width: 100%;
+  height: calc(var(--cell) * 2);
+}
+
+@media (min-width: 720px) {
+  .hero-desc__actions {
+    height: var(--cell);
+  }
+}
+
+.hero-desc__actions .square-button {
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+}
+
+.hero-desc__actions .primary-button {
+  flex: 1 0 0;
+  min-width: 0;
+}
+
+/* Dentro la riga i due bottoni non sono blocchi di griglia: la loro posizione
+   la decide il flex, quindi le custom property di posizionamento non servono. */
+.hero-desc__actions > * {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+/* ---------- Marquee ---------- */
+
+/* 314:2306 · 321:2793 · 250:196
+ *
+ * Full bleed a tutti i tier per decisione del committente (NOTES.md D4): nel
+ * Figma sfora solo a md.
+ *
+ * Lo sbordo sta su un figlio, non sul blocco: il blocco deve restare della
+ * misura del proprio span, altrimenti i suoi bordi non cadono piu' sulle linee
+ * e la sonda lo segnala giustamente.
+ *
+ * Il filo alto cade sulla linea di riga. Quello basso e' uno pseudo-elemento a
+ * -1px, cosi' dentro il contenitore occupa lo stesso pixel della linea
+ * successiva invece di affiancarla, e fuori la prolunga.
+ */
+.marquee {
+  position: relative;
+}
+
+.marquee__bleed {
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  overflow: clip;
+  width: 100vw;
+  margin-left: -50vw;
+  padding-inline: var(--pad-sm);
+  background: var(--block-bg);
+  border-top: var(--line) solid var(--line-color);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: calc(var(--u) * 16);
+  line-height: 1;
+}
+
+.marquee__bleed::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(var(--line) * -1);
+  height: var(--line);
+  background: var(--line-color);
+}
+
+.marquee__track {
+  display: flex;
+  flex: 1 0 auto;
+  gap: calc(var(--u) * 48);
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marquee__item {
+  flex-shrink: 0;
+  text-box: trim-both cap alphabetic;
+}
+
+@media (min-width: 720px) {
+  .marquee__bleed {
+    padding-inline: var(--pad);
+    font-size: calc(var(--u) * 32);
+  }
+
+  .marquee__track {
+    gap: 0;
+    justify-content: space-between;
+  }
+}
+
+/* ---------- About ---------- */
+
+/* 314:2325 · 321:2812 · 262:944 */
+.about-section {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 32);
+  padding: var(--pad-lg) var(--pad);
+}
+
+.about-section__title {
+  margin: 0;
+  font-size: calc(var(--u) * 32);
+}
+
+.about-section__body {
+  margin: 0;
+}
+
+@media (min-width: 720px) {
+  .about-section {
+    gap: var(--pad-lg);
+  }
+
+  .about-section__title {
+    font-size: calc(var(--u) * 64);
+  }
+}
+
+@media (min-width: 1200px) {
+  .about-section__title {
+    font-size: calc(var(--u) * 64);
+  }
+}
+
+/* ---------- Skill card ---------- */
+
+/* 314:2454 · 321:2981 · 262:937 */
+.skill-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--pad) var(--pad-sm);
+}
+
+.skill-card__label {
+  margin: 0;
+  font-weight: 700;
+  font-size: calc(var(--u) * 16);
+  line-height: 1.5;
+  text-box: trim-both cap alphabetic;
+}
+
+@media (min-width: 720px) {
+  .skill-card {
+    padding: var(--pad);
+  }
+
+  .skill-card__label {
+    font-size: calc(var(--u) * 24);
+  }
+}
+
+/* ---------- Selected Works ---------- */
+
+/* 314:2336 · 321:2823 · 265:1082 */
+.works-section {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 6);
+  justify-content: center;
+  padding: var(--pad);
+}
+
+.works-section__title {
+  margin: 0;
+  font-size: calc(var(--u) * 20);
+}
+
+.works-section__caption {
+  margin: 0;
+  font-size: calc(var(--u) * 14);
+  color: var(--dark-grey);
+}
+
+@media (min-width: 720px) {
+  .works-section {
+    gap: calc(var(--u) * 12);
+  }
+
+  .works-section__title {
+    font-size: calc(var(--u) * 40);
+  }
+
+  .works-section__caption {
+    font-size: calc(var(--u) * 16);
+  }
+}
+
+@media (min-width: 1200px) {
+  .works-section__title {
+    font-size: calc(var(--u) * 40);
+  }
+}
+
+/* 314:2329 · 321:2816 · 265:1044
+   La card e' un'immagine con, nell'ultima riga, il titolo e i tag. I tag di
+   categoria esistono da md in su: a base c'e' solo il titolo. */
+.works-card {
+  position: relative;
+  overflow: clip;
+}
+
+.works-card__media,
+.works-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.works-card__tags {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  height: calc(var(--cell) * 2);
+}
+
+.works-card__title,
+.works-card__tag {
+  display: flex;
+  align-items: center;
+  background: var(--off-white);
+  border: var(--line) solid var(--line-color);
+  /* I riquadri si sovrappongono di un pixel come nel Figma, cosi' fra due tag
+     adiacenti resta un filo solo invece di due. */
+  margin-inline-end: calc(var(--line) * -1);
+}
+
+.works-card__title {
+  padding: var(--pad);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: calc(var(--u) * 20);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.works-card__tag {
+  flex: 0 0 auto;
+  justify-content: center;
+  width: var(--cell);
+  padding-block: var(--pad);
+  font-weight: 700;
+  font-size: calc(var(--u) * 12);
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (width < 720px) {
+  .works-card__tag {
+    display: none;
+  }
+}
+
+@media (min-width: 720px) {
+  .works-card__tags {
+    height: var(--cell);
+  }
+
+  .works-card__title {
+    font-size: calc(var(--u) * 24);
+  }
+}
+
+@media (min-width: 1200px) {
+  .works-card__tag {
+    font-size: calc(var(--u) * 14);
+  }
+}
+
+/* 314:2677 · 321:2829 · 299:305 */
+.works-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--u) * 12);
+  color: var(--dark-grey);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 720px) {
+  .works-pagination {
+    font-size: calc(var(--u) * 16);
+  }
+}
+
+/* ---------- Testimonial ---------- */
+
+/* 314:2372 · 321:2859 · 266:1123 */
+.testimonials-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--pad);
+}
+
+.testimonials-section__title {
+  margin: 0;
+  font-size: calc(var(--u) * 32);
+}
+
+@media (min-width: 720px) {
+  .testimonials-section__title {
+    font-size: calc(var(--u) * 64);
+  }
+}
+
+@media (min-width: 1200px) {
+  .testimonials-section__title {
+    font-size: calc(var(--u) * 64);
+  }
+}
+
+/* 314:2344 · 321:2831 · 266:1158 — la cella con ";)" */
+.wink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--u) * 16);
+  line-height: 1.5;
+}
+
+@media (min-width: 720px) {
+  .wink {
+    font-size: calc(var(--u) * 24);
+  }
+}
+
+/*
+ * 314:2683 · 321:2946 · 266:1148
+ *
+ * A base la riga e' larga 468px su una viewport da 390: diventa a scorrimento
+ * orizzontale con scatto, come deciso in home-handoff §4-bis. Da md in su ci
+ * sta e lo scorrimento non serve.
+ */
+.testimonial-row {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.testimonial-row::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .testimonial-row {
+    overflow-x: visible;
+  }
+}
+
+.testimonial-tab {
+  position: relative;
+  display: flex;
+  flex: 0 0 calc(var(--cell) * 3);
+  align-items: center;
+  justify-content: center;
+  gap: var(--pad-sm);
+  scroll-snap-align: start;
+  background: none;
+  font-weight: 700;
+  font-size: calc(var(--u) * 12);
+  line-height: 1.5;
+  color: var(--light-grey);
+  cursor: pointer;
+  appearance: none;
+  /* Nessun bordo proprio: ogni scheda e' larga un numero intero di celle, quindi
+     i suoi lati cadono gia' su linee di griglia. Nel Figma il filo a destra
+     della scheda attiva e' scuro e quello delle altre e' grigio chiaro: qui
+     sono tutti la linea di griglia. E' una sfumatura da un pixel, annotata. */
+  border: 0;
+}
+
+.testimonial-tab[aria-selected='true'] {
+  color: var(--black);
+}
+
+/* Chi non ha ancora un testo non e' selezionabile: vedi NOTES.md B13. */
+.testimonial-tab[aria-disabled='true'] {
+  cursor: default;
+}
+
+@media (min-width: 720px) {
+  .testimonial-tab {
+    flex-basis: calc(var(--cell) * 2);
+  }
+}
+
+@media (min-width: 1200px) {
+  .testimonial-tab {
+    font-size: calc(var(--u) * 16);
+  }
+}
+
+/* La barra di avanzamento: nel Figma e' 191 su 240, cioe' un countdown a meta'
+   corsa. Qui parte da zero e la anima la timeline in Fase 5. */
+.testimonial-tab__progress {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 100%;
+  height: calc(var(--u) * 4);
+  background: var(--purple);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+/* 314:2349 · 321:2836 · 266:1107 */
+.testimonials {
+  display: flex;
+  flex-direction: column;
+}
+
+.testimonial-details {
+  display: flex;
+  flex: 1 0 0;
+  flex-direction: column;
+  gap: calc(var(--u) * 24);
+  justify-content: center;
+  padding-inline: calc(var(--u) * 12);
+}
+
+.testimonial-quote {
+  margin: 0;
+  font-size: calc(var(--u) * 16);
+  line-height: 1.75;
+}
+
+.testimonial-author {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 8);
+  margin: 0;
+}
+
+.testimonial-author__name {
+  font-weight: 700;
+  font-size: calc(var(--u) * 16);
+  line-height: 1.5;
+}
+
+.testimonial-author__role {
+  font-size: calc(var(--u) * 12);
+  line-height: 1.5;
+  color: var(--dark-grey);
+}
+
+@media (min-width: 720px) {
+  .testimonial-details {
+    padding-inline: var(--pad);
+  }
+
+  .testimonial-author__role {
+    font-size: calc(var(--u) * 14);
+  }
+}
+
+@media (min-width: 1200px) {
+  .testimonial-details {
+    padding-inline: calc(var(--cell));
+  }
+
+  .testimonial-quote {
+    font-size: calc(var(--u) * 24);
+  }
+
+  .testimonial-author__name {
+    font-size: calc(var(--u) * 24);
+  }
+
+  .testimonial-author__role {
+    font-size: calc(var(--u) * 20);
+  }
+}
+
+/* La navigazione prev/next esiste solo a desktop: confermato dal committente
+   (NOTES.md D5), a md e base i frame non la contengono. */
+.testimonials-nav {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.testimonials-nav .square-button {
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  grid-column: auto;
+  grid-row: auto;
+}

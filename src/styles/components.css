@@ -28,7 +28,7 @@
 /* Getai 40 / 24 / 20 px, dai nodi 257:798, 321:2792 e 314:2305. */
 .logo__text {
   display: block;
-  font-size: 20px;
+  font-size: calc(var(--u) * 20);
   text-align: center;
 }
 
@@ -40,7 +40,7 @@
 
 @media (min-width: 720px) {
   .logo__text {
-    font-size: 24px;
+    font-size: calc(var(--u) * 24);
   }
 
   .logo__word {
@@ -50,7 +50,7 @@
 
 @media (min-width: 1200px) {
   .logo__text {
-    font-size: 40px;
+    font-size: calc(var(--u) * 40);
   }
 }
 
@@ -104,19 +104,19 @@
 
 /* Stesse tre dimensioni del logo di testa: 268:1255, 321:2895, 314:2408. */
 .footer-brand__text {
-  font-size: 20px;
+  font-size: calc(var(--u) * 20);
   text-align: center;
 }
 
 @media (min-width: 720px) {
   .footer-brand__text {
-    font-size: 24px;
+    font-size: calc(var(--u) * 24);
   }
 }
 
 @media (min-width: 1200px) {
   .footer-brand__text {
-    font-size: 40px;
+    font-size: calc(var(--u) * 40);
   }
 }
 
@@ -157,7 +157,7 @@
   position: absolute;
   inset-inline: 0;
   bottom: 0;
-  height: 4px;
+  height: calc(var(--u) * 4);
   background: var(--purple);
 }
 
@@ -165,18 +165,11 @@
    Le voci social restano a 12px fino a lg, dove diventano 16px con l'icona di
    fianco invece che sopra. Valori dai nodi 314:2412, 321:2899, 268:1288 per la
    navigazione e 314:2419, 321:2997, 268:1262 per i social. */
-/*
- * 12px alla larghezza di disegno, meno sotto.
- *
- * Il frame base e' a 390, dove la cella vale 37,5 (39 meno il varco della
- * scrollbar) e una voce da 2 colonne e' larga 75px: "Instagram" a 12px ci entra
- * per un pelo. A 320 la stessa voce e' larga 61 e non ci entra piu'. Il tetto a
- * 12px fa si' che da 390 in su la dimensione sia esattamente quella del
- * disegno, e che a scendere il testo si stringa invece di sfondare la cella.
- */
+/* 12 pixel di disegno: a 390 sono 12px, sotto si stringono con la cella.
+   "Instagram" in una voce da due colonne ci entra per un pelo gia' a 390. */
 .footer-link__label {
   font-weight: 700;
-  font-size: min(12px, calc(var(--cell) * 12 / 37.5));
+  font-size: calc(var(--u) * 12);
   line-height: 1.5;
 }
 
@@ -184,16 +177,16 @@
    Figma fa stare "Instagram" dentro una cella da 77px. */
 .footer-link:has(.footer-link__arrow) {
   flex-direction: column;
-  gap: 4px;
+  gap: calc(var(--u) * 4);
 }
 
 @media (min-width: 720px) {
   .footer-link__label {
-    font-size: 16px;
+    font-size: calc(var(--u) * 16);
   }
 
   .footer-link:has(.footer-link__arrow) .footer-link__label {
-    font-size: 12px;
+    font-size: calc(var(--u) * 12);
   }
 }
 
@@ -204,7 +197,7 @@
   }
 
   .footer-link:has(.footer-link__arrow) .footer-link__label {
-    font-size: 16px;
+    font-size: calc(var(--u) * 16);
   }
 }
 
@@ -229,22 +222,43 @@
 
 /* ---------- Form ---------- */
 
+/* 314:2374 · 321:2861 · 266:1185 */
 .contact-form-block {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: var(--pad) 30px;
+  padding: var(--pad);
 }
 
 .contact-form {
   display: flex;
   flex-direction: column;
-  gap: var(--pad-lg);
+  gap: var(--pad);
 }
 
+/* A base i due campi corti non sono affiancati: stanno in colonna come gli
+   altri, ognuno a tutta larghezza. */
 .contact-form__row {
   display: flex;
-  gap: var(--pad-lg);
+  flex-direction: column;
+  gap: var(--pad);
+}
+
+@media (min-width: 720px) {
+  .contact-form,
+  .contact-form__row {
+    gap: var(--pad-lg);
+  }
+
+  .contact-form__row {
+    flex-direction: row;
+  }
+}
+
+@media (min-width: 1200px) {
+  .contact-form-block {
+    padding: var(--pad) 30px;
+  }
 }
 
 .contact-form__row > .form-field {
@@ -255,25 +269,36 @@
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: calc(var(--u) * 8);
   margin: 0;
 }
 
 .form-field__label-row {
   display: flex;
   align-items: flex-start;
-  gap: 4px;
+  gap: calc(var(--u) * 4);
+  font-size: calc(var(--u) * 12);
+}
+
+@media (min-width: 720px) {
+  .form-field__label-row {
+    font-size: calc(var(--u) * 16);
+  }
+}
+
+.form-field__label-row label {
+  font-size: inherit;
 }
 
 .form-field__required {
-  font-size: 12px;
+  font-size: calc(var(--u) * 12);
   line-height: 1.5;
   color: var(--light-grey);
 }
 
 .form-field__input {
   width: 100%;
-  height: 60px;
+  height: calc(var(--u) * 60);
   padding: var(--pad-sm);
   background: none;
   border: var(--line) solid var(--dark-grey);
@@ -283,9 +308,15 @@
 }
 
 .form-field__input--area {
-  height: 220px;
+  height: calc(var(--u) * 156);
   padding: var(--pad);
   resize: none;
+}
+
+@media (min-width: 720px) {
+  .form-field__input--area {
+    height: calc(var(--u) * 220);
+  }
 }
 
 .form-field__input::placeholder {
@@ -296,7 +327,7 @@
 .consent-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: calc(var(--u) * 8);
   margin: 0;
 }
 
@@ -322,11 +353,40 @@
 
 /* ---------- CTA ---------- */
 
+/* 314:2402 · 321:2889 · 266:1186 */
 .cta-section {
   display: flex;
   flex-direction: column;
-  gap: var(--pad-lg);
+  gap: var(--pad);
   padding: var(--pad);
+}
+
+.cta-section .cta-section__lead {
+  font-size: calc(var(--u) * 16);
+}
+
+.cta-section .cta-section__title {
+  font-size: calc(var(--u) * 32);
+}
+
+@media (min-width: 720px) {
+  .cta-section {
+    gap: var(--pad-lg);
+  }
+
+  .cta-section .cta-section__lead {
+    font-size: calc(var(--u) * 24);
+  }
+
+  .cta-section .cta-section__title {
+    font-size: calc(var(--u) * 64);
+  }
+}
+
+@media (min-width: 1200px) {
+  .cta-section .cta-section__title {
+    font-size: calc(var(--u) * 64);
+  }
 }
 
 /* Nel Figma questi due testi sono larghi 307 e 376 dentro un blocco da 480.

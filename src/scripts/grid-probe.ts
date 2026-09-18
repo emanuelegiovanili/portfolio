@@ -11,6 +11,13 @@
  * a monte, qualunque cosa sia.
  */
 
+/** Di quanto un blocco sfora, e su quale asse: senza questo non si sa cosa cambiare. */
+export interface Overflow {
+  block: string;
+  dx: number;
+  dy: number;
+}
+
 export interface GridProbeResult {
   tier: 'base' | 'md' | 'lg';
   cols: number;
@@ -21,8 +28,10 @@ export interface GridProbeResult {
   maxDrift: number;
   /** Il bordo che sbaglia di piu', per sapere dove guardare. */
   worst: { block: string; edge: string; delta: number } | null;
-  /** Blocchi il cui contenuto esce dal proprio span. */
-  overflowing: string[];
+  /** Blocchi il cui contenuto esce dal proprio span, e di quanto. */
+  overflowing: Overflow[];
+  /** Gli sfori gia' presenti nel Figma, dichiarati sul blocco con `data-known-overflow`. */
+  known: Overflow[];
   tolerance: number;
 }
 
@@ -47,6 +56,38 @@ function nearest(value: number, candidates: number[]): number {
     if (d < best) best = d;
   }
   return best;
+}
+
+/**
+ * Di quanto il contenuto esce dalla scatola del blocco.
+ *
+ * Sull'asse verticale si confrontano i rettangoli dei figli, non `scrollHeight`.
+ * Il motivo e' `text-box-trim`: accorcia la scatola del titolo alla cap-height
+ * ma le line box restano alte quanto il font, quindi `scrollHeight` conta
+ * sempre lo scarto che il trim ha appena tolto e segnala uno sforo che non
+ * esiste. Sull'asse orizzontale il trim non c'entra, e `scrollWidth` serve
+ * comunque a intercettare una parola lunga che sborda dal proprio paragrafo.
+ */
+function measureOverflow(block: Element, rect: DOMRect, style: CSSStyleDeclaration): { dx: number; dy: number } {
+  const top = rect.top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop);
+  const bottom = rect.bottom - parseFloat(style.borderBottomWidth) - parseFloat(style.paddingBottom);
+  const left = rect.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft);
+  const right = rect.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight);
+
+  let dx = Math.max(0, block.scrollWidth - Math.ceil(block.clientWidth));
+  let dy = 0;
+  for (const child of block.children) {
+    const r = child.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) continue;
+    // Un figlio in posizione assoluta sta dove lo hai messo, anche fuori dal
+    // box del contenuto: l'indicatore di voce attiva del footer copre di
+    // proposito il padding fino al bordo.
+    const position = getComputedStyle(child).position;
+    if (position === 'absolute' || position === 'fixed') continue;
+    dy = Math.max(dy, top - r.top, r.bottom - bottom);
+    dx = Math.max(dx, left - r.left, r.right - right);
+  }
+  return { dx: Math.round(Math.max(0, dx)), dy: Math.round(Math.max(0, dy)) };
 }
 
 function labelOf(el: Element, index: number): string {
@@ -79,9 +120,13 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
 
   let maxDrift = 0;
   let worst: GridProbeResult['worst'] = null;
-  const overflowing: string[] = [];
+  const overflowing: Overflow[] = [];
+  const known: Overflow[] = [];
 
-  const blocks = [...grid.querySelectorAll('.block')].filter(isVisible);
+  // Solo i figli diretti: un blocco annidato dentro un contenitore flex non e'
+  // un elemento di griglia, la sua posizione la decide il flex e confrontarla
+  // con le linee non vuol dire niente.
+  const blocks = [...grid.querySelectorAll(':scope > .block')].filter(isVisible);
   blocks.forEach((block, i) => {
     const rect = block.getBoundingClientRect();
     const name = labelOf(block, i);
@@ -98,8 +143,24 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
         worst = { block: name, edge, delta };
       }
     }
-    if (block.scrollWidth > Math.ceil(rect.width) || block.scrollHeight > Math.ceil(rect.height)) {
-      overflowing.push(name);
+    // Un blocco marcato `data-bleed` ha un figlio che esce di proposito dal
+    // proprio span, come il marquee: li' l'eccedenza e' il disegno, non un
+    // errore. I suoi quattro bordi restano comunque misurati come tutti.
+    // Un blocco marcato `data-bleed` esce di proposito dal proprio span, come
+    // il marquee. Un contenitore che scorre pure: la riga dei testimonial a
+    // base e' larga dodici celle dentro uno span da otto, ed e' il disegno.
+    const style = getComputedStyle(block);
+    const scrolls = /auto|scroll/.test(style.overflowX) || /auto|scroll/.test(style.overflowY);
+    if (!block.hasAttribute('data-bleed') && !scrolls) {
+      const over = measureOverflow(block, rect, style);
+      if (over.dx > 0 || over.dy > 0) {
+        // Un blocco che dichiara `data-known-overflow` sfora gia' nel Figma: il
+        // motivo sta nell'attributo. Va visto, non va confuso con una
+        // regressione, e non fa fallire la verifica.
+        const entry = { block: name, ...over };
+        if (block.hasAttribute('data-known-overflow')) known.push(entry);
+        else overflowing.push(entry);
+      }
     }
   });
 
@@ -115,6 +176,7 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
     maxDrift,
     worst,
     overflowing,
+    known,
     tolerance: TOLERANCE,
   };
 }

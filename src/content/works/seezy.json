@@ -1,0 +1,33 @@
+{
+  "title": "Seezy",
+  "order": 1,
+  "tags": ["Branding", "Product"],
+  "cover": "../../assets/works/seezy/cover.jpg",
+  "coverAlt": "Una mano tiene uno smartphone con la mappa di Seezy, su fondo blu forato",
+  "excerpt": "Una mappa della citta' costruita da chi la attraversa.",
+  "caseStudy": {
+    "body": "Reporting a dangerous situation happens in the worst possible conditions: in a hurry, one-handed, often while still shaken. Any friction in that moment means the report never exists and 40% of crimes in Milan are already never reported at all. Seezy turns that missing data into a shared resource: a real-time map built by the people who walk the city. The MVP defined the information architecture around two coexisting readings of the same urban space: streets, where risk is perceived by area, and the metro network, where it's perceived by stop. Two mental models, one product. The reporting flow was reduced to a pre-set taxonomy and a few taps, with anonymity by default: the effort stays proportionate to the moment it belongs to. The MVP established the base component system the product now scales on, and brought Seezy from concept to something investors could actually use.",
+    "blocks": [
+      {
+        "src": "../../assets/works/seezy/gallery-1.jpg",
+        "alt": "Due schermate dell'app sospese su fondo bianco",
+        "shape": "half"
+      },
+      {
+        "src": "../../assets/works/seezy/gallery-2.png",
+        "alt": "Tre schermate in fila: onboarding, mappa della metropolitana e invito a collaborare",
+        "shape": "wide"
+      },
+      {
+        "src": "../../assets/works/seezy/gallery-3.jpg",
+        "alt": "Due mani tengono lo smartphone con la schermata delle categorie di segnalazione",
+        "shape": "wide"
+      },
+      {
+        "src": "../../assets/works/seezy/gallery-4.jpg",
+        "alt": "La mappa dell'app con le segnalazioni attive, vista ravvicinata",
+        "shape": "half"
+      }
+    ]
+  }
+}

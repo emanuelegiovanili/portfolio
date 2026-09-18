@@ -118,6 +118,7 @@
     out('r-rows', String(r.rows));
     out('r-drift', `${r.maxDrift.toFixed(4)}px`, r.maxDrift <= r.tolerance ? 'good' : 'bad');
     out('r-overflow', String(r.overflowing.length), r.overflowing.length === 0 ? 'good' : 'bad');
+    if (r.overflowing.length) console.warn('blocchi che sforano', r.overflowing);
   }
 
   refresh();

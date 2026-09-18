@@ -2,16 +2,10 @@
 
 export const SITE_NAME = 'Emanuele Giovanili';
 
-/**
- * URL dei profili social.
- *
- * Il Figma mostra le etichette "LinkedIn" e "Instagram" ma non i link, e non me
- * li sono inventati: un link a un profilo sbagliato e' un bug che va online e
- * che nessuno nota finche' non ci clicca qualcuno. Vedi NOTES.md B10.
- */
+/** URL dei profili social. Non sono nel Figma: forniti dal committente. */
 export const SOCIAL = {
-  linkedin: '#',
-  instagram: '#',
+  linkedin: 'https://www.linkedin.com/in/emanuele-giovanili/',
+  instagram: 'https://www.instagram.com/whereisemanuelegiovanili/',
 } as const;
 
 /** Un href ancora da riempire, per non pubblicare un link che non porta da nessuna parte. */

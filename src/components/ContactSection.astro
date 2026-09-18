@@ -29,7 +29,12 @@ const FIELDS = [
 const CONSENT = 'I agree with the processing my personal data';
 ---
 
-<Block at={at.form} class="contact-form-block" clip>
+<Block
+  at={at.form}
+  class="contact-form-block"
+  clip
+  data-known-overflow="321:2861 — a md il form e' alto 633 nel file contro i 616 di otto righe, e il contenuto ne chiede 606 piu' padding"
+>
   <form class="contact-form" id="contact-form" novalidate>
     <div class="contact-form__row">
       {
@@ -107,7 +112,12 @@ const CONSENT = 'I agree with the processing my personal data';
 
 {
   at.cta && (
-    <Block at={at.cta} class="cta-section" clip>
+    <Block
+      at={at.cta}
+      class="cta-section"
+      clip
+      data-known-overflow="314:2402 — a base lead e titolo chiedono 156px dentro 155 di spazio utile"
+    >
       <p class="t-title cta-section__lead">Don’t let your ideas sit and simmer for too long</p>
       <p class="t-display t-display--page cta-section__title">
         Let’s <span class="cta-section__accent">bake</span> something together

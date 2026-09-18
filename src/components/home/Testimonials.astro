@@ -1,0 +1,74 @@
+---
+/**
+ * I testimonial.
+ *
+ * Struttura diversa per tier, e non di poco: a lg la riga dei nomi sta *dentro*
+ * il contenitore bordato (266:1148 e' figlio di 266:1107), a md e base e' un
+ * blocco separato sopra di esso. Qui la riga e' sempre un blocco a se', con una
+ * posizione per ciascun tier: a lg cade sulla prima riga del contenitore, che
+ * di conseguenza parte una riga piu' sotto. Il risultato in pagina e' identico,
+ * senza dover duplicare il markup delle schede.
+ *
+ * Solo il primo testimonial ha un testo nel Figma. Gli altri tre hanno il nome
+ * e basta: le loro schede ci sono ma non sono selezionabili. Vedi NOTES.md B13.
+ */
+import Block from '../Block.astro';
+import SquareButton from '../SquareButton.astro';
+import type { BlockPlacements } from '../../lib/layout';
+import type { Testimonial } from '../../data/testimonials';
+
+interface Props {
+  at: { row: BlockPlacements; details: BlockPlacements; nav?: BlockPlacements };
+  items: Testimonial[];
+}
+
+const { at, items } = Astro.props;
+
+const firstComplete = items.findIndex((t) => t.quote !== undefined);
+const active = firstComplete >= 0 ? firstComplete : 0;
+const shown = items[active];
+---
+
+<Block at={at.row} class="testimonial-row" role="tablist" aria-label="Clienti" surface="bare">
+  {
+    items.map((item, i) => {
+      const complete = item.quote !== undefined;
+      return (
+        <button
+          class="testimonial-tab"
+          type="button"
+          role="tab"
+          id={`tt-${i}`}
+          aria-controls="testimonial-panel"
+          aria-selected={i === active ? 'true' : 'false'}
+          aria-disabled={complete ? undefined : 'true'}
+          disabled={!complete}
+          tabindex={i === active ? 0 : -1}
+          data-testimonial={i}
+        >
+          {item.client}
+          {i === active && <span class="testimonial-tab__progress" aria-hidden="true" />}
+        </button>
+      );
+    })
+  }
+</Block>
+
+<Block at={at.details} class="testimonials" clip>
+  <div class="testimonial-details" id="testimonial-panel" role="tabpanel" aria-labelledby={`tt-${active}`}>
+    <p class="testimonial-quote" data-testimonial-quote>{shown.quote}</p>
+    <p class="testimonial-author">
+      <span class="testimonial-author__name" data-testimonial-author>{shown.author}</span>
+      <span class="testimonial-author__role" data-testimonial-role>{shown.role}</span>
+    </p>
+  </div>
+</Block>
+
+{
+  at.nav && (
+    <Block at={at.nav} class="testimonials-nav" surface="bare">
+      <SquareButton at={at.nav} icon="chevron-left" label="Testimonianza precedente" data-testimonial-prev />
+      <SquareButton at={at.nav} icon="chevron-right" label="Testimonianza successiva" data-testimonial-next />
+    </Block>
+  )
+}

@@ -136,12 +136,12 @@
 
 /* Titolo di pagina: About, voci del megamenu, In the kitchen. */
 .t-display--page {
-  font-size: 64px;
+  font-size: calc(var(--u) * 64);
 }
 
 /* Titolo di sezione, logo, brand del footer, Now playing. */
 .t-display--section {
-  font-size: 40px;
+  font-size: calc(var(--u) * 40);
 }
 
 /*
@@ -162,17 +162,17 @@
  */
 @media (min-width: 1200px) {
   .t-display--page {
-    font-size: min(64px, calc(var(--cell) * 64 / 120));
+    font-size: calc(var(--u) * 64);
   }
 
   .t-display--section {
-    font-size: min(40px, calc(var(--cell) * 40 / 120));
+    font-size: calc(var(--u) * 40);
   }
 }
 
 /* Testo dei bottoni. */
 .t-display--button {
-  font-size: 16px;
+  font-size: calc(var(--u) * 16);
   line-height: 1.5;
 }
 
@@ -180,31 +180,31 @@
 
 .t-title {
   font-weight: 700;
-  font-size: 24px;
+  font-size: calc(var(--u) * 24);
   line-height: 1.5;
 }
 
 .t-body {
   font-weight: 500;
-  font-size: 16px;
+  font-size: max(14px, calc(var(--u) * 16));
   line-height: 1.5;
 }
 
 .t-link {
   font-weight: 700;
-  font-size: 16px;
+  font-size: calc(var(--u) * 16);
   line-height: 1.5;
 }
 
 .t-tag {
   font-weight: 700;
-  font-size: 14px;
+  font-size: max(14px, calc(var(--u) * 14));
   line-height: 1.5;
 }
 
 .t-meta {
   font-weight: 500;
-  font-size: 12px;
+  font-size: calc(var(--u) * 12);
   line-height: 1.5;
   color: var(--dark-grey);
 }
@@ -212,13 +212,13 @@
 /* Citazione dei testimonial: e' l'unico testo con interlinea 1.75 (266:1129). */
 .t-quote {
   font-weight: 500;
-  font-size: 24px;
+  font-size: max(14px, calc(var(--u) * 24));
   line-height: 1.75;
 }
 
 .t-role {
   font-weight: 500;
-  font-size: 20px;
+  font-size: calc(var(--u) * 20);
   line-height: 1.5;
   color: var(--dark-grey);
 }

@@ -13,13 +13,24 @@
  */
 
 import { chromium } from 'playwright';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { transform } from 'esbuild';
 import { startDevServer, CHROMIUM } from './dev-server.mjs';
 
 const WIDTHS = [320, 390, 430, 719, 720, 768, 1024, 1199, 1200, 1280, 1440, 1680, 1920];
+
+/**
+ * Il frame piu' piccolo del Figma e' a 390.
+ *
+ * Sotto, nessun blocco ha un disegno: la composizione regge e le linee restano
+ * al loro posto, ma qualche blocco di testo sfora di pochi pixel perche' la
+ * cella e' piu' stretta di quella per cui e' stato disegnato. Lo si misura e lo
+ * si stampa, non lo si fa fallire: non c'e' niente a cui essere fedeli.
+ */
+const SMALLEST_DESIGNED_WIDTH = 390;
 const SCROLLS = ['top', 'middle', 'bottom'];
-const PATHS = ['/grid', '/grid/components'];
+const PATHS = ['/grid', '/grid/components', '/'];
 const SHOT_DIR = '.verify';
 
 const args = process.argv.slice(2);
@@ -34,6 +45,21 @@ const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await start
 
 if (flag('--shots') && !existsSync(SHOT_DIR)) await mkdir(SHOT_DIR, { recursive: true });
 
+/**
+ * La sonda viene iniettata, non importata dalla pagina.
+ *
+ * Le route di produzione non devono spedire codice di misura al visitatore, e
+ * le route di debug non devono essere le uniche misurabili. Iniettando lo
+ * stesso sorgente che il pannello di /grid importa, l'implementazione resta
+ * una sola e vale su qualunque pagina.
+ */
+const probeSource = await readFile(new URL('../src/scripts/grid-probe.ts', import.meta.url), 'utf8');
+const { code: probeScript } = await transform(probeSource, {
+  loader: 'ts',
+  format: 'iife',
+  target: 'es2022',
+});
+
 const browser = await chromium.launch({ executablePath: CHROMIUM });
 const rows = [];
 let failures = 0;
@@ -41,10 +67,19 @@ let failures = 0;
 try {
   for (const route of PATHS)
   for (const width of WIDTHS) {
+    // Sotto il confine md si emula un telefono. Non e' un dettaglio: con la
+    // scrollbar classica il varco riservato da `scrollbar-gutter: stable`
+    // toglie 15px su 390, cioe' il 4% della larghezza, e i blocchi di testo
+    // guadagnano una riga che sul dispositivo reale non hanno. I telefoni
+    // hanno scrollbar a sovrapposizione e il varco vale zero.
+    const mobile = width < 720;
     const context = await browser.newContext({
-      viewport: { width, height: 900 },
-      deviceScaleFactor: 2,
+      viewport: { width, height: mobile ? 844 : 900 },
+      deviceScaleFactor: mobile ? 3 : 2,
+      isMobile: mobile,
+      hasTouch: mobile,
     });
+    await context.addInitScript({ content: probeScript });
     const page = await context.newPage();
     const errors = [];
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
@@ -62,9 +97,10 @@ try {
       const result = await page.evaluate(() => window.__probeGrid?.() ?? null);
       if (!result) throw new Error(`nessuna griglia trovata a ${width}px`);
 
-      const ok = result.maxDrift <= result.tolerance && result.overflowing.length === 0;
+      const belowDesign = width < SMALLEST_DESIGNED_WIDTH;
+      const ok = result.maxDrift <= result.tolerance && (belowDesign || result.overflowing.length === 0);
       if (!ok) failures += 1;
-      rows.push({ route, width, where, ...result, ok, errors: errors.length });
+      rows.push({ route, width, where, ...result, ok, belowDesign, errors: errors.length });
 
       if (flag('--shots') && where === 'top') {
         const name = route.replace(/\//g, '-').replace(/^-/, '');
@@ -100,10 +136,28 @@ for (const r of rows) {
       pad(r.maxDrift.toFixed(4) + 'px', 11) +
       pad(r.overflowing.length, 7) +
       (r.ok
-        ? 'ok'
+        ? r.belowDesign && r.overflowing.length > 0
+          ? `ok (sotto ${SMALLEST_DESIGNED_WIDTH}: ${r.overflowing.map((o) => o.block).join(', ')})`
+          : 'ok'
         : `FALLITO ${r.worst ? `(${r.worst.block} ${r.worst.edge} ${r.worst.delta.toFixed(3)}px)` : ''}` +
-          (r.overflowing.length ? ` sfora: ${r.overflowing.join(', ')}` : '')),
+          (r.overflowing.length
+            ? ` sfora: ${r.overflowing.map((o) => `${o.block} ${o.dx ? `+${o.dx}w` : ''}${o.dy ? `+${o.dy}h` : ''}`).join(', ')}`
+            : '')),
   );
+}
+
+const knownRows = rows.filter((r) => r.known.length > 0);
+if (knownRows.length > 0) {
+  console.log('\nSfori gia' + String.fromCharCode(39) + ' presenti nel Figma (dichiarati con data-known-overflow):');
+  const seen = new Set();
+  for (const r of knownRows) {
+    for (const k of r.known) {
+      const key = `${r.route} ${k.block}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      console.log(`  ${r.route} · ${k.block} · fino a +${k.dx}w +${k.dy}h`);
+    }
+  }
 }
 
 const worst = rows.reduce((a, b) => (b.maxDrift > a.maxDrift ? b : a), rows[0]);

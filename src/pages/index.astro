@@ -1,0 +1,165 @@
+---
+/**
+ * Home.
+ *
+ * L'unica pagina con tutti e tre i tier. Le posizioni vengono da
+ * src/lib/blocks/home.ts, che le tiene lette dai tre frame; qui c'e' solo il
+ * contenuto e la struttura.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Grid from '../components/Grid.astro';
+import Block from '../components/Block.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Icon from '../components/Icon.astro';
+import SquareButton from '../components/SquareButton.astro';
+import PrimaryButton from '../components/PrimaryButton.astro';
+import ContactSection from '../components/ContactSection.astro';
+import WorksCarousel from '../components/home/WorksCarousel.astro';
+import Testimonials from '../components/home/Testimonials.astro';
+import { headerMap } from '../lib/blocks/chrome';
+import { homeBlocks, homeFooter } from '../lib/blocks/home';
+import { SERVICES } from '../data/services';
+import { TESTIMONIALS } from '../data/testimonials';
+import '../styles/home.css';
+
+const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
+
+const map = { ...headerMap, ...homeBlocks, ...homeFooter };
+
+/** Le tre skill card. L'icona e l'etichetta vengono da 262:937, 262:939, 262:930. */
+const SKILLS = [
+  { at: homeBlocks.skillProduct, icon: 'tablet-smartphone', label: 'Product Design' },
+  { at: homeBlocks.skillWeb, icon: 'app-window', label: 'Web Design' },
+  { at: homeBlocks.skillBranding, icon: 'swatch-book', label: 'Branding' },
+] as const;
+---
+
+<Base
+  title="Emanuele Giovanili — Baking Ideas"
+  description="UX/UI & Product Designer. Creo esperienze digitali e le porto in vita."
+>
+  <Grid map={map}>
+    <Header current="/" />
+
+    <Block
+      at={homeBlocks.heroText}
+      class="hero-text"
+      clip
+      data-known-overflow="314:2437 — a base il titolo a 72px chiede 125px dentro 116 di spazio utile"
+    >
+      <h1 class="t-display hero-text__title">Baking<br />Ideas</h1>
+    </Block>
+
+    <Block at={homeBlocks.heroDescription} class="hero-desc" clip>
+      <div class="hero-desc__copy">
+        <p class="hero-desc__lead">Never tasteless<br />digital experiences</p>
+        <p class="t-body hero-desc__body">
+          I’m a UX/UI &amp; Product Designer, creating digital experiences and bringing them to life.
+        </p>
+      </div>
+
+      <p class="t-meta hero-desc__location">
+        Based in San Benedetto del Tronto, Italy<br />Working remotely
+      </p>
+
+      <div class="hero-desc__actions">
+        <SquareButton
+          at={homeBlocks.heroDescription}
+          variant="profile"
+          label="Scopri chi sono"
+          href="/about"
+        />
+        <PrimaryButton at={homeBlocks.heroDescription} label="Discover more" href="#about" />
+      </div>
+    </Block>
+
+    <Block at={homeBlocks.marquee} surface="bare" class="marquee" data-bleed>
+      <div class="marquee__bleed">
+        <ul class="marquee__track">
+          {SERVICES.map((service) => <li class="marquee__item">{service}</li>)}
+        </ul>
+      </div>
+    </Block>
+
+    <Block
+      at={homeBlocks.about}
+      class="about-section"
+      id="about"
+      clip
+      data-known-overflow="314:2325 — sotto i 390 il corpo del testo guadagna righe che il blocco non ha"
+    >
+      <h2 class="t-display about-section__title">What’s<br />in the mix</h2>
+      <p class="t-body about-section__body">
+        To me, design is about making people happy about what they are looking at, using or
+        experiencing. Whether it is a product, a website or a brand, I find purpose in design when it
+        makes a real impact on people’s daily lives.
+      </p>
+    </Block>
+
+    {
+      SKILLS.map((skill) => (
+        <Block at={skill.at} class="skill-card" clip>
+          <Icon name={skill.icon} />
+          <p class="skill-card__label">{skill.label}</p>
+        </Block>
+      ))
+    }
+
+    <Block
+      at={homeBlocks.worksSection}
+      class="works-section"
+      clip
+      data-known-overflow="314:2336 — a base titolo piu' didascalia chiedono 57px dentro 38 di spazio utile"
+    >
+      <h2 class="t-display works-section__title">Selected Works</h2>
+      <p class="works-section__caption">Ideas that got baked</p>
+    </Block>
+
+    <PrimaryButton at={homeBlocks.worksViewAll} label="View all my work" href="/works" />
+
+    <WorksCarousel
+      at={{
+        card: homeBlocks.worksImage,
+        pagination: homeBlocks.worksPagination,
+        prev: homeBlocks.worksPrev,
+        next: homeBlocks.worksNext,
+      }}
+      works={works}
+    />
+
+    <Block
+      at={homeBlocks.testimonialsSection}
+      class="testimonials-section"
+      clip
+      data-known-overflow="314:2372 — a base il titolo va su tre righe: 88px dentro 77 di spazio utile"
+    >
+      <h2 class="t-display testimonials-section__title">People with good taste</h2>
+    </Block>
+
+    <Block at={homeBlocks.testimonialsIcon} class="wink" clip>
+      <span aria-hidden="true">;)</span>
+      <span class="visually-hidden">Un occhiolino</span>
+    </Block>
+
+    <Testimonials
+      at={{
+        row: homeBlocks.testimonialsRow,
+        details: homeBlocks.testimonialsContainer,
+        nav: homeBlocks.testimonialsNav,
+      }}
+      items={TESTIMONIALS}
+    />
+
+    <ContactSection
+      at={{
+        form: homeBlocks.contactForm,
+        cta: homeBlocks.contactCta,
+        send: homeBlocks.contactSend,
+      }}
+    />
+
+    <Footer at={homeFooter} current="/" />
+  </Grid>
+</Base>

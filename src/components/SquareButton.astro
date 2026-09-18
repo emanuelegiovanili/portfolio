@@ -2,9 +2,13 @@
 /**
  * Square-button 1x1 (258:867).
  *
- * Tre varianti nel Figma, non due: `menu` con lucide/menu, `mail` viola con
- * lucide/send, e `profile` con lucide/user-round, che sta nel blocco bottoni
- * dell'hero e non compare in nessuna mappa dei documenti di handoff.
+ * Il Figma ne definisce tre varianti: `menu` con lucide/menu, `mail` viola con
+ * lucide/send, `profile` con lucide/user-round, che sta nel blocco bottoni
+ * dell'hero e non compare in nessuna mappa degli handoff.
+ *
+ * Le celle 1x1 con le frecce dei caroselli hanno la stessa forma ma un'icona
+ * diversa, quindi l'icona si puo' passare direttamente invece di moltiplicare
+ * le varianti.
  *
  * La variante `mail` e' l'unica viola, e come tutti i blocchi viola non ha
  * bordo: copre la linea di griglia e non la rimpiazza.
@@ -14,9 +18,14 @@ import Icon from './Icon.astro';
 import type { BlockPlacements } from '../lib/layout';
 import type { IconName } from '../lib/icons';
 
+type Variant = 'menu' | 'mail' | 'profile';
+
 interface Props {
   at: BlockPlacements;
-  variant: 'menu' | 'mail' | 'profile';
+  /** Una delle tre varianti del Figma. In alternativa, `icon`. */
+  variant?: Variant;
+  /** Un'icona qualsiasi, per le celle che riusano la forma senza essere una variante. */
+  icon?: IconName;
   /** Nome accessibile del comando. L'icona da sola non ne fornisce uno. */
   label: string;
   href?: string;
@@ -24,13 +33,16 @@ interface Props {
   [key: string]: unknown;
 }
 
-const { at, variant, label, href, class: className, ...rest } = Astro.props;
+const { at, variant, icon, label, href, class: className, ...rest } = Astro.props;
 
-const ICON: Record<Props['variant'], IconName> = {
+const VARIANT_ICON: Record<Variant, IconName> = {
   menu: 'menu',
   mail: 'send',
   profile: 'user-round',
 };
+
+const name = icon ?? (variant ? VARIANT_ICON[variant] : undefined);
+if (!name) throw new Error('SquareButton: serve `variant` oppure `icon`');
 
 const isLink = href !== undefined;
 ---
@@ -46,5 +58,5 @@ const isLink = href !== undefined;
   aria-label={label}
   {...rest}
 >
-  <Icon name={ICON[variant]} />
+  <Icon name={name} />
 </Block>

@@ -276,6 +276,10 @@ resta valido.
 `Square-button`, nel blocco bottoni dell'hero: un blocco che nessuna mappa degli handoff elenca.
 Resta statica.
 
+### D26-bis. Gli URL social non sono nel Figma
+Le etichette "LinkedIn" e "Instagram" ci sono, i link no. Sono stati forniti dal committente e stanno
+in `src/lib/site.ts`, non sparsi nel markup, perche' cambiano indipendentemente dal disegno.
+
 ### D27. SVG inline, con elenco chiuso
 Le icone sono inline nel markup e non `<img src>`: un'immagine esterna non e' animabile, e sette di
 queste hanno un'animazione. L'elenco dei nomi ammessi sta in `src/lib/icons.ts` ed e' chiuso: un
@@ -345,6 +349,97 @@ frame base, che sta a 390) una voce da due colonne e' larga 61px e "Instagram" a
 
 ---
 
+## 8. Fase 3 — la home
+
+### D31. `src/content.config.ts`, non `src/content/config.ts`
+Il prompt di progetto indicava la posizione di Astro 4. Astro 5 vuole il file alla radice di `src/`.
+
+### D32. `--u`, il pixel di disegno
+E' la decisione piu' grossa della fase, e viene da una misura.
+
+Ogni tier del Figma e' disegnato a una larghezza precisa: 390, 767, 1440. `grid-system-handoff` §2
+dice, giustamente, che un layout **regge bene sopra la propria larghezza di disegno e male sotto**,
+e che i confini vanno messi perche' ogni layout lavori sopra. Poi pero' fissa i confini a 680 e
+1200, cioe' **sotto**: a 1200 la cella vale 98,75 contro i 120 del disegno, il 17% in meno.
+
+Misurato sulla home, con la scala del Figma presa alla lettera:
+
+| Blocco | 720 | 768 | 1200 | 1280 |
+|---|---|---|---|---|
+| Hero | +33w | +5w | +7w | +5w |
+| About | +17h | | | |
+| Logo | | | +6h | +3h |
+| Testimonial | | | +13h | |
+| Form di contatto | +29h | +9h | +14h | |
+
+`--u` e' quanto vale, in questa cella, un pixel del frame: `min(1px, cella / cella-di-disegno)`.
+Vale **esattamente 1px alla larghezza di disegno**, scende in proporzione sotto, e sopra non sale
+mai. Tutte le grandezze del Figma sono espresse in pixel di disegno: `calc(var(--u) * 20)` invece
+di `20px`.
+
+Sostituisce lo `min(64px, calc(var(--cell) * 64 / 120))` della Fase 2, che faceva la stessa cosa ma
+solo a lg.
+
+Tre eccezioni, ognuna per un motivo misurato:
+
+1. **Il testo di lettura ha un pavimento a 14px** (`max(14px, calc(var(--u) * 16))`). A 1200 il
+   fattore e' 0,82 e un corpo a 13px non e' piu' un testo.
+2. **Le larghezze di riga non si scalano.** I due testi della CTA sono vincolati a 307 e 376px nel
+   Figma per imporre il punto di a capo. Scalandoli il blocco sforava di **37px a 1200** invece che
+   di 1: stringere una riga aggiunge righe, che e' il contrario di quel che serve.
+3. **L'hero non si dimensiona in pixel di disegno** ma in frazione della larghezza interna del
+   proprio blocco (`25,5cqi`). E' l'unico testo che nel Figma riempie esattamente lo spazio utile
+   con `nowrap`: qualunque restringimento lo fa sforare, e a base sfora gia' nel file.
+
+### D33. `--cell` e `--u` sono registrate con `@property`
+Senza registrazione, `100cqw` dentro una custom property si risolve sul contenitore dell'elemento
+che la **usa**, non di quello che la dichiara. Bastava un `container-type` su un blocco qualsiasi
+(e l'hero ne ha uno) perche' tutti i suoi discendenti si ritrovassero una cella diversa. Registrate
+come `<length>`, si risolvono una volta sola su `.grid`.
+
+### D34. Gli sfori gia' presenti nel Figma sono dichiarati, non nascosti
+Sei blocchi della home non contengono il proprio contenuto **nemmeno nel file**, che li taglia con
+`overflow-clip`. Sono marcati in pagina con `data-known-overflow`, che ne porta il nodo e il
+motivo, e `npm run verify:grid` li stampa a parte invece di farli fallire: vanno visti, non vanno
+confusi con una regressione.
+
+| Blocco | Nodo | Quanto |
+|---|---|---|
+| Hero | `314:2437` | il titolo a 72px chiede 125px dentro 116 di spazio utile |
+| About | `314:2325` | sotto i 390 il corpo guadagna righe che il blocco non ha |
+| Selected Works | `314:2336` | titolo piu' didascalia chiedono 57px dentro 38 |
+| Testimonials | `314:2372` | il titolo va su tre righe: 88px dentro 77 |
+| CTA | `314:2402` | lead e titolo chiedono 156px dentro 155 |
+| Form di contatto | `321:2861` | a md il file lo fa alto 633 contro i 616 di otto righe |
+
+### D35. Sotto i 390 non c'e' niente a cui essere fedeli
+Il frame piu' piccolo del Figma e' a 390. A 320 le linee restano al loro posto (scarto 0,000px) ma
+il logo e il bottone primario sfiorano la cella di tre pixel. La verifica lo misura e lo stampa,
+non lo fa fallire: non esiste un disegno con cui confrontarsi.
+
+### D36. La verifica emula un telefono sotto i 720
+Con la scrollbar classica il varco riservato da `scrollbar-gutter: stable` toglie 15px su 390, il
+4% della larghezza, e i blocchi di testo guadagnano una riga che sul dispositivo reale non hanno. I
+telefoni hanno scrollbar a sovrapposizione e il varco vale zero. Senza questa emulazione la
+verifica falliva su blocchi che in mano a un utente stanno benissimo.
+
+### D37. La riga dei testimonial e' un blocco a tutti e tre i tier
+Nel Figma a lg sta **dentro** il contenitore bordato (`266:1148` e' figlio di `266:1107`), a md e
+base e' un blocco separato sopra. Qui e' sempre un blocco, con una posizione per tier: a lg cade
+sulla prima riga del contenitore, che parte una riga piu' sotto. Il risultato in pagina e' lo
+stesso e il markup delle schede non va duplicato.
+
+Conseguenza minore: nel Figma il filo fra la riga e il testo e' grigio chiaro e largo otto colonne;
+qui e' la linea di griglia, scura e larga dieci. Un pixel di sfumatura.
+
+### D38. La sonda misura gli sfori sui rettangoli dei figli, non su `scrollHeight`
+`text-box-trim` accorcia la scatola del titolo alla cap-height ma le line box restano alte quanto il
+font: `scrollHeight` conta sempre lo scarto che il trim ha appena tolto. Segnalava l'hero come
+sforante di 35px a 1440, dove ha 84px di margine. Ora il confronto e' fra i rettangoli dei figli e
+il box del contenuto, saltando i figli in posizione assoluta, che stanno dove li hai messi.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
@@ -357,5 +452,5 @@ frame base, che sta a 390) una voce da due colonne e' larga 61px e "Instagram" a
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |
-| B10 | **URL dei profili LinkedIn e Instagram** | Il Figma mostra le etichette ma non i link. Non li ho inventati: un link a un profilo sbagliato e' un bug che va online e che nessuno nota finche' non ci clicca qualcuno. Segnaposto in `src/lib/site.ts` |
+| B13 | **Tre testimonial su quattro non hanno un testo** | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |

@@ -22,7 +22,6 @@ const WIDTHS =
 
 const server = await startDevServer({ probePath: route });
 const browser = await chromium.launch({ executablePath: CHROMIUM });
-const page = await browser.newPage();
 
 const pad = (v, n) => String(v).padEnd(n);
 console.log(`${selector} su ${route}\n`);
@@ -31,7 +30,17 @@ console.log('-'.repeat(60));
 
 let worst = null;
 for (const width of WIDTHS) {
-  await page.setViewportSize({ width, height: 900 });
+  // Stessa emulazione della verifica: sotto il confine md la scrollbar e' a
+  // sovrapposizione e la cella e' piena, altrimenti i due strumenti misurano
+  // due celle diverse alla stessa larghezza.
+  const mobile = width < 720;
+  const context = await browser.newContext({
+    viewport: { width, height: mobile ? 844 : 900 },
+    deviceScaleFactor: mobile ? 3 : 2,
+    isMobile: mobile,
+    hasTouch: mobile,
+  });
+  const page = await context.newPage();
   await page.goto(server.base + route, { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
 
@@ -59,13 +68,17 @@ for (const width of WIDTHS) {
   }, selector);
 
   if (!r) {
+    await context.close();
     console.log(pad(width, 8) + 'selettore non trovato');
     continue;
   }
   if (r.hidden) {
+    await context.close();
     console.log(pad(width, 8) + 'non visibile a questo tier');
     continue;
   }
+
+  await context.close();
 
   const slack = r.contentH - r.need;
   if (worst === null || slack < worst.slack) worst = { width, slack };
