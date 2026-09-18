@@ -440,6 +440,73 @@ il box del contenuto, saltando i figli in posizione assoluta, che stanno dove li
 
 ---
 
+## 9. Fase 4 — le pagine interne, e il movimento
+
+### D39. Una pagina disegnata solo a desktop tiene le sue dodici colonne ovunque
+Le quattro pagine interne dichiarano solo il tier lg. Senza accorgimenti, sotto i 1200 `--cols`
+sarebbe passata a 10 mentre i blocchi restavano posizionati per 12: la dodicesima colonna sarebbe
+diventata implicita, la griglia si sarebbe allargata e **ogni linea avrebbe smesso di combaciare**.
+
+`Grid.astro` ora dichiara sulla griglia i tier che la pagina usa davvero, e il CSS tiene le dodici
+colonne dove il tier lg e' l'unico. Sotto i 1200 quelle pagine diventano un desktop rimpicciolito.
+Non e' un disegno, e' il meno peggio finche' un disegno non esiste (B2).
+
+Stessa ragione per la regola che nasconde i blocchi fuori tier: vale solo se la **pagina** dichiara
+quel tier, altrimenti sotto i 720 avrebbe nascosto tutto.
+
+### D40. `<Picture>` mette la classe sull'`<img>`, non sul `<picture>`
+Il wrapper restava `display: inline` e alto quanto l'immagine, e ogni card progetto si ritrovava un
+figlio piu' alto del proprio span: **+70px a 1200**. E' il tipo di errore che uno screenshot non
+mostra, perche' il blocco ha `overflow: clip`.
+
+### D41. Lo scroll morbido e' ScrollSmoother, e la struttura che chiede ha una conseguenza
+Dalla 3.13 tutti i plugin GSAP sono gratuiti: ScrollSmoother e SplitText inclusi. Niente librerie
+in piu', come chiede il prompt.
+
+`#smooth-content` viene **traslato**, e una trasformazione rende l'elemento il contenitore di
+riferimento dei propri discendenti in `position: fixed`. Tutto cio' che deve restare ancorato alla
+finestra va quindi **fuori**: `Base.astro` ha uno slot `fixed` apposta, gia' usato dal pannello di
+debug e pronto per il megamenu della Fase 5.
+
+I due elementi non hanno stile proprio: li imposta ScrollSmoother a runtime. Se il JavaScript non
+arriva, la pagina scorre in modo nativo e nulla e' fuori posto.
+
+`normalizeScroll` resta **spento**: sposta su JavaScript anche il tab e le frecce, che su una pagina
+con un form devono restare quelle del browser.
+
+### D42. Le linee si disegnano quando le raggiungi
+Le **orizzontali** si allungano da sinistra quando entrano nella vista, con uno scarto di 40ms fra
+una e l'altra.
+
+Le **verticali** no: attraversano tutta la pagina, e disegnarne una intera in mezzo secondo
+mostrerebbe una linea che arriva fin dove non sei ancora. Si allungano verso il basso in proporzione
+allo scroll, tenendo il proprio capo appena sotto il bordo inferiore della finestra:
+`scaleY` va da `altezza finestra / altezza pagina` a 1, legata allo scroll.
+
+I **bordi dei blocchi** sono un caso a parte, e il motivo e' D16: cadono sulla stessa linea di
+griglia, ma il fondo del blocco e' al 50% e la smorza, quindi il bordo serve a riportarla piena. Un
+`border` non si puo' accorciare, cosi' il filo e' diventato una coppia di gradienti la cui lunghezza
+sta in `--rule-x` e `--rule-y`, registrate come numeri perche' GSAP possa interpolarle.
+`background-origin: border-box` li fa partire esattamente dove stava il border, e il valore iniziale
+e' 1: **senza JavaScript la pagina resta quella di prima**, ed e' l'animazione ad accorciare i fili
+prima di ridisegnarli.
+
+### D43. Il movimento si verifica, non si guarda
+`npm run verify:motion` controlla tre cose:
+
+- con `prefers-reduced-motion: reduce` non viene creato niente: scroll nativo, linee intere, fili
+  interi;
+- senza quella preferenza lo scroll e' morbido e le linee partono corte;
+- **arrivati in fondo, ogni linea e ogni filo sono a lunghezza piena.** E' il controllo che conta:
+  un'animazione che non si completa lascia un bordo a meta' su una griglia a vista, e si vede da
+  tre metri.
+
+`verify:grid` continua a passare con il movimento attivo, e non e' un caso: le orizzontali si
+scalano dal lato sinistro e le verticali dall'alto, quindi il bordo che la sonda legge non si
+sposta mai.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
@@ -452,5 +519,6 @@ il box del contenuto, saltando i figli in posizione assoluta, che stanno dove li
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |
+| B14 | **`/about` si stringe fra 1200 e 1365** | Quattro blocchi di testo tengono a 1440 e chiedono fino a 17px in piu' a 1200. Dichiarati con `data-known-overflow`. Si risolve allargando qualche span o alzando il confine lg: e' una decisione di disegno |
 | B13 | **Tre testimonial su quattro non hanno un testo** | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |

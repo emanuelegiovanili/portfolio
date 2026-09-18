@@ -1,0 +1,35 @@
+---
+/**
+ * /contact — frame 312:1995. Solo desktop, e senza CTA Section.
+ */
+import Base from '../layouts/Base.astro';
+import Grid from '../components/Grid.astro';
+import Block from '../components/Block.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Icon from '../components/Icon.astro';
+import ContactSection from '../components/ContactSection.astro';
+import { headerMap } from '../lib/blocks/chrome';
+import { contactBlocks, contactFooter } from '../lib/blocks/pages';
+import '../styles/pages.css';
+
+const map = { ...headerMap, ...contactBlocks, ...contactFooter };
+---
+
+<Base title="Contact — Emanuele Giovanili" description="Scrivimi: raccontami cosa hai in mente.">
+  <Grid map={map}>
+    <Header current="/contact" />
+
+    <Block at={contactBlocks.contactTitle} class="page-title" clip>
+      <h1 class="t-display t-display--page">Let’s work together</h1>
+    </Block>
+
+    <Block at={contactBlocks.contactIcon} class="icon-cell" clip>
+      <Icon name="send" />
+    </Block>
+
+    <ContactSection at={{ form: contactBlocks.contactForm, send: contactBlocks.contactSend }} />
+
+    <Footer at={contactFooter} current="/contact" />
+  </Grid>
+</Base>

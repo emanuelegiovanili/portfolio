@@ -1,0 +1,38 @@
+---
+/**
+ * Il contenuto di una card progetto: l'immagine e, nell'ultima riga, il titolo
+ * e i tag.
+ *
+ * Gli handoff dicevano che le card sono immagini nude. Non lo sono: il titolo e
+ * i tag ci sono sia in home (265:1075) sia su /works (310:1492). L'errore
+ * veniva da `get_metadata`, che su quei nodi restituisce frame vuoti.
+ *
+ * A base i tag di categoria spariscono e resta il solo titolo: lo decide il
+ * CSS, non un ramo nel markup.
+ */
+import { Picture } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  work: CollectionEntry<'works'>;
+  /** La prima card di una pagina si carica subito, le altre no. */
+  eager?: boolean;
+  sizes?: string;
+}
+
+const { work, eager = false, sizes = '(min-width: 1200px) 67vw, 90vw' } = Astro.props;
+---
+
+<Picture
+  class="works-card__media"
+  src={work.data.cover}
+  alt={work.data.coverAlt}
+  widths={[640, 960, 1400, 1920]}
+  sizes={sizes}
+  formats={['avif', 'webp']}
+  loading={eager ? 'eager' : 'lazy'}
+/>
+<span class="works-card__tags">
+  <span class="works-card__title">{work.data.title}</span>
+  {work.data.tags.map((tag) => <span class="works-card__tag">{tag}</span>)}
+</span>

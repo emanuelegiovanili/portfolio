@@ -1,0 +1,230 @@
+/* Le quattro pagine interne.
+ *
+ * Esistono solo a desktop: sotto 1200px il Figma non ha un disegno, quindi qui
+ * non ci sono media query per tier. Le grandezze restano in pixel di disegno
+ * cosi' che sotto i 1440 si stringano con la cella invece di sforare.
+ */
+
+/* ---------- Celle ricorrenti ---------- */
+
+.page-title,
+.section-title {
+  display: flex;
+  align-items: center;
+  padding: var(--pad);
+}
+
+.page-title h1,
+.section-title h2 {
+  margin: 0;
+}
+
+.label-cell,
+.text-cell {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--pad);
+}
+
+.text-cell--center {
+  justify-content: center;
+  text-align: center;
+}
+
+.label-cell > *,
+.text-cell p {
+  margin: 0;
+}
+
+.label-cell {
+  justify-content: center;
+}
+
+.media-block {
+  overflow: clip;
+}
+
+.media-block :is(img, picture) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pad);
+  justify-content: center;
+  padding: var(--pad-lg) var(--pad);
+}
+
+.prose p {
+  margin: 0;
+}
+
+/* Nel Figma il primo paragrafo della biografia e' in Poppins Bold e gli altri
+   due in Medium (274:2065). */
+.prose p:first-child {
+  font-weight: 700;
+}
+
+.accent {
+  color: var(--purple);
+}
+
+/* ---------- /about ---------- */
+
+/* 299:277 · 299:314 · 299:317 — le tre card sono sfalsate, 1 e 3 a riga 13 e 2 a riga 14 */
+.recipe-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pad);
+  padding: var(--pad) var(--pad) var(--pad-lg);
+}
+
+.recipe-card__number {
+  margin: 0;
+  font-size: calc(var(--u) * 40);
+}
+
+.recipe-card__title {
+  margin: 0;
+  font-weight: 700;
+  font-size: calc(var(--u) * 24);
+  line-height: 1.5;
+  text-box: trim-both cap alphabetic;
+}
+
+.recipe-card__body {
+  flex: 1 0 0;
+  margin: 0;
+}
+
+/* 300:354 — "kitchen" e' viola. Il testo e' largo 438 dentro un blocco da 360:
+   sfora nel file, ed e' dichiarato con data-known-overflow sulla pagina. */
+.kitchen-title {
+  margin: 0;
+}
+
+/* 301:522 — la copertina gira su se stessa al passaggio del mouse. Qui e'
+   ferma: il movimento arriva in Fase 5, con i valori reali letti dal file
+   (2,515s, senso antiorario). */
+.spotify-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: clip;
+  background: var(--off-white);
+}
+
+.spotify-cover img {
+  width: 100%;
+  height: 100%;
+}
+
+/* 300:440 */
+.playlist {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 12);
+  justify-content: center;
+  padding: var(--pad);
+}
+
+.playlist__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.playlist__row--action {
+  justify-content: flex-start;
+  gap: var(--pad);
+}
+
+.playlist__count {
+  color: var(--dark-grey);
+}
+
+/* ---------- /works ---------- */
+
+/* 310:1587 e simili: il filtro attivo e' viola con testo chiaro. E' uno dei due
+   soli stati che il Figma disegni, insieme al Send disabilitato. */
+.work-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--pad);
+  text-align: center;
+  cursor: pointer;
+  appearance: none;
+}
+
+.work-filter__label {
+  font-weight: 700;
+  font-size: calc(var(--u) * 16);
+  line-height: 1.5;
+}
+
+.work-filter__count {
+  font-size: calc(var(--u) * 12);
+  line-height: 1.5;
+  color: var(--dark-grey);
+}
+
+/* Lo spaziatore in alto: nel Figma e' un frame vuoto 8x18 che tiene il testo
+   al centro fra il conteggio e il bordo (310:1601). */
+.work-filter::before {
+  content: '';
+  display: block;
+  width: calc(var(--u) * 8);
+  height: calc(var(--u) * 18);
+}
+
+.work-filter[aria-pressed='true'] {
+  background: var(--purple);
+  color: var(--accent-fg);
+}
+
+.work-filter[aria-pressed='true'] .work-filter__count {
+  color: var(--accent-fg);
+}
+
+/* ---------- /works/[slug] ---------- */
+
+.work-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--pad);
+  font-weight: 700;
+  font-size: calc(var(--u) * 12);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.work-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: var(--pad-lg) var(--pad);
+}
+
+.work-body p {
+  margin: 0;
+}
+
+/* Il titolo di sezione con l'icona dentro lo stesso blocco: su work-page
+   "Related work" e la fiamma stanno in 310:1799, non in due blocchi separati. */
+.related-title {
+  display: flex;
+  align-items: center;
+  padding: var(--pad);
+}
+
+.related-title h2 {
+  margin: 0;
+}

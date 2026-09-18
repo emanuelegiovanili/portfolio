@@ -1,0 +1,174 @@
+---
+/**
+ * /about — frame 274:1855.
+ *
+ * Solo desktop: sotto 1200px non esiste un disegno. Su questo nodo
+ * `get_metadata` restituisce un frame vuoto; i dati vengono da
+ * `get_design_context`.
+ */
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Grid from '../components/Grid.astro';
+import Block from '../components/Block.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Icon from '../components/Icon.astro';
+import { headerMap } from '../lib/blocks/chrome';
+import { aboutBlocks, aboutFooter } from '../lib/blocks/pages';
+import { BIO, LOCATION, RECIPE, REMOTE, SPOTIFY } from '../data/about';
+import portrait from '../assets/about/portrait.jpg';
+import desk from '../assets/about/desk.jpg';
+import spotifyCover from '../assets/about/spotify-cover.svg';
+import '../styles/pages.css';
+
+const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
+---
+
+<Base title="About — Emanuele Giovanili" description="Chi sono, come lavoro e cosa ascolto mentre lo faccio.">
+  <Grid map={map}>
+    <Header current="/about" />
+
+    <Block at={aboutBlocks.aboutTitle} class="page-title" clip>
+      <h1 class="t-display t-display--page">About</h1>
+    </Block>
+
+    <Block at={aboutBlocks.aboutBioLabel} class="label-cell" clip>
+      <span class="t-title">Bio</span>
+    </Block>
+
+    <Block at={aboutBlocks.aboutPortrait} surface="bare" class="media-block" clip>
+      <Picture
+        src={portrait}
+        alt="Ritratto di Emanuele Giovanili, maglione viola, seduto"
+        widths={[480, 960]}
+        sizes="(min-width: 1200px) 33vw, 100vw"
+        formats={['avif', 'webp']}
+        loading="eager"
+      />
+    </Block>
+
+    <Block
+      at={aboutBlocks.aboutBio}
+      class="prose"
+      clip
+      data-known-overflow="274:2063 — tiene a 1440, si stringe sotto: a 1200 la biografia chiede 17px in piu' di quanti il blocco ne offra"
+    >
+      {BIO.map((paragraph) => <p class="t-body">{paragraph}</p>)}
+    </Block>
+
+    <Block at={aboutBlocks.aboutPin} class="icon-cell" clip>
+      <Icon name="map-pin" />
+    </Block>
+
+    <Block at={aboutBlocks.aboutLocation} class="text-cell" clip>
+      <p class="t-body">{LOCATION}</p>
+    </Block>
+
+    <Block at={aboutBlocks.aboutRemote} class="text-cell text-cell--center" clip>
+      <p class="t-meta">{REMOTE}</p>
+    </Block>
+
+    <Block at={aboutBlocks.recipeIcon} class="icon-cell" clip>
+      <Icon name="chef-hat" />
+    </Block>
+
+    <Block at={aboutBlocks.recipeTitle} class="section-title" clip>
+      <h2 class="t-display t-display--section">My secret recipe</h2>
+    </Block>
+
+    <Block at={aboutBlocks.recipeFlame} class="icon-cell" clip>
+      <Icon name="flame" />
+    </Block>
+
+    <Block
+      at={aboutBlocks.recipeOne}
+      class="recipe-card"
+      clip
+      data-known-overflow="299:277 — tiene a 1440, chiede fino a 11px in piu' a 1200"
+    >
+      <p class="t-display recipe-card__number">{RECIPE[0].number}</p>
+      <h3 class="recipe-card__title">{RECIPE[0].title}</h3>
+      <p class="t-body recipe-card__body">{RECIPE[0].body}</p>
+    </Block>
+
+    <Block at={aboutBlocks.recipeBlender} class="icon-cell" clip>
+      <Icon name="blender" />
+    </Block>
+
+    <Block
+      at={aboutBlocks.recipeTwo}
+      class="recipe-card"
+      clip
+      data-known-overflow="299:277 — tiene a 1440, chiede fino a 11px in piu' a 1200"
+    >
+      <p class="t-display recipe-card__number">{RECIPE[1].number}</p>
+      <h3 class="recipe-card__title">{RECIPE[1].title}</h3>
+      <p class="t-body recipe-card__body">{RECIPE[1].body}</p>
+    </Block>
+
+    <Block
+      at={aboutBlocks.recipeThree}
+      class="recipe-card"
+      clip
+      data-known-overflow="299:277 — tiene a 1440, chiede fino a 11px in piu' a 1200"
+    >
+      <p class="t-display recipe-card__number">{RECIPE[2].number}</p>
+      <h3 class="recipe-card__title">{RECIPE[2].title}</h3>
+      <p class="t-body recipe-card__body">{RECIPE[2].body}</p>
+    </Block>
+
+    <Block
+      at={aboutBlocks.kitchenTitle}
+      class="section-title"
+      clip
+      data-known-overflow="300:354 — il blocco e' largo 3 colonne ma il testo ne chiede 438px: sfora di 78 nel file"
+    >
+      <h2 class="t-display t-display--page kitchen-title">In the <span class="accent">kitchen</span></h2>
+    </Block>
+
+    <Block at={aboutBlocks.kitchenPot} class="icon-cell" clip>
+      <Icon name="cooking-pot" />
+    </Block>
+
+    <Block at={aboutBlocks.kitchenPhoto} class="media-block" clip>
+      <Picture
+        src={desk}
+        alt="Emanuele alla scrivania, di spalle, davanti a due schermi"
+        widths={[960, 1400]}
+        sizes="(min-width: 1200px) 67vw, 100vw"
+        formats={['avif', 'webp']}
+        loading="lazy"
+      />
+    </Block>
+
+    <Block at={aboutBlocks.spotifyCover} class="spotify-cover" data-spin clip>
+      <img src={spotifyCover.src} alt="" width="240" height="240" />
+    </Block>
+
+    <Block at={aboutBlocks.spotifyTitle} class="section-title" clip>
+      <h2 class="t-display t-display--section">{SPOTIFY.heading}</h2>
+    </Block>
+
+    <Block at={aboutBlocks.spotifyDisc} class="icon-cell" clip>
+      <Icon name="disc-3" />
+    </Block>
+
+    <Block
+      at={aboutBlocks.spotifyPlaylist}
+      class="playlist"
+      clip
+      data-known-overflow="300:440 — tiene a 1440, chiede 3px in piu' a 1200"
+    >
+      <p class="playlist__row">
+        <span class="t-title">{SPOTIFY.playlist}</span>
+        <span class="t-body playlist__count">{SPOTIFY.count}</span>
+      </p>
+      <p class="playlist__row playlist__row--action">
+        <Icon name="audio-lines" />
+        <span class="t-body">{SPOTIFY.action}</span>
+      </p>
+    </Block>
+
+    <Footer at={aboutFooter} current="/about" />
+  </Grid>
+</Base>

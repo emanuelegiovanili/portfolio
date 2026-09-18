@@ -7,7 +7,7 @@ import '../styles/components.css';
 interface Props {
   title: string;
   description?: string;
-  /** Tiene la pagina fuori dagli indici. Serve alla route di debug /grid. */
+  /** Tiene la pagina fuori dagli indici. Serve alle route di debug. */
   noindex?: boolean;
 }
 
@@ -32,6 +32,26 @@ const { title, description, noindex = false } = Astro.props;
     <link rel="preload" href="/fonts/getai-black.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
-    <slot />
+    {/*
+      La struttura che ScrollSmoother si aspetta. I due elementi non hanno stile
+      proprio: li imposta ScrollSmoother a runtime, e se il JavaScript non
+      arriva la pagina scorre in modo nativo senza che nulla sia fuori posto.
+
+      Tutto cio' che e' in position: fixed va **fuori** da #smooth-content: il
+      contenuto viene traslato, e una trasformazione lo rende il contenitore di
+      riferimento dei suoi discendenti fissi, che smetterebbero di essere
+      ancorati alla finestra.
+    */}
+    <div id="smooth-wrapper">
+      <div id="smooth-content">
+        <slot />
+      </div>
+    </div>
+
+    <slot name="fixed" />
+
+    <script>
+      import '../scripts/motion';
+    </script>
   </body>
 </html>

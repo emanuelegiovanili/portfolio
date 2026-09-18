@@ -1,0 +1,102 @@
+---
+/**
+ * /works — frame 310:1270. Solo desktop.
+ *
+ * I contatori dei filtri sono calcolati dalla collection, mai scritti a mano.
+ * Nel Figma "All" dice 4 con tre progetti in elenco: gli altri tre contatori
+ * (Web Design 2, Branding 2, Product 1) coincidono invece esattamente con i
+ * tre progetti reali. E' "All" a essere rimasto indietro, vedi NOTES.md §3.1.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Grid from '../../components/Grid.astro';
+import Block from '../../components/Block.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Icon from '../../components/Icon.astro';
+import WorkCard from '../../components/WorkCard.astro';
+import ContactSection from '../../components/ContactSection.astro';
+import { headerMap } from '../../lib/blocks/chrome';
+import { worksBlocks, worksCardAt, worksFilterAt, worksFooter } from '../../lib/blocks/pages';
+import { WORK_TAGS } from '../../content.config';
+import '../../styles/pages.css';
+import '../../styles/home.css';
+
+const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
+
+const filters = [
+  { label: 'All', tag: null, count: works.length },
+  ...WORK_TAGS.map((tag) => ({
+    label: tag,
+    tag,
+    count: works.filter((w) => w.data.tags.includes(tag)).length,
+  })),
+];
+
+const cardAt = Object.fromEntries(works.map((w, i) => [w.id, worksCardAt(i)]));
+const filterAt = Object.fromEntries(filters.map((f, i) => [f.label, worksFilterAt(i)]));
+
+const map = {
+  ...headerMap,
+  ...worksBlocks,
+  ...Object.fromEntries(Object.entries(cardAt).map(([k, v]) => [`card-${k}`, v])),
+  ...Object.fromEntries(Object.entries(filterAt).map(([k, v]) => [`filter-${k}`, v])),
+  ...worksFooter,
+};
+---
+
+<Base title="Works — Emanuele Giovanili" description="Progetti di branding, web design e product design.">
+  <Grid map={map}>
+    <Header current="/works" />
+
+    <Block at={worksBlocks.worksTitle} class="page-title" clip>
+      <h1 class="t-display t-display--page">My work</h1>
+    </Block>
+
+    <Block at={worksBlocks.worksFlame} class="icon-cell" clip>
+      <Icon name="flame" />
+    </Block>
+
+    {
+      filters.map((filter) => (
+        <Block
+          at={filterAt[filter.label]}
+          as="button"
+          type="button"
+          class="work-filter"
+          aria-pressed={filter.tag === null ? 'true' : 'false'}
+          data-filter={filter.tag ?? 'all'}
+          clip
+        >
+          <span class="work-filter__label">{filter.label}</span>
+          <span class="work-filter__count">{filter.count}</span>
+        </Block>
+      ))
+    }
+
+    {
+      works.map((work, i) => (
+        <Block
+          at={cardAt[work.id]}
+          as="a"
+          href={`/works/${work.id}`}
+          class="works-card"
+          data-tags={work.data.tags.join(' ')}
+          clip
+        >
+          <WorkCard work={work} eager={i === 0} />
+        </Block>
+      ))
+    }
+
+    <ContactSection
+      at={{
+        form: worksBlocks.worksContactForm,
+        cta: worksBlocks.worksContactCta,
+        send: worksBlocks.worksContactSend,
+      }}
+    />
+
+    <Footer at={worksFooter} current="/works" />
+  </Grid>
+</Base>

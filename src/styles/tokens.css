@@ -13,8 +13,8 @@
   --dark-grey: #504d5c;
   --light-grey: #b0adb9;
 
-  /* Griglia. --cols cambia una volta sola; il layout cambia tre volte. */
-  --cols: 10;
+  /* Griglia. --cols vive su .grid, perche' una pagina disegnata solo a
+     desktop tiene le sue dodici colonne anche sotto i 1200. */
   --grid-max: 1680px;
   --line: 1px;
   --line-color: var(--dark-grey);
@@ -50,12 +50,6 @@
   /* Tipografia */
   --font-display: 'DT Getai Grotesk Display', 'Getai Fallback', system-ui, sans-serif;
   --font-text: 'Poppins', 'Poppins Fallback', system-ui, sans-serif;
-}
-
-@media (min-width: 1200px) {
-  :root {
-    --cols: 12;
-  }
 }
 
 *,

@@ -20,6 +20,9 @@ import { startDevServer, CHROMIUM } from './dev-server.mjs';
 
 const WIDTHS = [320, 390, 430, 719, 720, 768, 1024, 1199, 1200, 1280, 1440, 1680, 1920];
 
+/** Le pagine interne esistono solo a desktop: misurarle sotto 1200 non dice niente. */
+const DESKTOP_ONLY = ['/about', '/works', '/works/seezy', '/contact'];
+
 /**
  * Il frame piu' piccolo del Figma e' a 390.
  *
@@ -30,7 +33,7 @@ const WIDTHS = [320, 390, 430, 719, 720, 768, 1024, 1199, 1200, 1280, 1440, 1680
  */
 const SMALLEST_DESIGNED_WIDTH = 390;
 const SCROLLS = ['top', 'middle', 'bottom'];
-const PATHS = ['/grid', '/grid/components', '/'];
+const PATHS = ['/grid', '/grid/components', '/', '/about', '/works', '/works/seezy', '/contact'];
 const SHOT_DIR = '.verify';
 
 const args = process.argv.slice(2);
@@ -67,6 +70,7 @@ let failures = 0;
 try {
   for (const route of PATHS)
   for (const width of WIDTHS) {
+
     // Sotto il confine md si emula un telefono. Non e' un dettaglio: con la
     // scrollbar classica il varco riservato da `scrollbar-gutter: stable`
     // toglie 15px su 390, cioe' il 4% della larghezza, e i blocchi di testo
@@ -97,7 +101,11 @@ try {
       const result = await page.evaluate(() => window.__probeGrid?.() ?? null);
       if (!result) throw new Error(`nessuna griglia trovata a ${width}px`);
 
-      const belowDesign = width < SMALLEST_DESIGNED_WIDTH;
+      // Sotto la larghezza minima disegnata, o sotto i 1200 su una pagina che
+      // esiste solo a desktop, lo sforo si misura e si stampa: non c'e' un
+      // disegno con cui confrontarsi. L'allineamento delle linee invece deve
+      // reggere ovunque, e resta un errore.
+      const belowDesign = width < SMALLEST_DESIGNED_WIDTH || (DESKTOP_ONLY.includes(route) && width < 1200);
       const ok = result.maxDrift <= result.tolerance && (belowDesign || result.overflowing.length === 0);
       if (!ok) failures += 1;
       rows.push({ route, width, where, ...result, ok, belowDesign, errors: errors.length });

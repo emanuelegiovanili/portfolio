@@ -19,6 +19,18 @@ const { map, class: className } = Astro.props;
 
 const rows = deriveRows(map);
 
+/**
+ * I tier che la pagina dichiara davvero.
+ *
+ * Le quattro pagine interne esistono solo a lg. Senza questo, sotto 1200
+ * `--cols` passerebbe a 10 mentre i blocchi restano posizionati per 12: la
+ * dodicesima colonna diventa implicita, la griglia si allarga e ogni linea
+ * smette di combaciare. Con `data-tiers` il CSS tiene le 12 colonne e la
+ * pagina diventa un desktop rimpicciolito, che e' il meno peggio finche' un
+ * disegno per gli schermi piccoli non esiste (NOTES.md B2).
+ */
+const declaredTiers = TIERS.filter((tier) => Object.values(map).some((b) => b[tier] !== undefined));
+
 // Tutti e tre i tier ricevono un valore, anche quando la pagina ne dichiara uno
 // solo: sotto 1200px le quattro pagine interne non hanno un disegno, e senza
 // --rows-base la griglia non avrebbe righe e collasserebbe.
@@ -29,7 +41,7 @@ const horizontals = horizontalGroups(rows);
 ---
 
 <div class="grid-wrap">
-  <div class:list={['grid', className]} style={rowVars}>
+  <div class:list={['grid', className]} style={rowVars} data-tiers={declaredTiers.join(' ')}>
     <div class="grid-lines" aria-hidden="true">
       {
         verticals.map((group) => (

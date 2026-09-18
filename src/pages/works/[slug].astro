@@ -1,0 +1,134 @@
+---
+/**
+ * /works/[slug] — frame 310:1614. Solo desktop.
+ *
+ * La galleria si compone su un insieme chiuso di due forme, `wide` (10x6) e
+ * `half` (5x4), dichiarate nel JSON del progetto. Nel Figma la sequenza e'
+ * cucita addosso a Seezy; cosi' la pagina regge un numero qualsiasi di
+ * immagini, che e' quanto chiede pagine-interne §7.7.
+ *
+ * Solo Seezy ha un case study: gli altri due progetti non hanno una pagina di
+ * dettaglio disegnata e mostrano copertina, tag e titolo.
+ */
+import { getCollection, type CollectionEntry } from 'astro:content';
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Grid from '../../components/Grid.astro';
+import Block from '../../components/Block.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Icon from '../../components/Icon.astro';
+import WorkCard from '../../components/WorkCard.astro';
+import PrimaryButton from '../../components/PrimaryButton.astro';
+import { headerMap } from '../../lib/blocks/chrome';
+import { galleryAt, workBlocks, workFooter, workTagAt } from '../../lib/blocks/pages';
+import '../../styles/pages.css';
+import '../../styles/home.css';
+
+export async function getStaticPaths() {
+  const works = await getCollection('works');
+  return works.map((work) => ({
+    params: { slug: work.id },
+    props: { work, all: works },
+  }));
+}
+
+interface Props {
+  work: CollectionEntry<'works'>;
+  all: CollectionEntry<'works'>[];
+}
+
+const { work, all } = Astro.props;
+
+const related = all.filter((w) => w.id !== work.id).sort((a, b) => a.data.order - b.data.order).slice(0, 2);
+const blocks = work.data.caseStudy?.blocks ?? [];
+
+const tagAt = Object.fromEntries(work.data.tags.map((tag, i) => [tag, workTagAt(i)]));
+const galleryPlacements = blocks.map((_, i) => galleryAt(i));
+const relatedAt = [workBlocks.workRelatedOne, workBlocks.workRelatedTwo];
+
+const map = {
+  ...headerMap,
+  ...workBlocks,
+  ...Object.fromEntries(Object.entries(tagAt).map(([k, v]) => [`tag-${k}`, v])),
+  ...Object.fromEntries(galleryPlacements.map((v, i) => [`gallery-${i}`, v])),
+  ...Object.fromEntries(related.map((w, i) => [`related-${w.id}`, relatedAt[i]])),
+  ...workFooter,
+};
+---
+
+<Base title={`${work.data.title} — Emanuele Giovanili`} description={work.data.excerpt}>
+  <Grid map={map}>
+    <Header current="/works" />
+
+    <Block at={workBlocks.workCover} class="media-block" clip>
+      <Picture
+        src={work.data.cover}
+        alt={work.data.coverAlt}
+        widths={[960, 1400, 1920]}
+        sizes="(min-width: 1200px) 83vw, 100vw"
+        formats={['avif', 'webp']}
+        loading="eager"
+      />
+    </Block>
+
+    {work.data.tags.map((tag) => (
+      <Block at={tagAt[tag]} class="work-tag" clip>
+        {tag}
+      </Block>
+    ))}
+
+    <Block at={workBlocks.workTitle} class="page-title" clip>
+      <h1 class="t-display t-display--page">{work.data.title}</h1>
+    </Block>
+
+    {
+      work.data.caseStudy && (
+        <Block at={workBlocks.workBody} class="work-body" clip>
+          <p class="t-body">{work.data.caseStudy.body}</p>
+        </Block>
+      )
+    }
+
+    {
+      blocks.map((image, i) => (
+        <Block at={galleryPlacements[i]} class="media-block" clip>
+          <Picture
+            src={image.src}
+            alt={image.alt}
+            widths={[640, 960, 1400, 1920]}
+            sizes="(min-width: 1200px) 83vw, 100vw"
+            formats={['avif', 'webp']}
+            loading="lazy"
+          />
+        </Block>
+      ))
+    }
+
+    <Block at={workBlocks.workRelatedTitle} class="related-title" clip>
+      <h2 class="t-display t-display--page">Related work</h2>
+    </Block>
+
+    <Block at={workBlocks.workRelatedFlame} class="icon-cell" clip>
+      <Icon name="flame" />
+    </Block>
+
+    {
+      related.map((item, i) => (
+        <Block
+          at={relatedAt[i]}
+          as="a"
+          href={`/works/${item.id}`}
+          class="works-card"
+          clip
+        >
+          <WorkCard work={item} sizes="(min-width: 1200px) 42vw, 100vw" />
+        </Block>
+      ))
+    }
+
+    <PrimaryButton at={workBlocks.workViewAll} label="View all" href="/works" />
+
+    <Footer at={workFooter} current="/works" />
+  </Grid>
+</Base>

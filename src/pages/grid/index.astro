@@ -41,9 +41,9 @@ const rows = deriveRows(probes);
     <Block at={probes.lgOnly} clip><p class="label">solo lg</p></Block>
   </Grid>
 
-  <GridProbe />
+  <GridProbe slot="fixed" />
 
-  <p class="rows-map">base {rows.base} · md {rows.md} · lg {rows.lg}</p>
+  <p class="rows-map" slot="fixed">base {rows.base} · md {rows.md} · lg {rows.lg}</p>
 </Base>
 
 <style>

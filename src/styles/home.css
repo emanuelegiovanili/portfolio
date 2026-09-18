@@ -312,12 +312,22 @@
   overflow: clip;
 }
 
-.works-card__media,
-.works-card__media img {
+/* `<Picture>` mette la classe sull'`<img>`, non sul `<picture>` che lo avvolge:
+   senza regola esplicita il wrapper resta inline e alto quanto l'immagine, e il
+   blocco si ritrova un figlio piu' alto del proprio span. */
+.works-card picture,
+.works-card__media {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Le slide del carosello: ognuna riempie la card. */
+.works-card__slide {
+  position: absolute;
+  inset: 0;
+  display: block;
 }
 
 .works-card__tags {
