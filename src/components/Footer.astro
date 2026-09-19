@@ -33,13 +33,7 @@ const WORK_TOGETHER = "Let’s work together";
   <span class="t-display footer-brand__text">{SITE_NAME}</span>
 </Block>
 
-{
-  at.footerWorkTogether && (
-    <Block at={at.footerWorkTogether} as="a" surface="accent" class="footer-cta" href="/contact" clip>
-      <span class="t-display t-display--button">{WORK_TOGETHER}</span>
-    </Block>
-  )
-}
+{at.footerWorkTogether && <PrimaryButton at={at.footerWorkTogether} label={WORK_TOGETHER} href="/contact" />}
 
 {
   FOOTER_LINKS.map((link) => {

@@ -9,11 +9,12 @@
     "preview": "wrangler dev",
     "check": "astro check",
     "deploy": "wrangler deploy",
-    "verify": "npm run verify:grid && npm run verify:type && npm run verify:motion",
+    "verify": "npm run verify:grid && npm run verify:edges && npm run verify:type && npm run verify:motion",
     "verify:type": "node scripts/verify-type.mjs",
     "verify:grid": "node scripts/verify-grid.mjs",
     "measure": "node scripts/measure-fit.mjs",
-    "verify:motion": "node scripts/verify-motion.mjs"
+    "verify:motion": "node scripts/verify-motion.mjs",
+    "verify:edges": "node scripts/verify-edges.mjs"
   },
   "dependencies": {
     "astro": "^5.14.1",

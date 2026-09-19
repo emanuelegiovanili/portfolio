@@ -66,6 +66,16 @@
   --pad-sm: calc(var(--u) * 10);
   --pad-lg: calc(var(--u) * 40);
 
+  /*
+   * L'hover dei bottoni: quanto ci mette il riempimento a salire.
+   *
+   * Sta in CSS e non nei token di movimento perche' l'hover e' una transizione,
+   * non una timeline: non ha bisogno di GSAP, e senza JavaScript deve
+   * funzionare lo stesso.
+   */
+  --hover-time: 0.4s;
+  --hover-ease: cubic-bezier(0.33, 1, 0.68, 1);
+
   /* Tipografia */
   --font-display: 'DT Getai Grotesk Display', 'Getai Fallback', system-ui, sans-serif;
   --font-text: 'Poppins', 'Poppins Fallback', system-ui, sans-serif;

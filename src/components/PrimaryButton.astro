@@ -6,9 +6,12 @@
  * mobile, 4x1 nel footer. Non e' una proprieta' del componente, e' la mappa
  * della pagina a dirlo.
  *
- * Lo stato disabilitato usa --light-grey. E' l'unico stato oltre al default che
- * il Figma disegni: il Send button e' grigio su tutte e tre le pagine in cui
- * compare, perche' il form e' vuoto. Vedi NOTES.md D24.
+ * Lo stato disabilitato usa --light-grey. Vedi NOTES.md D24.
+ *
+ * L'hover (314:2215) inverte: fondo off-white, testo nero. Il riempimento sale
+ * dal basso e la scritta e' ripetuta dentro allo strato che sale, cosi' cambia
+ * colore esattamente dove passa il bordo del riempimento. Su disabilitato non
+ * parte: non c'e' niente da premere.
  */
 import Block from './Block.astro';
 import type { BlockPlacements } from '../lib/layout';
@@ -39,4 +42,7 @@ const isLink = href !== undefined;
   {...rest}
 >
   <span class="t-display t-display--button">{label}</span>
+  <span class="hover-fill" aria-hidden="true">
+    <span class="t-display t-display--button">{label}</span>
+  </span>
 </Block>

@@ -48,28 +48,33 @@
  * non registrata e' una stringa, e una stringa non si anima. Il valore iniziale
  * e' 1, cioe' filo intero: senza JavaScript la pagina resta quella di sempre,
  * ed e' l'animazione ad accorciarli prima di ridisegnarli.
+ *
+ * `inherits: true` non e' un dettaglio: i fili li disegna uno pseudo-elemento,
+ * che e' un elemento a se'. Con l'ereditarieta' spenta GSAP animava il valore
+ * sul blocco e lo pseudo continuava a leggere il proprio iniziale, cioe' 1:
+ * i fili restavano interi e l'animazione non si vedeva.
  */
 @property --rule-t {
   syntax: '<number>';
-  inherits: false;
+  inherits: true;
   initial-value: 1;
 }
 
 @property --rule-r {
   syntax: '<number>';
-  inherits: false;
+  inherits: true;
   initial-value: 1;
 }
 
 @property --rule-b {
   syntax: '<number>';
-  inherits: false;
+  inherits: true;
   initial-value: 1;
 }
 
 @property --rule-l {
   syntax: '<number>';
-  inherits: false;
+  inherits: true;
   initial-value: 1;
 }
 
@@ -279,31 +284,61 @@
  * quello che fa il Figma, `border: 1px solid #504D5C` su tutti e quattro.
  *
  * Non sono `border` ma gradienti, perche' un border non si puo' accorciare e
- * questi fili si disegnano allo scroll. I bordi restano dichiarati e
- * trasparenti per tenere il modello di scatola, e `background-origin:
- * border-box` fa partire i gradienti esattamente dove starebbero.
+ * questi fili si disegnano allo scroll.
  *
- * L'ancoraggio di ciascun lato e' l'angolo da cui il tratto **arriva**, non un
- * angolo qualsiasi: alto ancorato a sinistra, destro in alto, basso a destra,
- * sinistro in basso. Cosi' i quattro segmenti si susseguono in senso orario e
- * il filo si chiude dove e' partito. Cambiare uno di questi quattro valori
- * spezza il giro e lo fa ripartire da un'altra parte.
+ * ---------------------------------------------------------------------------
+ * PERCHE' STANNO SU UNO PSEUDO-ELEMENTO PIU' GRANDE DEL BLOCCO
+ *
+ * Un bordo di un pixel dentro la scatola cade sulla linea di griglia solo in
+ * alto e a sinistra. In basso e a destra sta **accanto**: il blocco finisce a
+ * y=440 e il suo filo occupa il pixel 439, mentre la linea di griglia occupa il
+ * 440. Misurato sui pixel dipinti di una skill card, non dedotto.
+ *
+ * Il risultato e' un pixel scuro e uno chiaro appaiati su due lati e un pixel
+ * solo sugli altri due: a schermo sembra che il bordo sia doppio, ed e' quello
+ * che il committente ha visto.
+ *
+ * Lo pseudo-elemento si estende di un pixel a destra e in basso, cioe' fin
+ * **sopra** le due linee che chiudono il blocco. Cosi' tutti e quattro i fili
+ * cadono esattamente sulla propria linea di griglia: la regola zero del
+ * progetto, portata dalla scatola al pixel.
+ *
+ * Il `border` trasparente resta perche' regge il modello di scatola: toglierlo
+ * darebbe due pixel di spazio interno in piu' a ogni blocco del sito.
+ * ---------------------------------------------------------------------------
  *
  * Il valore iniziale delle quattro variabili e' 1: senza JavaScript i fili sono
  * interi.
  */
 .block[data-surface='line'] {
+  position: relative;
   border: var(--line) solid transparent;
   background-color: var(--block-bg);
+}
+
+.block[data-surface='line']::after {
+  content: '';
+  position: absolute;
+  /* Il box di riferimento di un figlio assoluto e' il **padding box**, cioe'
+     gia' un --line dentro al bordo: il -1 su alto e sinistra lo riporta sul
+     border box, il -2 su destra e basso lo porta un pixel oltre, dove sta la
+     linea. */
+  top: calc(var(--line) * -1);
+  left: calc(var(--line) * -1);
+  right: calc(var(--line) * -2);
+  bottom: calc(var(--line) * -2);
+  pointer-events: none;
+
   background-image:
     linear-gradient(var(--rule-color), var(--rule-color)),
     linear-gradient(var(--rule-color), var(--rule-color)),
     linear-gradient(var(--rule-color), var(--rule-color)),
     linear-gradient(var(--rule-color), var(--rule-color));
-  background-origin: border-box;
-  background-clip: border-box;
   background-repeat: no-repeat;
-  /*        alto        destro      basso         sinistro */
+  /* L'ancoraggio di ciascun lato e' l'angolo da cui il tratto **arriva**: alto
+     ancorato a sinistra, destro in alto, basso a destra, sinistro in basso.
+     Cosi' i quattro segmenti si susseguono in senso orario e il filo si chiude
+     dove e' partito. Cambiare uno di questi quattro valori spezza il giro. */
   background-position:
     left top,
     right top,
@@ -316,7 +351,10 @@
     var(--line) calc(100% * var(--rule-l));
 }
 
+/* Un blocco viola copre la linea e non la rimpiazza (NOTES.md D2), quindi deve
+   stare sopra anche al filo che il vicino sporge di un pixel dentro di lui. */
 .block[data-surface='accent'] {
+  z-index: 2;
   background: var(--accent-bg);
   color: var(--accent-fg);
 }
@@ -327,4 +365,10 @@
 
 .block[data-clip] {
   overflow: clip;
+  /* Il filo sporge di un pixel oltre il border box, e il ritaglio di `clip` si
+     misura dal padding box: senza questo margine se lo mangerebbe tutto, su
+     tutti e quattro i lati. Due pixel, cioe' --line per due — scritto per
+     esteso perche' con un calc su custom property la dichiarazione viene
+     scartata e il valore calcolato torna a zero. Verificato. */
+  overflow-clip-margin: 2px;
 }

@@ -20,6 +20,7 @@ import Grid from './Grid.astro';
 import Block from './Block.astro';
 import Icon from './Icon.astro';
 import SquareButton from './SquareButton.astro';
+import PrimaryButton from './PrimaryButton.astro';
 import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
 import { SITE_NAME } from '../lib/site';
 ---
@@ -43,9 +44,7 @@ import { SITE_NAME } from '../lib/site';
           <span class="t-display t-display--section">{SITE_NAME}</span>
         </Block>
 
-        <Block at={megamenuMap.menuCta} as="a" surface="accent" class="menu-cta" href="/contact" clip>
-          <span class="t-display t-display--button">Let’s work together</span>
-        </Block>
+        <PrimaryButton at={megamenuMap.menuCta} label="Let’s work together" href="/contact" />
 
         {/*
           L'icona e' `menu`, non `x`.

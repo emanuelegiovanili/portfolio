@@ -94,12 +94,34 @@ function nearest(value: number, candidates: number[]): number {
  * comunque a intercettare una parola lunga che sborda dal proprio paragrafo.
  */
 function measureOverflow(block: Element, rect: DOMRect, style: CSSStyleDeclaration): { dx: number; dy: number } {
+  /*
+   * Il decoro di un blocco sporge di un --line oltre il border box.
+   *
+   * Lo fanno lo pseudo-elemento che disegna i fili e lo strato che riempie un
+   * bottone in hover, e lo fanno apposta: e' li' che cade la linea di griglia
+   * che chiude il blocco (grid.css). `scrollWidth` non sa distinguerli dal
+   * contenuto e li conta come uno sforo, su ogni blocco bordato e su ogni
+   * bottone del sito. Va scorporato, altrimenti la misura dice un paio di pixel
+   * di troppo ovunque e non significa piu' niente.
+   *
+   * Si misura dal padding box, che e' quello che `scrollWidth` guarda: lo
+   * sbordo e' il --line piu' il bordo del blocco.
+   *
+   * Sull'asse verticale non serve: li' si guardano i rettangoli dei figli, e ne'
+   * lo pseudo-elemento ne' lo strato — che e' in posizione assoluta — entrano
+   * in quel conto.
+   */
+  const bordato = block.getAttribute('data-surface') === 'line';
+  const conRiempimento = block.querySelector(':scope > .hover-fill') !== null;
+  const line = Number.parseFloat(style.getPropertyValue('--line')) || 0;
+  const bleed = bordato || conRiempimento ? line + parseFloat(style.borderRightWidth) : 0;
+
   const top = rect.top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop);
   const bottom = rect.bottom - parseFloat(style.borderBottomWidth) - parseFloat(style.paddingBottom);
   const left = rect.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft);
   const right = rect.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight);
 
-  let dx = Math.max(0, block.scrollWidth - Math.ceil(block.clientWidth));
+  let dx = Math.max(0, block.scrollWidth - Math.ceil(block.clientWidth) - bleed);
   let dy = 0;
   for (const child of block.children) {
     const r = child.getBoundingClientRect();

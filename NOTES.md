@@ -823,6 +823,83 @@ Le immagini marcate sono le cinque di contenuto (`data-reveal` sui `<Picture>` d
 orizzontale su un oggetto ruotato non vuol dire niente.
 
 
+### D61. Il filo cade sulla linea, non accanto
+Il committente ha visto una sovrapposizione su un fermo-immagine. Non era un'impressione: misurati i
+pixel dipinti di una skill card a densita' 1,
+
+| lato | pixel |
+|---|---|
+| alto | `y=200` filo — la linea di griglia e' **coperta** |
+| basso | `y=439` filo, `y=440` linea di griglia — **due pixel appaiati** |
+
+Un bordo di un pixel dentro la scatola cade sulla linea solo in alto e a sinistra. In basso e a
+destra le sta accanto, perche' la scatola finisce dove la linea comincia. Due lati con un pixel
+scuro e due con uno scuro piu' uno chiaro: a schermo sembra un bordo doppio da un lato solo.
+
+I quattro gradienti sono passati dal blocco a uno **pseudo-elemento piu' grande di lui**: si estende
+di un `--line` a destra e in basso, cioe' fin sopra le due linee che chiudono il blocco. Ora tutti e
+quattro i fili cadono esattamente sulla propria linea. E' la regola zero del progetto portata dalla
+scatola al pixel.
+
+Tre cose che sono costate un giro ciascuna:
+
+1. **Il riferimento di un figlio assoluto e' il padding box**, non il border box. Su un blocco
+   bordato e' gia' un `--line` dentro e va compensato; su uno senza bordo no. Con i soli valori del
+   primo caso il riempimento di un bottone viola sbordava di due pixel invece di uno.
+2. **`@property --rule-*` era `inherits: false`.** Lo pseudo-elemento e' un elemento a se': GSAP
+   animava il valore sul blocco e lo pseudo continuava a leggere il proprio iniziale, cioe' 1. I fili
+   restavano interi e l'animazione non si vedeva affatto.
+3. **`overflow-clip-margin: calc(var(--line) * 2)` viene scartata** e il valore calcolato torna a
+   zero, quindi il ritaglio di `clip` si mangiava i fili su tutti e quattro i lati. Serve il valore
+   per esteso.
+
+E una conseguenza sulla sonda: lo pseudo-elemento sporgente finisce in `scrollWidth`, che lo conta
+come contenuto che sfora — due pixel su ogni blocco bordato del sito, 168 misure rosse. Ora lo
+sbordo del decoro si scorpora, misurandolo invece di indovinarlo.
+
+### D62. `verify:edges` — una verifica sui pixel dipinti
+`verify:grid` misura le **scatole**, e le scatole erano giuste: scarto 0,0000px mentre il disegno era
+sbagliato di un pixel su due lati. Nessuna delle misure esistenti poteva accorgersene, e infatti a
+trovarlo e' stato l'occhio del committente su un fermo-immagine.
+
+`scripts/verify-edges.mjs` ritaglia strisce alte o larghe un pixel che attraversano i quattro lati di
+cinque blocchi diversi, le legge con sharp a densita' 1 — un pixel dell'immagine e' un pixel CSS — e
+controlla due cose per lato: che il filo ci sia dove deve, e che **subito fuori** non resti griglia
+scoperta. Controlla anche che lo strato dell'hover copra il blocco piu' esattamente un pixel.
+
+### D63. L'hover dei bottoni
+Disegnato dal committente: `258:872` per il quadrato, `314:2215` per il primario. E' un'inversione.
+
+| | default | hover |
+|---|---|---|
+| Mail | viola, icona off-white | off-white, icona nera |
+| Menu | off-white, icona nera | viola, icona off-white |
+| Menu Open | nero, X off-white | viola, X off-white |
+| Profile | off-white, icona nera | il **ritratto** di `/about` |
+| Primario | viola, testo off-white | off-white, testo nero |
+
+Il riempimento sale dal basso, come richiesto. Il meccanismo e' un secondo strato sovrapposto che
+porta il proprio fondo **e una copia del contenuto** nel colore d'arrivo; un `clip-path` li ritaglia
+insieme. E' questo che fa cambiare colore all'icona e alla scritta **esattamente dove passa il bordo
+del riempimento**: con una copia sola si potrebbe solo farle cambiare tutte in una volta a meta'
+strada.
+
+I fili si spengono col ritaglio complementare, cosi' il bordo non sopravvive sopra al viola, che nel
+Figma non ce l'ha.
+
+Tre note:
+
+- **E' una transizione CSS, non una timeline GSAP.** L'hover non ha bisogno di JavaScript e senza
+  JavaScript deve funzionare lo stesso. Durata e curva stanno in `--hover-time` e `--hover-ease`.
+- **Solo dove c'e' un puntatore** (`@media (hover: hover)`): su touch `:hover` resta appiccicato dopo
+  il tocco e il bottone resterebbe riempito finche' non se ne tocca un altro.
+- **Le frecce dei caroselli** riusano la forma del `Square-button 1x1` e prendono lo stesso hover,
+  pur non avendo una variante propria nel file. Su una freccia disabilitata non parte.
+
+Il "Let's work together" del footer e del megamenu erano due `Block` scritti a mano: sono diventati
+`PrimaryButton`, che e' quello che sono nel file, e con questo hanno preso l'hover.
+
+
 ---
 
 ## 5. Blocchi aperti
@@ -833,7 +910,7 @@ orizzontale su un oggetto ruotato non vuol dire niente.
 | B2 | Frame mobile e md per `/about`, `/works`, `/works/[slug]`, `/contact` e megamenu | Sotto 1200px quelle quattro route non hanno disegno |
 | B3 | Backend del form, stati di errore / invio / conferma, privacy policy | Il form non è inviabile |
 | B4 | Blocco Spotify: "32 songs" e "Now playing" sono dati vivi o uno snapshot | Scritto a mano sarà sbagliato entro un mese |
-| B5 | Stati hover e focus | Non progettati per nessun componente. Il disabilitato del Send e l'attivo del filtro invece esistono (§4.4, §4.5) |
+| B5 | Stati hover e focus per **tutto il resto** | I due bottoni ora sono disegnati (D63). Restano senza hover le voci del footer, quelle del megamenu, le card progetto e i filtri. Il focus da tastiera e' visibile solo dentro il megamenu |
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |

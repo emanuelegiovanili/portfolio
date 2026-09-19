@@ -57,6 +57,9 @@
 /* ---------- Square button ---------- */
 
 .square-button {
+  /* Lo strato dell'hover e' assoluto e si appoggia qui. Sui blocchi bordati
+     `position: relative` c'e' gia' (grid.css), su quelli viola no. */
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,6 +77,7 @@
 /* ---------- Primary button ---------- */
 
 .primary-button {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,14 +122,6 @@
   .footer-brand__text {
     font-size: calc(var(--u) * 40);
   }
-}
-
-.footer-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--pad);
-  text-align: center;
 }
 
 .footer-link {
@@ -409,6 +405,124 @@
   color: var(--purple);
 }
 
+/* ---------- L'hover dei bottoni ---------- */
+
+/*
+ * Il riempimento sale dal basso (258:872 per il quadrato, 314:2215 per il
+ * primario). E' un'inversione: chi e' viola diventa off-white, chi e' off-white
+ * diventa viola, e icona e scritte cambiano di conseguenza.
+ *
+ * Il meccanismo e' un secondo strato sovrapposto, con dentro **una copia** del
+ * contenuto nel colore d'arrivo. Lo strato porta il proprio fondo e la propria
+ * copia, e un `clip-path` li ritaglia insieme: il colore dell'icona cambia
+ * esattamente dove passa il bordo del riempimento, invece di cambiare tutto in
+ * una volta a meta' strada.
+ *
+ * `--hover` e' la quota ancora da scoprire, da 100% (niente) a 0% (tutto). Non
+ * e' animata lei — non e' registrata, e una custom property non registrata non
+ * si anima — ma il `clip-path` che la usa si', e basta.
+ */
+.square-button,
+.primary-button {
+  --hover: 100%;
+  --hover-bg: var(--purple);
+  --hover-fg: var(--off-white);
+}
+
+/* Chi e' gia' viola va dall'altra parte. */
+.square-button[data-surface='accent'],
+.primary-button[data-surface='accent'] {
+  --hover-bg: var(--off-white);
+  --hover-fg: var(--black);
+}
+
+.hover-fill {
+  position: absolute;
+  /*
+   * Come lo pseudo-elemento dei fili: dal border box fino a un pixel oltre, che
+   * e' dove stanno le due linee che chiudono il blocco. Il riempimento le
+   * copre, come fa ogni blocco viola (NOTES.md D2).
+   *
+   * I numeri sono due perche' il box di riferimento di un figlio assoluto e' il
+   * **padding box**: su un blocco bordato e' gia' un --line dentro e va
+   * compensato, su uno senza bordo coincide col border box e non c'e' niente da
+   * compensare. Misurato: con i soli valori del primo caso il riempimento di un
+   * bottone viola sbordava di due pixel invece di uno.
+   */
+  top: 0;
+  left: 0;
+  right: calc(var(--line) * -1);
+  bottom: calc(var(--line) * -1);
+  /* Sopra ai fili, che nel Figma sotto il riempimento non ci sono. */
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--hover-bg);
+  color: var(--hover-fg);
+  text-align: center;
+  pointer-events: none;
+  clip-path: inset(var(--hover) 0 0 0);
+}
+
+/* I blocchi bordati hanno un --line di bordo trasparente fra border box e
+   padding box: qui va aggiunto a ogni lato. */
+.block[data-surface='line'] > .hover-fill {
+  top: calc(var(--line) * -1);
+  left: calc(var(--line) * -1);
+  right: calc(var(--line) * -2);
+  bottom: calc(var(--line) * -2);
+}
+
+.primary-button .hover-fill {
+  padding: var(--pad);
+}
+
+/* Il ritratto della variante `profile`: il riempimento e' un'immagine. */
+.hover-fill :is(img, picture) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*
+ * I fili si spengono da sotto, esattamente dove il riempimento arriva.
+ *
+ * E' il ritaglio complementare: `--hover` al 100% lascia i fili interi, allo 0%
+ * non ne resta niente. Cosi' il bordo non sopravvive sopra al viola, che nel
+ * Figma non ha bordo, e nel mezzo il filo c'e' solo dove il riempimento non e'
+ * ancora salito.
+ */
+.square-button[data-surface='line']::after,
+.primary-button[data-surface='line']::after {
+  clip-path: inset(0 0 calc(100% - var(--hover)) 0);
+}
+
+/*
+ * Solo dove c'e' un puntatore.
+ *
+ * Su touch `:hover` resta appiccicato dopo il tocco: il bottone resterebbe
+ * riempito finche' non se ne tocca un altro.
+ */
+@media (hover: hover) {
+  :is(.square-button, .primary-button):hover:not(:disabled):not([aria-disabled='true']) {
+    --hover: 0%;
+  }
+
+  .hover-fill,
+  :is(.square-button, .primary-button)[data-surface='line']::after {
+    transition: clip-path var(--hover-time) var(--hover-ease);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-fill,
+  :is(.square-button, .primary-button)[data-surface='line']::after {
+    transition: none;
+  }
+}
+
 /* ---------- Megamenu ---------- */
 
 /*
@@ -459,7 +573,6 @@
 }
 
 .menu-logo,
-.menu-cta,
 .menu-voice,
 .menu-social {
   display: flex;

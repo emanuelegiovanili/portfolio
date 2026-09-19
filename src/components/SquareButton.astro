@@ -12,9 +12,21 @@
  *
  * La variante `mail` e' l'unica viola, e come tutti i blocchi viola non ha
  * bordo: copre la linea di griglia e non la rimpiazza.
+ *
+ * L'hover (258:872) e' un'inversione: il viola diventa off-white e l'off-white
+ * diventa viola, con l'icona che cambia di conseguenza. La variante `profile`
+ * fa eccezione e scopre il ritratto.
+ *
+ * Il riempimento sale dal basso, e l'icona e' scritta **due volte**: una nel
+ * blocco e una dentro allo strato che sale. Le due copie stanno nello stesso
+ * punto, e lo strato le ritaglia insieme al proprio fondo, quindi il colore
+ * dell'icona cambia esattamente dove passa il bordo del riempimento. Con una
+ * copia sola si potrebbe solo farle cambiare colore tutta in una volta.
  */
+import { Picture } from 'astro:assets';
 import Block from './Block.astro';
 import Icon from './Icon.astro';
+import portrait from '../assets/about/portrait.jpg';
 import type { BlockPlacements } from '../lib/layout';
 import type { IconName } from '../lib/icons';
 
@@ -67,4 +79,20 @@ const isLink = href !== undefined;
   {...rest}
 >
   <Icon name={name} />
+  <span class="hover-fill" aria-hidden="true">
+    {
+      variant === 'profile' ? (
+        <Picture
+          src={portrait}
+          alt=""
+          widths={[160, 320]}
+          sizes="160px"
+          formats={['avif', 'webp']}
+          loading="lazy"
+        />
+      ) : (
+        <Icon name={name} />
+      )
+    }
+  </span>
 </Block>
