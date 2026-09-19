@@ -36,6 +36,29 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Prima di spendere quattro minuti in build e verifica: le credenziali
+      # ci sono? Senza questo passo il workflow muore in fondo, su un errore di
+      # wrangler che non dice dove sia il problema.
+      #
+      # I valori non si stampano e non si possono stampare: GitHub li maschera.
+      # Qui si guarda solo se sono vuoti.
+      - name: Credenziali
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mancanti=()
+          [ -n "$TOKEN" ] || mancanti+=(CLOUDFLARE_API_TOKEN)
+          [ -n "$ACCOUNT" ] || mancanti+=(CLOUDFLARE_ACCOUNT_ID)
+          if [ ${#mancanti[@]} -gt 0 ]; then
+            echo "::error::Secret mancanti o vuoti: ${mancanti[*]}"
+            echo "Vanno in Settings > Secrets and variables > Actions, scheda"
+            echo "**Secrets** (non Variables), come secret del repository (non"
+            echo "di un Environment). Il nome deve corrispondere esattamente."
+            exit 1
+          fi
+          echo "Credenziali presenti."
+
       - uses: actions/setup-node@v5
         with:
           node-version: 22
