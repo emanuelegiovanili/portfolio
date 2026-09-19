@@ -64,6 +64,27 @@ let failures = 0;
 
 const near = (px, target) => px.every((c, i) => Math.abs(c - target[i]) <= TOLLERANZA);
 
+/**
+ * Il rettangolo di un blocco, e se tocca il bordo della griglia.
+ *
+ * Sul bordo il filo torna dentro, come fa l'ultima linea di griglia: fuori
+ * cadrebbe oltre il contenitore. L'atteso cambia di un pixel, e senza questo la
+ * verifica cercherebbe il filo del bottone del menu — dodicesima colonna — a
+ * x=1440 di uno schermo largo 1440.
+ */
+const BOX_OF = `(sel) => {
+  const el = document.querySelector(sel);
+  const grid = el.closest('.grid');
+  const r = el.getBoundingClientRect();
+  const g = grid.getBoundingClientRect();
+  return {
+    left: Math.round(r.left), right: Math.round(r.right),
+    top: Math.round(r.top), bottom: Math.round(r.bottom),
+    edgeX: r.right >= g.right - 0.5,
+    edgeY: r.bottom >= g.bottom - 0.5,
+  };
+}`;
+
 /** Una striscia di pixel dallo schermo, letta come terne RGB. */
 async function strip(page, clip) {
   const buf = await page.screenshot({ clip });
@@ -103,10 +124,7 @@ try {
     await page.evaluate((top) => window.scrollTo(0, Math.max(0, top - 250)), found);
     await page.waitForTimeout(2600);
 
-    const box = await page.evaluate((sel) => {
-      const r = document.querySelector(sel).getBoundingClientRect();
-      return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom) };
-    }, selector);
+    const box = await page.evaluate(new Function('return ' + BOX_OF)(), selector);
 
     // Una fascia orizzontale e una verticale, prese vicino a un angolo dove il
     // contenuto non arriva: si guardano i fili, non il testo. Il margine si
@@ -129,11 +147,14 @@ try {
      * chiude, ed e' esattamente lo spostamento che si sta verificando. Subito
      * oltre non deve restare griglia scoperta.
      */
+    // Sul bordo della griglia il filo sta all'ultimo pixel **dentro** il blocco.
+    const dx = padL + w - (box.edgeX ? 1 : 0);
+    const dy = padT + h - (box.edgeY ? 1 : 0);
     const lati = [
       ['sinistro', cols[padL], padL > 0 ? cols[padL - 1] : null],
-      ['destro', cols[padL + w], cols[padL + w + 1]],
+      ['destro', cols[dx], cols[dx + 1] ?? null],
       ['alto', rows[padT], padT > 0 ? rows[padT - 1] : null],
-      ['basso', rows[padT + h], rows[padT + h + 1]],
+      ['basso', rows[dy], rows[dy + 1] ?? null],
     ];
 
     for (const [lato, dentro, fuori] of lati) {
@@ -166,11 +187,14 @@ try {
         if (!fill) return 'senza strato';
         const b = el.getBoundingClientRect();
         const f = fill.getBoundingClientRect();
+        const g = el.closest('.grid').getBoundingClientRect();
         return {
           sx: +(b.left - f.left).toFixed(2),
           su: +(b.top - f.top).toFixed(2),
           dx: +(f.right - b.right).toFixed(2),
           giu: +(f.bottom - b.bottom).toFixed(2),
+          edgeX: b.right >= g.right - 0.5,
+          edgeY: b.bottom >= g.bottom - 0.5,
         };
       }, selector);
 
@@ -179,10 +203,56 @@ try {
         console.log(`  FALLITO ${nome} — ${scarti ?? 'blocco assente'}`);
         continue;
       }
-      // Zero sui due lati che gia' coincidono, un pixel sui due che chiudono.
-      const ok = scarti.sx === 0 && scarti.su === 0 && scarti.dx === 1 && scarti.giu === 1;
+      // Zero sui due lati che gia' coincidono, un pixel sui due che chiudono —
+      // ma zero anche li' quando il blocco tocca il bordo della griglia, dove
+      // il decoro torna dentro.
+      const attesoDx = scarti.edgeX ? 0 : 1;
+      const attesoGiu = scarti.edgeY ? 0 : 1;
+      const ok = scarti.sx === 0 && scarti.su === 0 && scarti.dx === attesoDx && scarti.giu === attesoGiu;
       if (!ok) failures += 1;
-      console.log(`  ${ok ? 'ok     ' : 'FALLITO'} ${nome}` + (ok ? '' : ` — sx ${scarti.sx} su ${scarti.su} dx ${scarti.dx} giu ${scarti.giu}, attesi 0 0 1 1`));
+      console.log(
+        `  ${ok ? 'ok     ' : 'FALLITO'} ${nome}` +
+          (ok ? '' : ` — sx ${scarti.sx} su ${scarti.su} dx ${scarti.dx} giu ${scarti.giu}, attesi 0 0 ${attesoDx} ${attesoGiu}`),
+      );
+    }
+
+    /*
+     * E il filo deve restare visibile **mentre** il bottone e' riempito.
+     *
+     * Senza contorno un bottone riempito di off-white su una pagina off-white
+     * galleggia, e il blocco esce dalla griglia proprio mentre lo stai
+     * puntando: e' la regressione che il committente ha segnalato.
+     */
+    console.log('\nE con il riempimento su, il filo c\'e\' ancora?\n');
+
+    for (const { selector, nome } of HOVER) {
+      const box = await page.evaluate(new Function('return ' + BOX_OF)(), selector);
+
+      await page.hover(selector);
+      // Il riempimento e' una transizione CSS: si misura a corsa finita.
+      await page.waitForTimeout(900);
+
+      const PAD = 3;
+      const padL = Math.min(PAD, box.left);
+      const padT = Math.min(PAD, box.top);
+      const w = box.right - box.left;
+      const h = box.bottom - box.top;
+      const cols = await strip(page, { x: box.left - padL, y: box.top + 6, width: padL + w + PAD, height: 1 });
+      const rows = await strip(page, { x: box.left + 6, y: box.top - padT, width: 1, height: padT + h + PAD });
+
+      for (const [lato, px] of [
+        ['sinistro', cols[padL]],
+        ['destro', cols[padL + w - (box.edgeX ? 1 : 0)]],
+        ['alto', rows[padT]],
+        ['basso', rows[padT + h - (box.edgeY ? 1 : 0)]],
+      ]) {
+        const ok = near(px, RULE);
+        if (!ok) failures += 1;
+        console.log(`  ${ok ? 'ok     ' : 'FALLITO'} ${nome} in hover · lato ${lato}` + (ok ? '' : ` — ${px.join(',')} invece del filo`));
+      }
+
+      await page.mouse.move(2, 2);
+      await page.waitForTimeout(700);
     }
 
     await context.close();

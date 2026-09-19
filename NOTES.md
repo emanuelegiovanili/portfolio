@@ -884,8 +884,7 @@ insieme. E' questo che fa cambiare colore all'icona e alla scritta **esattamente
 del riempimento**: con una copia sola si potrebbe solo farle cambiare tutte in una volta a meta'
 strada.
 
-I fili si spengono col ritaglio complementare, cosi' il bordo non sopravvive sopra al viola, che nel
-Figma non ce l'ha.
+I fili **restano** anche in hover: vedi D64, che corregge la prima versione di questa decisione.
 
 Tre note:
 
@@ -898,6 +897,84 @@ Tre note:
 
 Il "Let's work together" del footer e del megamenu erano due `Block` scritti a mano: sono diventati
 `PrimaryButton`, che e' quello che sono nel file, e con questo hanno preso l'hover.
+
+
+### D64. Il filo resta anche in hover
+Prima versione: i fili si spegnevano col ritaglio complementare mentre il riempimento saliva, perche'
+il Figma disegna il Menu Hover come viola pieno senza bordo (258:869).
+
+Il committente ha chiesto il contrario, e ha ragione: senza contorno un bottone riempito di off-white
+su una pagina off-white **galleggia**, e il blocco esce dalla griglia proprio nell'istante in cui lo
+stai puntando. E' una deviazione voluta dal file, in nome dell'invariante del progetto.
+
+Due casi:
+
+- **Bottone bordato** (il menu): non c'e' niente da fare. Lo pseudo-elemento che disegna i fili e'
+  l'ultimo figlio, quindi sta gia' sopra al riempimento; e' bastato togliere il ritaglio e lo
+  `z-index` che lo strato si era preso.
+- **Bottone viola** (mail, primario): il filo non esiste, perche' un blocco viola non ha bordo (D2).
+  Lo porta **lo strato stesso**, come immagine di sfondo sopra al proprio colore, cosi' viene
+  ritagliato insieme al riempimento e cresce con lui invece di comparire tutto in una volta.
+
+`verify:edges` ora controlla anche questo: si mette in hover su tre bottoni, aspetta la fine della
+transizione e rilegge i quattro lati.
+
+### D65. Sul bordo della griglia il filo torna dentro
+Conseguenza di D61, trovata dalla verifica appena e' stata estesa all'hover.
+
+Un filo che sporge di un pixel cade sulla linea di griglia che chiude il blocco. Ma **sul bordo del
+contenitore quella linea e' disegnata dall'altra parte**: l'ultima verticale sta dentro l'ultima
+colonna, non fuori, altrimenti finirebbe oltre lo schermo e non si vedrebbe. E' l'eccezione che le
+linee `data-edge` hanno da sempre, e i blocchi devono seguirla. Misurato: il filo destro del bottone
+del menu, che sta in dodicesima colonna, cadeva sul pixel 1440 di uno schermo largo 1440.
+
+Non serve nessun dato in piu': `--col` e `--c` stanno sul blocco, `--cols` e `--rows` sulla griglia,
+e due `max()` bastano.
+
+```css
+--edge-x: max(0, calc(var(--col) + var(--c) - var(--cols)));
+--edge-y: max(0, calc(var(--row) + var(--r) - var(--rows)));
+```
+
+Un blocco che finisce all'ultima colonna da' 1, tutti gli altri zero. Il decoro e lo strato di hover
+lo sommano al proprio scostamento e tornano dentro.
+
+Nello stesso giro: `border: 0` esplicito sui blocchi `accent` e `bare`. Su un `<button>`, senza,
+resta il bordo dell'UA — `outset`, che su fondo scuro disegna una L grigia in alto a sinistra. Si
+vedeva sul bottone di chiusura del megamenu, l'unico blocco `bare` cliccabile del sito.
+
+### D66. Megamenu a base e md — proposta
+Il Figma ha solo il frame a 1440. Questa e' una **proposta**, e nessuna scelta e' inventata: ognuna
+viene da una regola che il file applica gia' altrove.
+
+| Blocco | base (10 col) | md (10 col) | lg (12 col) |
+|---|---|---|---|
+| Logo | `[1,1,5,2]` | `[1,1,6,1]` | `[1,1,4,1]` |
+| Chiudi | `[9,1,2,2]` | `[10,1,1,1]` | `[12,1,1,1]` |
+| Let's work together | `[1,14,10,2]` | `[7,1,3,1]` | `[8,1,4,1]` |
+| Work | `[1,4,10,3]` | `[1,3,10,3]` | `[2,2,10,2]` |
+| About | `[1,7,10,3]` | `[1,6,10,3]` | `[2,4,10,2]` |
+| LinkedIn | `[1,11,5,2]` | `[5,10,3,1]` | `[8,6,2,1]` |
+| Instagram | `[6,11,5,2]` | `[8,10,3,1]` | `[10,6,2,1]` |
+
+Le ragioni, una per riga:
+
+1. **Il bottone di chiusura sta nella cella della hamburger di pagina**, tier per tier. E' il punto di
+   D57: quel quadrato e' l'unica cosa che non cambia, e deve restare dov'era anche a 390.
+2. **Il logo copia il logo dell'header**, stessa cella e stesse tre dimensioni (20/24/40 px), con
+   l'a capo a base che il Figma impone gia' li'.
+3. **A base "Let's work together" scende a fondo pagina come bottone largo.** E' esattamente quello
+   che fa il footer a base (`footerCta`), dove a lg sta invece in prima riga: la composizione mobile
+   di quel bottone nel file esiste, e si riusa.
+4. **Le due voci prendono tutta la larghezza.** Il rientro di una colonna per lato del frame lg, a
+   dieci colonne, lascerebbe un titolo da 64px dentro otto celle da 39.
+5. **I social restano a destra a md e lg**, dove il file li mette, e si dividono la riga a base,
+   dove non c'e' spazio per lasciarne meta' vuota.
+
+A md la riga 1 torna piena — logo, CTA, chiudi — come a 1440.
+
+Misurato: 15 righe a base (585px in una finestra da 844), 10 a md (767px), 6 a lg. Nessuno sforo a
+nessuna delle tredici larghezze.
 
 
 ---
@@ -917,4 +994,4 @@ Il "Let's work together" del footer e del megamenu erano due `Block` scritti a m
 | B14 | **`/about` si stringe fra 1200 e 1365** | Quattro blocchi di testo tengono a 1440 e chiedono fino a 17px in piu' a 1200. Dichiarati con `data-known-overflow`. Si risolve allargando qualche span o alzando il confine lg: e' una decisione di disegno |
 | B13 | **Tre testimonial su quattro non hanno un testo** | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |
-| B15 | **Il megamenu sul telefono e' un desktop rimpicciolito** | Il Figma ha solo il frame a 1440. Sotto i 1200 tiene le dodici colonne come le pagine interne (B2), quindi a 390px le voci "Work" e "About" scendono a ~17px. Sul telefono la hamburger e' meta' della navigazione: qui serve un disegno, non una scala |
+| B15 | **Megamenu a base e md: proposta in attesa di conferma** | Composizione derivata dalle regole del file, non disegnata (D66). Se il committente la conferma, B15 si chiude; se preferisce altro, cambia una tabella in `chrome.ts` |

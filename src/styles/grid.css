@@ -214,7 +214,26 @@
  * L'ordine e' lo stesso di `resolveTier` in layout.ts: prima il tier corrente,
  * poi il piu' vicino verso il basso, infine quello verso l'alto.
  */
+/*
+ * Il blocco tocca il bordo destro o basso della griglia? 1 se si', 0 se no.
+ *
+ * Serve al decoro. Un filo che sporge di un pixel cade sulla linea di griglia
+ * che chiude il blocco, ma **sul bordo del contenitore quella linea e'
+ * disegnata dall'altra parte**: l'ultima verticale sta dentro l'ultima colonna,
+ * non fuori, altrimenti finirebbe oltre lo schermo e non si vedrebbe. E' la
+ * stessa eccezione che hanno le linee `data-edge`, e i blocchi devono seguirla:
+ * misurato, il filo destro del bottone del menu — che sta in dodicesima colonna
+ * — cadeva sul pixel 1440 di uno schermo largo 1440, cioe' in nessun posto.
+ *
+ * Non serve nessun dato in piu': `--col` e `--c` stanno sul blocco, `--cols` e
+ * `--rows` sulla griglia. Un blocco che finisce all'ultima colonna da'
+ * `col + c - cols = 1`, tutti gli altri danno zero o meno, e `max()` li
+ * appiattisce a zero. `deriveRows` garantisce che nessuno vada oltre.
+ */
 .block {
+  --edge-x: max(0, calc(var(--col) + var(--c) - var(--cols)));
+  --edge-y: max(0, calc(var(--row) + var(--r) - var(--rows)));
+
   --col: var(--col-base, var(--col-md, var(--col-lg)));
   --row: var(--row-base, var(--row-md, var(--row-lg)));
   --c: var(--c-base, var(--c-md, var(--c-lg)));
@@ -325,8 +344,9 @@
      linea. */
   top: calc(var(--line) * -1);
   left: calc(var(--line) * -1);
-  right: calc(var(--line) * -2);
-  bottom: calc(var(--line) * -2);
+  /* Un --line piu' in la', salvo sul bordo della griglia: vedi --edge-x. */
+  right: calc(var(--line) * (-2 + var(--edge-x)));
+  bottom: calc(var(--line) * (-2 + var(--edge-y)));
   pointer-events: none;
 
   background-image:
@@ -355,11 +375,17 @@
    stare sopra anche al filo che il vicino sporge di un pixel dentro di lui. */
 .block[data-surface='accent'] {
   z-index: 2;
+  border: 0;
   background: var(--accent-bg);
   color: var(--accent-fg);
 }
 
+/* `border: 0` esplicito: su un <button> senza questo resta il bordo dell'UA,
+   che e' `outset` e su fondo scuro disegna una L grigia in alto a sinistra.
+   Visto sul bottone di chiusura del megamenu, che e' l'unico blocco `bare`
+   cliccabile del sito. */
 .block[data-surface='bare'] {
+  border: 0;
   background: none;
 }
 

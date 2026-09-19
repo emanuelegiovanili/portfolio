@@ -22,7 +22,6 @@ import Icon from './Icon.astro';
 import SquareButton from './SquareButton.astro';
 import PrimaryButton from './PrimaryButton.astro';
 import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
-import { SITE_NAME } from '../lib/site';
 ---
 
 <div
@@ -40,8 +39,10 @@ import { SITE_NAME } from '../lib/site';
         {/* Nel file e' un frame di testo, non un link. Qui porta a casa: il menu
             non ha una voce "Home" e un logo muto dentro una navigazione a tutto
             schermo e' un vicolo cieco. Vedi NOTES.md D48. */}
-        <Block at={megamenuMap.menuLogo} as="a" href="/" class="menu-logo" clip>
-          <span class="t-display t-display--section">{SITE_NAME}</span>
+        <Block at={megamenuMap.menuLogo} as="a" href="/" class="logo menu-logo" clip>
+          <span class="t-display logo__text">
+            <span class="logo__word">Emanuele</span> <span class="logo__word">Giovanili</span>
+          </span>
         </Block>
 
         <PrimaryButton at={megamenuMap.menuCta} label="Let’s work together" href="/contact" />

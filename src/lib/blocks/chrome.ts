@@ -95,10 +95,18 @@ export const FOOTER_LINKS = [
  * vuota. Qui le righe sono sei e il nero del pannello copre da solo il resto
  * della finestra, che e' esattamente cio' che si vede nel file.
  *
- * Esiste solo a lg. Come le quattro pagine interne tiene le dodici colonne a
- * ogni larghezza (NOTES.md B2): sotto i 1200 diventa un desktop rimpicciolito.
- * Sul telefono e' l'unica navigazione a schermo insieme al footer, quindi la
- * cosa e' segnalata e non nascosta (B15).
+ * **I tier base e md sono una proposta, non un disegno.** Il Figma ha solo il
+ * frame a 1440. Non sono inventati: ogni scelta viene da una regola che il file
+ * applica gia' altrove, ed e' scritta in NOTES.md D65. In due parole:
+ *
+ *   - il bottone di chiusura sta **nella cella della hamburger di pagina**, tier
+ *     per tier, perche' e' quello il gesto (D57): 9,1 2x2 a base, 10,1 1x1 a md;
+ *   - il logo copia il logo dell'header, stessa cella;
+ *   - a base "Let's work together" scende a fondo pagina come bottone largo,
+ *     esattamente come fa il footer a base, dove a lg sta invece in prima riga;
+ *   - le due voci prendono tutta la larghezza, perche' a dieci colonne il
+ *     rientro di una colonna per lato del frame lg lascerebbe un titolo da
+ *     64px in otto celle da 39.
  *
  *   logo    x=0    y=0    480x120   -> 1,1 span 4x1
  *   cta     x=840  y=0    480x120   -> 8,1 span 4x1
@@ -109,13 +117,13 @@ export const FOOTER_LINKS = [
  *   Instagram x=1080 y=600 240x120  -> 10,6 span 2x1
  */
 export const megamenuMap = {
-  menuLogo: { lg: [1, 1, 4, 1] },
-  menuCta: { lg: [8, 1, 4, 1] },
-  menuClose: { lg: [12, 1, 1, 1] },
-  menuWork: { lg: [2, 2, 10, 2] },
-  menuAbout: { lg: [2, 4, 10, 2] },
-  menuLinkedin: { lg: [8, 6, 2, 1] },
-  menuInstagram: { lg: [10, 6, 2, 1] },
+  menuLogo: { base: [1, 1, 5, 2], md: [1, 1, 6, 1], lg: [1, 1, 4, 1] },
+  menuClose: { base: [9, 1, 2, 2], md: [10, 1, 1, 1], lg: [12, 1, 1, 1] },
+  menuCta: { base: [1, 14, 10, 2], md: [7, 1, 3, 1], lg: [8, 1, 4, 1] },
+  menuWork: { base: [1, 4, 10, 3], md: [1, 3, 10, 3], lg: [2, 2, 10, 2] },
+  menuAbout: { base: [1, 7, 10, 3], md: [1, 6, 10, 3], lg: [2, 4, 10, 2] },
+  menuLinkedin: { base: [1, 11, 5, 2], md: [5, 10, 3, 1], lg: [8, 6, 2, 1] },
+  menuInstagram: { base: [6, 11, 5, 2], md: [8, 10, 3, 1], lg: [10, 6, 2, 1] },
 } as const satisfies LayoutMap;
 
 /**

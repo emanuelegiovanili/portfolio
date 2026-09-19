@@ -451,15 +451,15 @@
    */
   top: 0;
   left: 0;
-  right: calc(var(--line) * -1);
-  bottom: calc(var(--line) * -1);
-  /* Sopra ai fili, che nel Figma sotto il riempimento non ci sono. */
-  z-index: 1;
+  /* Come il decoro dei fili, `--edge-*` compreso: sul bordo della griglia il
+     riempimento non deve sporgere oltre lo schermo. */
+  right: calc(var(--line) * (-1 + var(--edge-x)));
+  bottom: calc(var(--line) * (-1 + var(--edge-y)));
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: var(--hover-bg);
+  background-color: var(--hover-bg);
   color: var(--hover-fg);
   text-align: center;
   pointer-events: none;
@@ -471,8 +471,8 @@
 .block[data-surface='line'] > .hover-fill {
   top: calc(var(--line) * -1);
   left: calc(var(--line) * -1);
-  right: calc(var(--line) * -2);
-  bottom: calc(var(--line) * -2);
+  right: calc(var(--line) * (-2 + var(--edge-x)));
+  bottom: calc(var(--line) * (-2 + var(--edge-y)));
 }
 
 .primary-button .hover-fill {
@@ -487,16 +487,41 @@
 }
 
 /*
- * I fili si spengono da sotto, esattamente dove il riempimento arriva.
+ * Il filo resta, anche in hover.
  *
- * E' il ritaglio complementare: `--hover` al 100% lascia i fili interi, allo 0%
- * non ne resta niente. Cosi' il bordo non sopravvive sopra al viola, che nel
- * Figma non ha bordo, e nel mezzo il filo c'e' solo dove il riempimento non e'
- * ancora salito.
+ * E' una richiesta del committente e ha una ragione: senza contorno un bottone
+ * riempito di off-white su una pagina off-white galleggia, e il blocco esce
+ * dalla griglia proprio mentre lo stai puntando. Il Figma disegna il Menu Hover
+ * come viola pieno senza bordo (258:869): qui il bordo resta, ed e' una
+ * deviazione voluta. Vedi NOTES.md D64.
+ *
+ * Sui blocchi bordati non c'e' niente da fare: basta non spegnerli, e lo
+ * pseudo-elemento che li disegna e' l'ultimo figlio, quindi sta gia' sopra al
+ * riempimento.
+ *
+ * Sui blocchi viola il filo non esiste — un blocco viola non ha bordo (D2) —
+ * quindi lo porta **lo strato stesso**, come immagine di sfondo sopra al
+ * proprio colore. Cosi' il filo viene ritagliato insieme al riempimento e
+ * cresce con lui, invece di comparire tutto in una volta.
  */
-.square-button[data-surface='line']::after,
-.primary-button[data-surface='line']::after {
-  clip-path: inset(0 0 calc(100% - var(--hover)) 0);
+:is(.square-button, .primary-button)[data-surface='accent'] > .hover-fill {
+  background-image:
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color));
+  background-repeat: no-repeat;
+  background-position:
+    left top,
+    right top,
+    right bottom,
+    left bottom;
+  /* Interi: qui l'avanzamento lo detta il ritaglio, non la lunghezza. */
+  background-size:
+    100% var(--line),
+    var(--line) 100%,
+    100% var(--line),
+    var(--line) 100%;
 }
 
 /*
@@ -572,7 +597,6 @@
   min-height: 100%;
 }
 
-.menu-logo,
 .menu-voice,
 .menu-social {
   display: flex;
