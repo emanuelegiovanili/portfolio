@@ -1220,6 +1220,33 @@ sempre. Da `emanuele-giovanili-portfolio.emanuelegiovanili.workers.dev` a
 `portfolio.emanuelegiovanili.workers.dev`. E' una riga di `wrangler.jsonc`: si
 cambia in un secondo se il committente preferisce altro.
 
+### D79. Il deploy passa dalla sonda, e pubblica quello che ha misurato
+
+`.github/workflows/deploy.yml`: su push al ramo di produzione costruisce,
+misura, e pubblica. In quest'ordine, e senza ricostruire in mezzo: i byte che
+vanno online sono gli stessi che sono passati sotto la sonda. Ricostruire dopo
+la verifica vorrebbe dire pubblicare qualcosa che nessuno ha guardato.
+
+La sonda che gira e' `verify:build`, non tutte. Le altre misurano il sorgente, e
+il sorgente e' gia' quello che e': qui interessa la cosa pubblicata.
+
+**Una conseguenza immediata.** Mettere `npm run check` nel workflow ha fatto
+saltare fuori un errore di tipi che c'era gia' e che nessuno vedeva: `verify` non
+chiama `astro check`, e nessuno lo lanciava a mano. In `carousel.ts`,
+`if ('requestIdleCallback' in window)` restringeva il ramo `else` a `never`,
+perche' quella funzione e' ormai dichiarata come sempre presente. TypeScript
+considerava irraggiungibile proprio la ripiegatura che esiste per i Safari
+vecchi. L'annotazione esplicita a `| undefined` la tiene viva.
+
+E' la quarta volta in questo progetto che un difetto sopravvive perche' nessuna
+misura lo guardava (D59, D61, D74, e questo).
+
+### D80. Il nome del worker non e' un'impostazione del sito
+
+Nel codice non c'e' niente che dipenda dal nome: cambia solo la prima etichetta
+dell'indirizzo `workers.dev`. Il sito non sa dove sta, non ci sono URL assoluti
+in pagina, e i link interni sono tutti relativi alla radice.
+
 ---
 
 ## 5. Blocchi aperti
@@ -1240,3 +1267,5 @@ cambia in un secondo se il committente preferisce altro.
 | B15 | **Megamenu a base e md: proposta in attesa di conferma** | Composizione derivata dalle regole del file, non disegnata (D66). Se il committente la conferma, B15 si chiude; se preferisce altro, cambia una tabella in `chrome.ts` |
 | B16 | **Nessuna pagina 404** | Non e' disegnata e non l'ho inventata. Oggi risponde quella essenziale di Workers. `not_found_handling: "404-page"` e' gia' pronto: il giorno che il disegno c'e', basta una route `404.astro` |
 | B17 | **Il deploy non parte da questa sessione** | `api.cloudflare.com` risponde **403 al CONNECT** attraverso il proxy di uscita dell'ambiente, e non ci sono credenziali (`wrangler whoami`: "You are not authenticated"). Nemmeno con un token si potrebbe pubblicare da qui. Il comando e' `npm run deploy` da una macchina con `wrangler login` fatto |
+| B18 | **Il ramo di produzione non esiste** | Il repository ha un ramo solo, `claude/serene-gates-y6076d`, che e' anche il predefinito. Il workflow di deploy parte su `main`: finche' `main` non c'e', non parte niente. Serve creare `main` da questo ramo e renderlo predefinito |
+| B19 | **I secret Cloudflare non sono impostati** | `CLOUDFLARE_API_TOKEN` (permesso *Workers Scripts: Edit*) e `CLOUDFLARE_ACCOUNT_ID` vanno messi nei secret del repository. Senza, il workflow costruisce e verifica ma l'ultimo passo fallisce |

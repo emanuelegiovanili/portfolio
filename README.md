@@ -51,6 +51,19 @@ sottodominio e' quello scelto una volta per tutte sull'account.
 serve invece `CLOUDFLARE_API_TOKEN` (permesso *Workers Scripts: Edit*) e
 `CLOUDFLARE_ACCOUNT_ID` nelle variabili d'ambiente.
 
+### Automatico
+
+`.github/workflows/deploy.yml` fa la stessa cosa a ogni push su `main`:
+costruisce, misura la build con `verify:build`, e pubblica **quel** `dist/`,
+senza ricostruire in mezzo.
+
+Perche' funzioni servono due cose, da fare una volta sola:
+
+1. i secret del repository: `CLOUDFLARE_API_TOKEN` (permesso *Workers Scripts:
+   Edit*) e `CLOUDFLARE_ACCOUNT_ID`;
+2. un ramo `main`. Oggi il repository ne ha uno solo, di lavorazione, e il
+   workflow parte su `main`: finche' non c'e', non pubblica niente.
+
 ## L'invariante del progetto
 
 **I bordi dei blocchi cadono sulle linee della griglia, a ogni larghezza di finestra, in ogni fotogramma di ogni animazione.**

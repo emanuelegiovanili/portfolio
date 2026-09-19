@@ -7,6 +7,7 @@
  */
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
+import { existsSync } from 'node:fs';
 
 export async function waitForServer(url, timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
@@ -63,5 +64,11 @@ export async function startDevServer({ probePath = '/grid' } = {}) {
   return { base, port, stop };
 }
 
-/** In questo ambiente playwright non trova il proprio Chromium: c'e' solo questo. */
-export const CHROMIUM = '/opt/pw-browsers/chromium';
+/*
+ * Il Chromium da usare.
+ *
+ * In questo ambiente playwright non trova il proprio: c'e' solo quello gia'
+ * installato altrove. Su una macchina qualunque, e in CI, quel percorso non
+ * esiste e playwright il suo ce l'ha: `undefined` gli dice di usarlo.
+ */
+export const CHROMIUM = existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;

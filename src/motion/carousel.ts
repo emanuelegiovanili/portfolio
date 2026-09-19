@@ -116,7 +116,15 @@ export function startCarousel(root: ParentNode = document): Carousel | null {
     }
   };
 
-  if ('requestIdleCallback' in window) window.requestIdleCallback(preload, { timeout: 3000 });
+  /*
+   * `requestIdleCallback` e' dichiarato come sempre presente, ma su Safari e'
+   * arrivato tardi e la ripiegatura serve ancora. L'annotazione esplicita a
+   * `| undefined` e' quello che la tiene viva: con un `in window` TypeScript
+   * restringeva il ramo `else` a `never`, cioe' considerava irraggiungibile
+   * proprio il caso per cui la ripiegatura esiste.
+   */
+  const aTempoPerso: typeof window.requestIdleCallback | undefined = window.requestIdleCallback;
+  if (aTempoPerso) aTempoPerso.call(window, preload, { timeout: 3000 });
   else window.setTimeout(preload, 1200);
 
   const onPrev = () => go(current - 1);
