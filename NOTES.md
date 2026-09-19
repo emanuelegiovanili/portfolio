@@ -943,39 +943,48 @@ Nello stesso giro: `border: 0` esplicito sui blocchi `accent` e `bare`. Su un `<
 resta il bordo dell'UA — `outset`, che su fondo scuro disegna una L grigia in alto a sinistra. Si
 vedeva sul bottone di chiusura del megamenu, l'unico blocco `bare` cliccabile del sito.
 
-### D66. Megamenu a base e md — proposta
-Il Figma ha solo il frame a 1440. Questa e' una **proposta**, e nessuna scelta e' inventata: ognuna
-viene da una regola che il file applica gia' altrove.
+### D66. Megamenu: una colonna di rientro, e sette righe piene
+Il committente ha mandato un fermo-immagine del file e tre correzioni. La mappa ora e' questa:
 
 | Blocco | base (10 col) | md (10 col) | lg (12 col) |
 |---|---|---|---|
 | Logo | `[1,1,5,2]` | `[1,1,6,1]` | `[1,1,4,1]` |
 | Chiudi | `[9,1,2,2]` | `[10,1,1,1]` | `[12,1,1,1]` |
-| Let's work together | `[1,14,10,2]` | `[7,1,3,1]` | `[8,1,4,1]` |
-| Work | `[1,4,10,3]` | `[1,3,10,3]` | `[2,2,10,2]` |
-| About | `[1,7,10,3]` | `[1,6,10,3]` | `[2,4,10,2]` |
-| LinkedIn | `[1,11,5,2]` | `[5,10,3,1]` | `[8,6,2,1]` |
-| Instagram | `[6,11,5,2]` | `[8,10,3,1]` | `[10,6,2,1]` |
+| Let's work together | `[2,12,8,2]` | `[7,1,3,1]` | `[8,1,4,1]` |
+| Work | `[2,4,8,3]` | `[2,3,8,3]` | `[2,2,10,2]` |
+| About | `[2,7,8,3]` | `[2,6,8,3]` | `[2,4,10,2]` |
+| LinkedIn | `[2,10,4,2]` | `[4,9,3,2]` | `[8,6,2,2]` |
+| Instagram | `[6,10,4,2]` | `[7,9,3,2]` | `[10,6,2,2]` |
 
-Le ragioni, una per riga:
+**1. Niente full width: una colonna di rientro per lato, a ogni tier.** Non e' una regola nuova, e'
+quella del file: a desktop le voci stanno da 2 a 11 di 12. La riga 1 fa eccezione e va da bordo a
+bordo — logo, CTA, chiudi — perche' cosi' e' disegnata.
 
-1. **Il bottone di chiusura sta nella cella della hamburger di pagina**, tier per tier. E' il punto di
-   D57: quel quadrato e' l'unica cosa che non cambia, e deve restare dov'era anche a 390.
-2. **Il logo copia il logo dell'header**, stessa cella e stesse tre dimensioni (20/24/40 px), con
-   l'a capo a base che il Figma impone gia' li'.
-3. **A base "Let's work together" scende a fondo pagina come bottone largo.** E' esattamente quello
-   che fa il footer a base (`footerCta`), dove a lg sta invece in prima riga: la composizione mobile
-   di quel bottone nel file esiste, e si riusa.
-4. **Le due voci prendono tutta la larghezza.** Il rientro di una colonna per lato del frame lg, a
-   dieci colonne, lascerebbe un titolo da 64px dentro otto celle da 39.
-5. **I social restano a destra a md e lg**, dove il file li mette, e si dividono la riga a base,
-   dove non c'e' spazio per lasciarne meta' vuota.
+**2. I social si attaccano sotto ad About e occupano due righe.** Il frame e' alto 840, cioe' sette
+righe da 120, e i nodi ne riempiono sei: con i social in sesta e settima il menu riempie il frame
+invece di lasciarne fuori un ottavo. E' la lettura che torna con la misura del file, ed e' quella
+che il committente ha chiesto.
 
-A md la riga 1 torna piena — logo, CTA, chiudi — come a 1440.
+A base la voce social va a `padding: 0`: quattro celle da 39 fanno 156px e "Instagram" piu' la
+freccia ne chiedono 132, che con 20px per lato non ci starebbero. E' la stessa cosa che fa gia' la
+voce social del footer sotto lg.
 
-Misurato: 15 righe a base (585px in una finestra da 844), 10 a md (767px), 6 a lg. Nessuno sforo a
-nessuna delle tredici larghezze.
+**3. La hamburger diventa nera al click e ci resta.** E' la variante `Menu / Open` (268:1518). Prima
+restava off-white finche' la tendina non le passava sopra, e siccome dopo un click il puntatore e'
+fermo li', l'hover la faceva diventare viola. Il file ha anche un `Menu / Open Hover` viola
+(268:1555): per decisione del committente **non si usa**, ne' sulla hamburger ne' sul bottone di
+chiusura del pannello. Aperto e' nero, e basta.
 
+Lo stato e' `aria-expanded`, lo stesso che pilota il morph dell'icona: uno solo, e non si puo'
+desincronizzare.
+
+**Cosa resta proposta.** I tier base e md: un frame per gli schermi piccoli non esiste. Le scelte
+derivate, non inventate, sono sempre quelle: il bottone di chiusura nella cella della hamburger di
+pagina tier per tier (D57), il logo che copia quello dell'header, la CTA che a base scende a fondo
+come fa gia' il footer, e il rientro di una colonna che e' la regola del punto 1.
+
+Misurato: 13 righe a base (507px), 10 a md (767px), 7 a lg (840px, cioe' il frame esatto). Nessuno
+sforo a nessuna delle tredici larghezze.
 
 ---
 

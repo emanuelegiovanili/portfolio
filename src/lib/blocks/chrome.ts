@@ -91,39 +91,37 @@ export const FOOTER_LINKS = [
 /**
  * Megamenu (268:1498).
  *
- * Il frame e' 1440x840: dodici colonne da 120 e sette righe, ma la settima e'
- * vuota. Qui le righe sono sei e il nero del pannello copre da solo il resto
- * della finestra, che e' esattamente cio' che si vede nel file.
+ * Il frame e' 1440x840: dodici colonne da 120 e sette righe. I nodi del file
+ * lasciano l'ultima riga vuota e mettono i social in sesta; per decisione del
+ * committente i social occupano **sesta e settima**, cosi' il menu riempie il
+ * frame invece di lasciarne fuori un ottavo.
  *
- * **I tier base e md sono una proposta, non un disegno.** Il Figma ha solo il
- * frame a 1440. Non sono inventati: ogni scelta viene da una regola che il file
- * applica gia' altrove, ed e' scritta in NOTES.md D65. In due parole:
+ * La riga 1 va da bordo a bordo — logo, CTA, chiudi — e tutto il resto rientra
+ * di **una colonna per lato**, a ogni tier. E' la regola che il file applica a
+ * desktop (le voci stanno da 2 a 11 di 12) e che il committente ha chiesto di
+ * tenere anche sotto.
  *
- *   - il bottone di chiusura sta **nella cella della hamburger di pagina**, tier
- *     per tier, perche' e' quello il gesto (D57): 9,1 2x2 a base, 10,1 1x1 a md;
- *   - il logo copia il logo dell'header, stessa cella;
- *   - a base "Let's work together" scende a fondo pagina come bottone largo,
- *     esattamente come fa il footer a base, dove a lg sta invece in prima riga;
- *   - le due voci prendono tutta la larghezza, perche' a dieci colonne il
- *     rientro di una colonna per lato del frame lg lascerebbe un titolo da
- *     64px in otto celle da 39.
+ * **I tier base e md restano una proposta**, perche' un frame per gli schermi
+ * piccoli non esiste. Nessuna scelta e' inventata: ognuna viene da una regola
+ * che il file applica gia' altrove, e sono elencate in NOTES.md D66.
  *
- *   logo    x=0    y=0    480x120   -> 1,1 span 4x1
- *   cta     x=840  y=0    480x120   -> 8,1 span 4x1
- *   chiudi  x=1320 y=0    120x120   -> 12,1 span 1x1
- *   Work    x=120  y=120  1200x240  -> 2,2 span 10x2
- *   About   x=120  y=360  1200x240  -> 2,4 span 10x2
- *   LinkedIn  x=840  y=600 240x120  -> 8,6 span 2x1
- *   Instagram x=1080 y=600 240x120  -> 10,6 span 2x1
+ *   base       md          lg
+ *   10 colonne 10 colonne  12 colonne
+ *   13 righe   10 righe    7 righe
  */
 export const megamenuMap = {
+  // Riga 1: da bordo a bordo, come nel frame.
   menuLogo: { base: [1, 1, 5, 2], md: [1, 1, 6, 1], lg: [1, 1, 4, 1] },
   menuClose: { base: [9, 1, 2, 2], md: [10, 1, 1, 1], lg: [12, 1, 1, 1] },
-  menuCta: { base: [1, 14, 10, 2], md: [7, 1, 3, 1], lg: [8, 1, 4, 1] },
-  menuWork: { base: [1, 4, 10, 3], md: [1, 3, 10, 3], lg: [2, 2, 10, 2] },
-  menuAbout: { base: [1, 7, 10, 3], md: [1, 6, 10, 3], lg: [2, 4, 10, 2] },
-  menuLinkedin: { base: [1, 11, 5, 2], md: [5, 10, 3, 1], lg: [8, 6, 2, 1] },
-  menuInstagram: { base: [6, 11, 5, 2], md: [8, 10, 3, 1], lg: [10, 6, 2, 1] },
+  menuCta: { base: [2, 12, 8, 2], md: [7, 1, 3, 1], lg: [8, 1, 4, 1] },
+
+  // Il resto rientra di una colonna per lato.
+  menuWork: { base: [2, 4, 8, 3], md: [2, 3, 8, 3], lg: [2, 2, 10, 2] },
+  menuAbout: { base: [2, 7, 8, 3], md: [2, 6, 8, 3], lg: [2, 4, 10, 2] },
+
+  // Attaccati sotto ad About, e alti due celle come le voci.
+  menuLinkedin: { base: [2, 10, 4, 2], md: [4, 9, 3, 2], lg: [8, 6, 2, 2] },
+  menuInstagram: { base: [6, 10, 4, 2], md: [7, 9, 3, 2], lg: [10, 6, 2, 2] },
 } as const satisfies LayoutMap;
 
 /**

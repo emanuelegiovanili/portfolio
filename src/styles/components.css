@@ -612,9 +612,43 @@
   gap: var(--pad);
 }
 
+/* A base la voce social sta in quattro celle da 39: "Instagram" piu' la freccia
+   chiedono 132px e con 20px per lato non ci starebbero. Il padding va a zero,
+   esattamente come fa la voce social del footer sotto lg. */
+@media (width < 720px) {
+  .menu-social {
+    padding: 0;
+  }
+}
+
 /* Il bottone di chiusura e' l'unico blocco chiaro su nero senza filo. */
 .menu-close {
   color: var(--off-white);
+}
+
+/*
+ * A menu aperto la hamburger diventa nera e ci resta.
+ *
+ * E' la variante `Menu / Open` del file (268:1518). Prima restava off-white
+ * fino a quando la tendina non le passava sopra, e se il puntatore era fermo
+ * li' — cosa che succede sempre, visto che ci hai appena cliccato — l'hover la
+ * faceva diventare viola. Il committente ha chiesto il nero, e il nero resta:
+ * `Menu / Open Hover` (268:1555), che nel file e' viola, non si usa.
+ *
+ * Lo stato e' `aria-expanded`, lo stesso che pilota il morph dell'icona: uno
+ * solo, e non si puo' desincronizzare.
+ */
+#menu-toggle[aria-expanded='true'] {
+  --block-bg: var(--black);
+  /* Sul nero il grigio dei componenti sparirebbe, come nel pannello. */
+  --rule-color: var(--off-white);
+  color: var(--off-white);
+}
+
+/* Niente riempimento di hover sui due bottoni del menu: aperto e' nero e basta. */
+#menu-toggle[aria-expanded='true'] > .hover-fill,
+.menu-close > .hover-fill {
+  display: none;
 }
 
 /* Il fuoco da tastiera deve vedersi: dentro il megamenu tutto e' un comando, e
