@@ -44,7 +44,7 @@ npm run deploy
 ```
 
 L'indirizzo che ne esce ha la forma `<nome-worker>.<sottodominio>.workers.dev`,
-dove il nome del worker e' quello in `wrangler.jsonc` (`portfolio`) e il
+dove il nome del worker e' quello in `wrangler.jsonc` (`emanuelegiovanili`) e il
 sottodominio e' quello scelto una volta per tutte sull'account.
 
 `wrangler login` e' un giro OAuth nel browser: da un ambiente senza browser

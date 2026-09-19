@@ -1211,14 +1211,17 @@ sempre, puntate sul server di Workers invece che su quello di sviluppo.
 **0,0038px**; 45 controlli a livello di pixel sui fili; 21 pagine caricate a
 390, 768 e 1440 senza un errore in console ne' una richiesta fallita.
 
-### D78. Il worker si chiama `portfolio`
+### D78. Il worker si chiama `emanuelegiovanili`
 
-Un indirizzo `workers.dev` ha la forma `<nome-worker>.<sottodominio>.workers.dev`.
-`emanuelegiovanili` puo' quindi essere solo il **sottodominio dell'account**, non
-l'indirizzo intero: il nome del worker e' la prima etichetta, e una c'e'
-sempre. Da `emanuele-giovanili-portfolio.emanuelegiovanili.workers.dev` a
-`portfolio.emanuelegiovanili.workers.dev`. E' una riga di `wrangler.jsonc`: si
-cambia in un secondo se il committente preferisce altro.
+Un indirizzo `workers.dev` ha la forma `<nome-worker>.<sottodominio>.workers.dev`,
+e la prima etichetta c'e' sempre. Il committente ha scelto `emanuelegiovanili`
+per il nome del worker: e' l'unica delle due parti che si decide qui, perche' il
+sottodominio si sceglie una volta sola sull'account e in questo momento non e'
+ancora stato assegnato.
+
+Nel codice non c'e' niente che dipenda dal nome. Non ci sono URL assoluti in
+pagina, i link interni sono tutti relativi alla radice, e il worker non sa dove
+sta: cambia solo l'indirizzo.
 
 ### D79. Il deploy passa dalla sonda, e pubblica quello che ha misurato
 
