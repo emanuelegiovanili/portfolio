@@ -185,6 +185,55 @@ try {
 
     await context.close();
   }
+  /*
+   * Il marquee ha due fili, e vanno guardati a parte.
+   *
+   * Non e' un blocco bordato: sfora di proposito su tutta la larghezza della
+   * finestra, e i suoi due fili se li disegna da solo — quello alto e' un
+   * `border-top`, quello basso uno pseudo-elemento un pixel sotto. Il secondo
+   * era invisibile, mangiato dal ritaglio che serve al testo che scorre, e a
+   * trovarlo e' stato l'occhio del committente.
+   */
+  console.log('\nE il marquee ha i suoi due fili?\n');
+
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+    const page = await context.newPage();
+    await page.goto(server.base + '/', { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+
+    const top = await page.evaluate(() => {
+      const el = document.querySelector('.marquee');
+      return el ? el.getBoundingClientRect().top + window.scrollY : null;
+    });
+
+    if (top === null) {
+      failures += 1;
+      console.log('  FALLITO il marquee non esiste su /');
+    } else {
+      await page.evaluate((t) => window.scrollTo(0, Math.max(0, t - 300)), top);
+      await page.waitForTimeout(2600);
+
+      const box = await page.evaluate(() => {
+        const r = document.querySelector('.marquee').getBoundingClientRect();
+        return { top: Math.round(r.top), bottom: Math.round(r.bottom) };
+      });
+      // Una colonna lontana dalle parole, dove restano solo i due fili.
+      const column = await strip(page, { x: 700, y: box.top - 3, width: 1, height: box.bottom - box.top + 6 });
+
+      for (const [lato, px] of [
+        ['alto', column[3]],
+        ['basso', column[3 + (box.bottom - box.top)]],
+      ]) {
+        const ok = near(px, RULE);
+        if (!ok) failures += 1;
+        console.log(`  ${ok ? 'ok     ' : 'FALLITO'} marquee · filo ${lato}` + (ok ? '' : ` — ${px.join(',')} invece del filo`));
+      }
+    }
+
+    await context.close();
+  }
+
   console.log('\nLo strato dell\'hover copre il blocco e la sua linea?\n');
 
   {

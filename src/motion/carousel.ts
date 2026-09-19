@@ -24,6 +24,7 @@
 
 import gsap from 'gsap';
 import { CAROUSEL } from './tokens';
+import { playCardMeta } from './card';
 
 export interface Carousel {
   stop(): void;
@@ -70,6 +71,10 @@ export function startCarousel(root: ParentNode = document): Carousel | null {
 
     current = target;
     sync();
+
+    // La card che entra e' nuova: titolo e categorie si ricompongono davanti a
+    // chi guarda, invece di arrivare gia' fatte da fuori schermo.
+    playCardMeta(to);
 
     running = gsap
       .timeline({

@@ -135,7 +135,17 @@
   margin-left: -50vw;
   padding-inline: var(--pad-sm);
   background: var(--block-bg);
-  border-top: var(--line) solid var(--dark-grey);
+  border-top: var(--line) solid var(--rule-color);
+  /*
+   * Il ritaglio serve al testo che scorre, ma si mangiava il filo basso.
+   *
+   * Quel filo e' uno pseudo-elemento a -1px, cioe' **fuori** dal padding box:
+   * con `overflow: clip` nudo non veniva disegnato affatto, e a schermo il
+   * marquee aveva un bordo solo. Due pixel di margine bastano a farcelo stare,
+   * come sui blocchi bordati (grid.css). Scritto per esteso: con un calc su
+   * custom property la dichiarazione viene scartata.
+   */
+  overflow-clip-margin: 2px;
   font-family: var(--font-display);
   font-weight: 900;
   font-size: calc(var(--u) * 16);
@@ -148,7 +158,7 @@
   inset-inline: 0;
   bottom: calc(var(--line) * -1);
   height: var(--line);
-  background: var(--dark-grey);
+  background: var(--rule-color);
 }
 
 .marquee__track {
@@ -343,6 +353,8 @@
   display: flex;
   align-items: stretch;
   height: calc(var(--cell) * 2);
+  /* La maschera da cui i riquadri spuntano: sta ferma mentre loro salgono. */
+  overflow: clip;
 }
 
 .works-card__title,

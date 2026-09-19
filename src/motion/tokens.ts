@@ -91,3 +91,17 @@ export const TESTIMONIAL = {
   dwell: 7,
   fade: 0.22,
 } as const;
+
+/**
+ * Il titolo e le categorie di una card progetto.
+ *
+ * Salgono da sotto il bordo della card, uno dopo l'altro. Non e' nel Figma:
+ * e' una richiesta del committente, e i valori sono una scelta — abbastanza
+ * lenti da leggersi, abbastanza sfalsati da sentirsi come una sequenza e non
+ * come un blocco solo che si alza.
+ */
+export const CARD = {
+  rise: 0.5,
+  stagger: 0.08,
+  ease: 'power3.out',
+} as const;

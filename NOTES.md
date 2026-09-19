@@ -1066,6 +1066,44 @@ Nel Figma la barra e' a 191 su 240, cioe' tre quarti: un fermo-immagine a meta' 
 l'unico indizio del fatto che l'avanzamento automatico esista. La durata, 7 secondi, e' una scelta.
 
 
+### D72. Il filo basso del marquee non c'era
+Segnalato dal committente. Il marquee non e' un blocco bordato: sfora di proposito su tutta la
+larghezza della finestra, e i suoi due fili se li disegna da solo — quello alto e' un `border-top`,
+quello basso uno pseudo-elemento un pixel sotto, per cadere sulla linea di riga invece che
+affiancarla (stessa regola di D61, scritta a mano).
+
+Il ritaglio che serve al testo che scorre se lo mangiava: lo pseudo-elemento sta **fuori** dal
+padding box, e `overflow: clip` nudo non lo disegna affatto. Due pixel di
+`overflow-clip-margin` bastano, gli stessi dei blocchi bordati — e anche qui il valore va scritto per
+esteso, perche' con un `calc()` su custom property la dichiarazione viene scartata (D61).
+
+`verify:edges` ora controlla anche i due fili del marquee, su una colonna lontana dalle parole.
+
+### D73. Titolo e categorie spuntano dal basso
+Richiesta del committente: un effetto su nome e categorie delle card progetto, in sequenza.
+
+I riquadri stanno appoggiati al fondo della card (265:1075) e sono blocchi bordati a tutti gli
+effetti, larghi un numero intero di celle. Salgono uno dopo l'altro — prima il titolo, poi le
+categorie nell'ordine in cui stanno — da sotto il bordo della card.
+
+**La maschera e' il contenitore**, che non si muove: sono i riquadri a traslare dentro di lui. Non
+serve un wrapper per ognuno, perche' il gruppo e' gia' un elemento a se' appoggiato al fondo, e
+basta dargli `overflow: clip`. Nessun blocco della griglia si sposta.
+
+Parte in due momenti:
+
+- quando la card arriva nella vista, come tutto il resto del sito;
+- quando una slide del carosello diventa quella attiva, perche' li' la card e' nuova e si compone
+  davanti a chi guarda.
+
+Una trappola: la timeline di una slide nasce mentre la slide e' `hidden`, e li' l'altezza e' zero,
+cioe' il 100% da cui i riquadri dovrebbero salire vale zero pixel. Al cambio slide serve
+`invalidate()` prima di `play(0)`. Misurato: da 120px sotto la maschera a zero, sfalsati.
+
+Le durate sono una scelta — l'effetto non e' nel Figma — abbastanza lente da leggersi e abbastanza
+sfalsate da sentirsi come una sequenza e non come un blocco solo che si alza.
+
+
 ---
 
 ## 5. Blocchi aperti

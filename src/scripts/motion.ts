@@ -7,7 +7,8 @@
  * 2. Il disegno delle linee: i bordi si completano quando il blocco entra in
  *    vista.
  * 3. Le immagini, che si scoprono dall'alto verso il basso.
- * 4. Il marquee, che e' l'unico movimento che non dipende dallo scroll.
+ * 4. Il titolo e le categorie delle card progetto, che spuntano dal basso.
+ * 5. Il marquee, che e' l'unico movimento che non dipende dallo scroll.
  *
  * Tutto passa da `gsap.matchMedia()`. Sotto `prefers-reduced-motion: reduce`
  * non viene creato niente: lo scroll resta nativo e le linee restano intere.
@@ -23,6 +24,7 @@ import { clearRules, traceRules } from '../motion/trace';
 import { startMarquee } from '../motion/marquee';
 import { startCarousel } from '../motion/carousel';
 import { startTestimonials } from '../motion/testimonials';
+import { revealCards } from '../motion/card';
 
 /** Dove comincia e dove finisce l'ingresso, in frazioni di schermata. */
 const ENTER_FROM = 0.9;
@@ -57,6 +59,7 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
 
   revealRules();
   revealMedia();
+  revealCards();
   const marquee = startMarquee();
 
   return () => {
