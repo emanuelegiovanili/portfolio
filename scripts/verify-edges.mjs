@@ -17,6 +17,13 @@
  * Uso:
  *   node scripts/verify-edges.mjs
  *   node scripts/verify-edges.mjs --url http://…
+ *   node scripts/verify-edges.mjs --width 390
+ *
+ * **La larghezza conta.** Fino alla Fase 7 questo script guardava solo 1440, e
+ * quindi diceva qualcosa sui fili di **un tier su tre**. Il committente ha
+ * segnalato bordi mancanti a mobile, e non c'era una sola misura di pixel sotto
+ * i 1200 a cui chiedere conferma o smentita. Ora `verify:edges` gira a 390, 768
+ * e 1440, cioe' una larghezza per tier.
  */
 
 import { chromium } from 'playwright';
@@ -105,6 +112,15 @@ const value = (name, fallback) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 
+/**
+ * Una larghezza per tier.
+ *
+ * Densita' 1 a tutte e tre: un pixel dell'immagine deve essere un pixel CSS,
+ * altrimenti un filo da un pixel ne occupa due o tre e i conti sull'indice
+ * della striscia non tornano piu'.
+ */
+const WIDTHS = value('--width', null) ? [Number(value('--width', null))] : [390, 768, 1440];
+
 const explicitUrl = value('--url', null);
 const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await startDevServer({ probePath: CASES[0].route });
 
@@ -149,9 +165,13 @@ async function strip(page, clip) {
 try {
   console.log('\nI fili cadono sulla linea?\n');
 
+  for (const larghezza of WIDTHS)
   for (const { route, selector, nome, apri, filo } of CASES) {
     // Densita' 1: un pixel dell'immagine e' un pixel CSS, e i conti tornano.
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+    const context = await browser.newContext({
+      viewport: { width: larghezza, height: 900 },
+      deviceScaleFactor: 1,
+    });
     const page = await context.newPage();
     await page.goto(server.base + route, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
@@ -163,7 +183,7 @@ try {
     }, selector);
 
     if (found === null) {
-      console.log(`  SALTATO ${nome} — ${selector} non esiste su ${route}`);
+      console.log(`  SALTATO ${nome} @${larghezza} — ${selector} non esiste su ${route}`);
       await context.close();
       continue;
     }
@@ -180,6 +200,20 @@ try {
     }
 
     const box = await page.evaluate(new Function('return ' + BOX_OF)(), selector);
+    const etichetta = `${nome} @${larghezza}`;
+
+    /*
+     * Un blocco piu' alto della finestra non si puo' fotografare tutto.
+     *
+     * Succede a 390, dove le celle sono piccole e certi blocchi sono alti dieci
+     * righe di contenuto. Si dichiara saltato invece di ritagliare fuori dallo
+     * schermo, che darebbe un errore di sharp e nessuna informazione.
+     */
+    if (box.top < 0 || box.bottom > 900) {
+      console.log(`  SALTATO ${etichetta} — non ci sta nella finestra (${box.top}…${box.bottom})`);
+      await context.close();
+      continue;
+    }
 
     // Una fascia orizzontale e una verticale, prese vicino a un angolo dove il
     // contenuto non arriva: si guardano i fili, non il testo. Il margine si
@@ -220,7 +254,7 @@ try {
       if (!ok) failures += 1;
       const dett = `filo ${dentro.join(',')}${fuori ? ` · fuori ${fuori.join(',')}` : ''}`;
       console.log(
-        `  ${ok ? 'ok     ' : 'FALLITO'} ${nome} · lato ${lato}` +
+        `  ${ok ? 'ok     ' : 'FALLITO'} ${etichetta} · lato ${lato}` +
           (ok ? '' : ` — ${!haFilo ? 'nessun filo dove dovrebbe' : 'la linea resta scoperta accanto al filo'} (${dett})`),
       );
     }

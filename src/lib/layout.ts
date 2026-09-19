@@ -149,8 +149,17 @@ function groupByCount(byTier: Partial<Record<Tier, number>>): LineGroup[] {
   return [...groups].map(([count, tiers]) => ({ show: tiers.join(' '), count }));
 }
 
-export function verticalGroups(): LineGroup[] {
-  return groupByCount(COLS);
+/**
+ * Le linee verticali, per i tier che la pagina dichiara.
+ *
+ * `cols` va filtrato sui tier dichiarati, non e' sempre `COLS`. Una pagina
+ * disegnata solo a desktop tiene dodici colonne a ogni larghezza
+ * (`.grid[data-tiers='lg']` in grid.css): passandole `COLS` intero, sotto i
+ * 1200 disegnava le **dieci** linee del tier base su una griglia da dodici
+ * colonne, cioe' dieci linee in posti dove non c'era nessun confine.
+ */
+export function verticalGroups(cols: Partial<Record<Tier, number>> = COLS): LineGroup[] {
+  return groupByCount(cols);
 }
 
 export function horizontalGroups(rows: RowCounts): LineGroup[] {

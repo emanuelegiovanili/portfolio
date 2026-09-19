@@ -27,17 +27,32 @@ import { startTestimonials } from '../motion/testimonials';
 import { revealCards } from '../motion/card';
 
 /**
- * Dove comincia e dove finisce l'ingresso, in frazioni di schermata.
+ * Dove finisce l'ingresso: il bordo **basso** del blocco, in frazioni di
+ * schermata.
  *
- * `ENTER_TO` e' la posizione del bordo **alto** del blocco quando il filo si
- * chiude. A 0,4 il giro finiva sopra la meta' dello schermo, cioe' quando il
- * blocco aveva gia' passato il centro: il committente ha chiesto che a meta'
- * schermo i bordi siano gia' fatti. A 0,6 il bordo alto e' ancora nella meta'
- * bassa quando il filo si chiude, quindi il blocco arriva al centro gia'
- * finito, qualunque sia la sua altezza.
+ * ---------------------------------------------------------------------------
+ * PERCHE' IL BORDO BASSO E NON QUELLO ALTO
+ *
+ * Fino alla Fase 7 la finestra era legata al bordo **alto**: da `top 95%` a
+ * `top 60%`. Con un blocco alto il risultato era giusto, con un blocco basso
+ * no: un quadrato da una cella che stava **tutto dentro lo schermo**, appoggiato
+ * al bordo inferiore, aveva il bordo alto ancora al 92% e quindi il filo appena
+ * cominciato. A schermo: un blocco intero, visibile, senza bordo.
+ *
+ * Su desktop si notava poco — le celle sono grandi e i blocchi occupano una
+ * fetta di schermo. A 390 la cella e' 39px: nella fascia bassa ci stanno cinque
+ * blocchi, e restano li' senza bordo finche' non scorri ancora. E' quello che
+ * il committente ha visto e ha chiamato "in mobile mancano i bordi ai
+ * container". Non era un difetto di mobile: era un difetto che mobile rendeva
+ * visibile.
+ *
+ * Legata al bordo basso, la promessa diventa esprimibile in una riga: **un
+ * blocco che dista dal fondo piu' di un settimo di schermata ha i suoi quattro
+ * fili interi**, alto o basso che sia. La fascia in cui si vede un filo a meta'
+ * passa da due quinti di schermo a un settimo.
+ * ---------------------------------------------------------------------------
  */
-const ENTER_FROM = 0.95;
-const ENTER_TO = 0.6;
+const ENTER_END = 0.85;
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
@@ -172,31 +187,49 @@ function revealRules(): void {
  * **prima** dello scroll zero, quindi il suo trigger non verrebbe mai
  * disegnato e i suoi fili resterebbero a zero, cioe' invisibili, per sempre.
  * Quel blocco non deve aspettare lo scroll: si disegna all'apertura.
+ *
+ * Il confine e' il fondo della finestra, non una frazione: se all'apertura si
+ * vede anche solo un pixel del blocco, quel blocco si disegna subito. Cosi'
+ * nessuno resta a meta' senza che ci sia dello scroll davanti a finirlo.
  */
 function isBelowTheFold(el: HTMLElement): boolean {
-  return el.getBoundingClientRect().top >= window.innerHeight * ENTER_FROM;
+  return el.getBoundingClientRect().top >= window.innerHeight;
 }
 
 /**
  * La finestra di scroll in cui un blocco "arriva nella view".
  *
- * Da quando il bordo alto e' a `ENTER_FROM` di schermata a quando e' a
- * `ENTER_TO`: la stessa corsa per tutti i blocchi, alti o bassi.
+ * Da quando spunta dal fondo a quando il suo bordo basso e' salito a
+ * `ENTER_END`: il filo si chiude quando il blocco e' dentro per intero **piu'**
+ * un margine, non quando il suo bordo alto ha raggiunto una certa quota.
  *
- * La finestra ovvia sarebbe "da quando il blocco spunta dal fondo a quando e'
- * entrato tutto", ma li' il giro finisce nell'istante esatto in cui il bordo
- * basso diventa visibile: il rettangolo intero non si vede mai, e infatti dal
- * primo video il filo non si distingueva. Spostandola avanti il blocco e' gia'
- * dentro allo schermo mentre il tratto lo percorre.
+ * La finestra ovvia sarebbe "fino a quando il bordo basso diventa visibile", e
+ * li' il giro finirebbe nell'istante esatto in cui lo diventa: il rettangolo
+ * intero non si vedrebbe mai (era il difetto di D59). Il margine di
+ * `1 - ENTER_END` e' esattamente quello che serve a vederlo finito.
  */
 function entering(block: HTMLElement): ScrollTrigger.Vars {
   return {
     trigger: block,
     // `clamp()` tiene la finestra dentro la corsa di scroll disponibile. Senza,
-    // i blocchi dell'ultima schermata non arriverebbero mai a quattro decimi —
-    // non c'e' piu' pagina sotto di loro — e resterebbero senza bordo.
-    start: `clamp(top ${ENTER_FROM * 100}%)`,
-    end: `clamp(top ${ENTER_TO * 100}%)`,
+    // i blocchi dell'ultima schermata non arriverebbero mai in fondo — non c'e'
+    // piu' pagina sotto di loro — e resterebbero senza bordo.
+    start: 'clamp(top bottom)',
+    /*
+     * Funzione e non stringa: dipende dall'altezza del blocco, che cambia con
+     * la larghezza della finestra, e `invalidateOnRefresh` la rilegge.
+     *
+     * Un blocco piu' alto della fascia disponibile non puo' stare "tutto dentro
+     * con un margine": non esiste una posizione di scroll in cui sia vero. Per
+     * lui si torna al bordo alto, a un quarto di schermata, che e' il punto in
+     * cui se n'e' visto abbastanza.
+     */
+    end: () => {
+      const h = block.getBoundingClientRect().height;
+      return h <= window.innerHeight * ENTER_END
+        ? `clamp(bottom ${ENTER_END * 100}%)`
+        : 'clamp(top 25%)';
+    },
     scrub: true,
     invalidateOnRefresh: true,
   };

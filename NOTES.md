@@ -1414,6 +1414,103 @@ Dopo: avanzo positivo a tutte e dieci le larghezze, da 5px a 1200 a 309px a 719.
 
 ---
 
+## 15. Fase 7-bis — "in mobile mancano i bordi ai container"
+
+Una segnalazione di tre parole. Dietro c'erano due difetti, e il secondo era
+grosso.
+
+### D92. La finestra d'ingresso guardava il bordo sbagliato
+
+Era legata al bordo **alto** del blocco: da `top 95%` a `top 60%`. Con un blocco
+alto funziona. Con un blocco basso no: un quadrato da una cella appoggiato al
+fondo dello schermo e' **tutto visibile** mentre il suo bordo alto e' ancora al
+92%, cioe' con il filo appena cominciato. A schermo: un blocco intero, fermo,
+senza bordo.
+
+Su desktop si notava poco, perche' le celle sono grandi. A 390 la cella e' 39px:
+nella fascia bassa ce ne stanno cinque, e restano li' senza bordo finche' non
+scorri ancora. Non era un difetto di mobile, era un difetto che mobile rendeva
+visibile.
+
+Ora la finestra va da quando il blocco spunta dal fondo a quando il suo bordo
+**basso** e' salito all'85%. La promessa diventa dicibile in una riga: *un
+blocco che dista dal fondo piu' di un settimo di schermata ha i suoi quattro
+fili interi*, alto o basso che sia. La fascia in cui si vede un filo a meta'
+passa da due quinti di schermo a un settimo.
+
+Per i blocchi piu' alti dell'85% della finestra quella posizione non esiste, e
+si ripiega sul bordo alto a un quarto di schermata. `end` e' una funzione, non
+una stringa, perche' dipende dall'altezza del blocco, che cambia con la
+larghezza.
+
+### D93. Quattro pagine su cinque erano vuote sotto i 1200
+
+Cercando il primo difetto e' saltato fuori questo. `/about`, `/works`,
+`/works/[slug]` e `/contact` mostravano **solo l'header** a qualunque larghezza
+sotto i 1200. Da sempre.
+
+**Il meccanismo.** Ogni pagina passa a `<Grid>` una mappa che contiene anche
+header e footer, e `<Grid>` deduceva i tier della pagina guardando **tutti** i
+blocchi. Header e footer un disegno ce l'hanno a tutti e tre i tier, quindi
+`/about` si dichiarava `base md lg` pur essendo disegnata solo a 1440. Da li',
+tre conseguenze:
+
+1. `.grid[data-tiers~='base'] .block:not([data-tiers~='base'])` spegne i blocchi
+   che in quel tier non esistono. E' la regola giusta per un blocco tolto di
+   proposito — il "Let's work together" del footer a base — e su quelle pagine
+   spegneva tutto il contenuto.
+2. `--rows` prendeva `--rows-base`, che li' vale **2**: l'altezza del solo
+   header.
+3. Le linee verticali venivano disegnate **dieci**, quante ne ha il tier base,
+   su una griglia che di colonne ne tiene dodici.
+
+**Perche' nessuna sonda l'ha visto.** `verify:grid` scarta i blocchi a
+`display: none`, e lo fa per un motivo giusto: un blocco spento non ha misure da
+confrontare. Quindi misurava l'header, lo trovava perfetto, e diceva ok.
+Nessuno chiedeva **quanti** blocchi fossero rimasti accesi.
+
+**La correzione.** Una pagina puo' dichiarare i tier in cui e' disegnata
+(`<Grid tiers={['lg']}>`), e righe e colonne si risolvono solo su quelli. La
+deduzione resta per la home, dove e' vera. Ora quelle quattro pagine sono un
+desktop rimpicciolito a ogni larghezza — dodici colonne, ventinove righe,
+trentuno blocchi su trentuno — che e' esattamente quello che B2 prometteva e che
+non stava succedendo.
+
+Resta che sono **illeggibili sotto i 1200**: il testo scala con la cella e a 390
+la cella e' 32px. Un desktop rimpicciolito e' meglio di una pagina bianca, non
+e' un disegno per il telefono. B2 resta aperto, e adesso si vede.
+
+### D94. Due controlli nuovi, per le due cose che nessuno guardava
+
+**`verify:rules`** scorre ogni pagina a tre larghezze, si ferma ogni due quinti
+di schermata e chiede: c'e' un blocco fermo dentro la promessa e senza i suoi
+quattro fili? E' l'unica sonda che guarda una pagina **che scorre**, che e' la
+cosa che l'utente guarda.
+
+**Il conteggio dei blocchi accesi**, dentro `verify:grid`. Una route non puo'
+mostrare meno del 40% dei blocchi che mostra alla sua larghezza migliore. Sarebbe
+bastato questo, dal primo giorno, per non pubblicare quattro pagine vuote.
+
+**`verify:edges` gira anche a 390 e 768.** Prima guardava i pixel dipinti solo a
+1440, cioe' diceva qualcosa su un tier su tre.
+
+### D95. "Solo desktop" e' una regola, non un elenco
+
+`verify:grid` teneva l'elenco delle pagine disegnate solo a 1440, e l'elenco
+dimenticava due case study su tre: `verify:build` li misura tutti e li faceva
+fallire, mentre `/works/seezy` — identico per struttura — passava perche' era
+scritto nella lista. La regola vera e' che **la home e' l'unica pagina con tre
+tier**.
+
+Cosi' e' venuto fuori uno sforo reale: sulle card dei lavori correlati la riga
+di titolo e categorie chiede 381px dentro una card da 318 a 768. A 1440 ne
+chiede 597 dentro 598, cioe' e' disegnata per riempire esattamente cinque
+colonne: a qualunque scala minore l'arrotondamento del testo la fa sbordare, e
+il ritaglio della card la taglia. E' B6: il layout dei case study e' su misura
+per Seezy a 1440.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |

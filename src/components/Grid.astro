@@ -7,17 +7,34 @@
  * dei blocchi cadono sulle linee per costruzione. Il wrapper che le raccoglie
  * ha display:contents proprio per non introdurre quel secondo livello.
  */
-import { deriveRows, horizontalGroups, resolveTier, TIERS, verticalGroups, type LayoutMap } from '../lib/layout';
+import {
+  COLS,
+  deriveRows,
+  horizontalGroups,
+  resolveTier,
+  TIERS,
+  verticalGroups,
+  type LayoutMap,
+  type Tier,
+} from '../lib/layout';
 
 interface Props {
   /** La mappa di posizionamento della pagina. Da qui discende --rows. */
   map: LayoutMap;
+  /**
+   * I tier in cui la pagina e' **disegnata**.
+   *
+   * Va passato dalle pagine che hanno un disegno per un tier solo. Se manca, si
+   * deduce dalla mappa, e la deduzione e' giusta solo quando tutti i blocchi
+   * della pagina raccontano la stessa storia.
+   */
+  tiers?: readonly Tier[];
   /** Il megamenu non ha griglia di sfondo: solo blocchi bordati su fondo pieno. */
   lines?: boolean;
   class?: string;
 }
 
-const { map, lines = true, class: className } = Astro.props;
+const { map, tiers, lines = true, class: className } = Astro.props;
 
 const rows = deriveRows(map);
 
@@ -30,16 +47,61 @@ const rows = deriveRows(map);
  * smette di combaciare. Con `data-tiers` il CSS tiene le 12 colonne e la
  * pagina diventa un desktop rimpicciolito, che e' il meno peggio finche' un
  * disegno per gli schermi piccoli non esiste (NOTES.md B2).
+ *
+ * ---------------------------------------------------------------------------
+ * PERCHE' NON BASTA DEDURLI DALLA MAPPA
+ *
+ * La deduzione guarda **tutti** i blocchi, e in ogni mappa ci sono anche header
+ * e footer, che un disegno ce l'hanno a tutti e tre i tier. Bastava quello:
+ * `/about` dichiarava `base md lg` pur essendo disegnata solo a desktop, e da
+ * li' due conseguenze, tutte e due gravi.
+ *
+ * La prima: `.grid[data-tiers~='base'] .block:not([data-tiers~='base'])` spegne
+ * i blocchi che in quel tier non esistono, ed e' la regola giusta per un blocco
+ * tolto di proposito (il "Let's work together" del footer a base). Su una
+ * pagina che dichiarava base per sbaglio, spegneva **tutto il contenuto**.
+ * La seconda: `--rows` prendeva `--rows-base`, che su quella pagina vale 2,
+ * cioe' l'altezza del solo header.
+ *
+ * Risultato: `/about`, `/works`, `/works/[slug]` e `/contact` erano **vuote
+ * sotto i 1200**, header a parte. Da sempre. Nessuna sonda l'ha vista: la
+ * sonda della griglia scarta i blocchi a `display: none`, quindi misurava
+ * l'header, lo trovava perfetto, e diceva ok.
+ *
+ * Ora chi ha un disegno per un tier solo lo dichiara, e la deduzione resta per
+ * la home, dove e' vera.
+ * ---------------------------------------------------------------------------
  */
-const declaredTiers = TIERS.filter((tier) => Object.values(map).some((b) => b[tier] !== undefined));
+const declaredTiers =
+  tiers ?? TIERS.filter((tier) => Object.values(map).some((b) => b[tier] !== undefined));
 
-// Tutti e tre i tier ricevono un valore, anche quando la pagina ne dichiara uno
-// solo: sotto 1200px le quattro pagine interne non hanno un disegno, e senza
-// --rows-base la griglia non avrebbe righe e collasserebbe.
-const rowVars = TIERS.map((tier) => `--rows-${tier}:${resolveTier(rows, tier)}`).join(';');
+/**
+ * Righe e colonne guardano **solo** i tier dichiarati.
+ *
+ * E' la seconda meta' dello stesso difetto. `deriveRows` conta l'ultima riga
+ * occupata in ogni tier, header e footer compresi: su `/about` dava
+ * `--rows-base: 2`, cioe' l'altezza del solo header. Con i blocchi finalmente
+ * accesi (vedi sopra), il contenuto finiva in righe implicite dimensionate dal
+ * testo, e i bordi cadevano a duemila pixel dalla linea piu' vicina.
+ *
+ * Stessa cosa per le colonne: una pagina `lg` ne tiene dodici a ogni
+ * larghezza, ma le linee verticali venivano disegnate dieci, quante ne ha il
+ * tier base. Dieci linee su una griglia da dodici colonne.
+ *
+ * Filtrando, `resolveTier` ripiega sul tier disegnato e i tre valori
+ * diventano lo stesso numero: una pagina disegnata solo a desktop e' un
+ * desktop rimpicciolito a ogni larghezza, linee comprese.
+ */
+const onlyDeclared = <T,>(byTier: Partial<Record<Tier, T>>): Partial<Record<Tier, T>> =>
+  Object.fromEntries(declaredTiers.map((tier) => [tier, byTier[tier]]).filter(([, v]) => v !== undefined));
 
-const verticals = verticalGroups();
-const horizontals = horizontalGroups(rows);
+const declaredRows = onlyDeclared(rows);
+const declaredCols = onlyDeclared(COLS);
+
+const rowVars = TIERS.map((tier) => `--rows-${tier}:${resolveTier(declaredRows, tier)}`).join(';');
+
+const verticals = verticalGroups(declaredCols);
+const horizontals = horizontalGroups(declaredRows);
 ---
 
 <div class="grid-wrap">

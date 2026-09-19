@@ -42,6 +42,9 @@ export interface GridProbeResult {
    * questione di misura, e' un errore di struttura, quindi si conta a parte.
    */
   misplaced: string[];
+  /** Quanti blocchi sono accesi a questa larghezza, e quanti ce ne sono in tutto. */
+  visible: number;
+  total: number;
   tolerance: number;
 }
 
@@ -241,6 +244,8 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
 
   return {
     tier,
+    visible: blocks.length,
+    total: all.length,
     cols,
     rows,
     cell: containerWidth / cols,

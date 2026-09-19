@@ -21,8 +21,20 @@ import { startDevServer, CHROMIUM } from './dev-server.mjs';
 
 const WIDTHS = [320, 390, 430, 719, 720, 768, 1024, 1199, 1200, 1280, 1440, 1680, 1920];
 
-/** Le pagine interne esistono solo a desktop: misurarle sotto 1200 non dice niente. */
-const DESKTOP_ONLY = ['/about', '/works', '/works/seezy', '/contact'];
+/**
+ * Le pagine interne esistono solo a desktop: misurarle sotto 1200 non dice
+ * niente sullo sforo, perche' non c'e' un disegno con cui confrontarsi.
+ *
+ * Era un elenco, e l'elenco dimenticava due case study su tre: `verify:build`
+ * li misura tutti e li faceva fallire, mentre `/works/seezy` — identico per
+ * struttura — passava perche' era scritto nella lista. La regola vera non e'
+ * un elenco di indirizzi: **la home e' l'unica pagina con tre tier**, tutto il
+ * resto e' disegnato solo a 1440.
+ *
+ * L'allineamento alle linee resta un errore ovunque, a qualunque larghezza:
+ * qui si allenta solo la misura dello sforo del contenuto.
+ */
+const isDesktopOnly = (route) => route !== '/' && !route.startsWith('/grid');
 
 /**
  * Il frame piu' piccolo del Figma e' a 390.
@@ -116,7 +128,7 @@ try {
       // esiste solo a desktop, lo sforo si misura e si stampa: non c'e' un
       // disegno con cui confrontarsi. L'allineamento delle linee invece deve
       // reggere ovunque, e resta un errore.
-      const belowDesign = width < SMALLEST_DESIGNED_WIDTH || (DESKTOP_ONLY.includes(route) && width < 1200);
+      const belowDesign = width < SMALLEST_DESIGNED_WIDTH || (isDesktopOnly(route) && width < 1200);
       // Un blocco fuori dalla griglia e' sempre un errore, a qualunque larghezza:
       // non dipende dal disegno, dipende da dove sta nel markup.
       const ok =
@@ -176,7 +188,7 @@ try {
 }
 
 const pad = (v, n) => String(v).padEnd(n);
-const head = `${pad('route', 19)}${pad('larghezza', 10)}${pad('scroll', 8)}${pad('tier', 6)}${pad('col', 5)}${pad('righe', 7)}${pad('cella', 12)}${pad('scarto', 11)}${pad('sfora', 7)}esito`;
+const head = `${pad('route', 19)}${pad('larghezza', 10)}${pad('scroll', 8)}${pad('tier', 6)}${pad('col', 5)}${pad('righe', 7)}${pad('blocchi', 9)}${pad('cella', 12)}${pad('scarto', 11)}${pad('sfora', 7)}esito`;
 console.log('\n' + head);
 console.log('-'.repeat(head.length));
 for (const r of rows) {
@@ -187,6 +199,7 @@ for (const r of rows) {
       pad(r.tier, 6) +
       pad(r.cols, 5) +
       pad(r.rows, 7) +
+      pad(`${r.visible}/${r.total}`, 9) +
       pad(r.cell.toFixed(4), 12) +
       pad(r.maxDrift.toFixed(4) + 'px', 11) +
       pad(r.overflowing.length, 7) +
@@ -213,6 +226,49 @@ if (knownRows.length > 0) {
       seen.add(key);
       console.log(`  ${r.route} · ${k.block} · fino a +${k.dx}w +${k.dy}h`);
     }
+  }
+}
+
+/*
+ * Una pagina non puo' svuotarsi cambiando larghezza.
+ *
+ * Questo controllo esiste per un difetto che e' stato online dall'inizio senza
+ * che nessuno lo vedesse: `/about`, `/works`, `/works/[slug]` e `/contact`
+ * erano **vuote sotto i 1200**, header a parte. Dichiaravano il tier `base`
+ * perche' header e footer un disegno a base ce l'hanno, e la regola che spegne
+ * i blocchi assenti in un tier spegneva tutto il contenuto.
+ *
+ * Perche' nessuna sonda l'ha visto: questa scarta i blocchi a `display: none`,
+ * per un motivo giusto — un blocco spento non ha misure da confrontare — e
+ * quindi misurava l'header, lo trovava perfetto, e diceva ok. Nessuno chiedeva
+ * **quanti** blocchi fossero rimasti.
+ *
+ * Ora lo si chiede. La soglia e' relativa al massimo della route stessa: la
+ * home cambia composizione per tier e qualche blocco in piu' o in meno e'
+ * normale, ma passare da trenta blocchi a due non lo e' a nessuna larghezza.
+ */
+const SVUOTAMENTO = 0.4;
+const perRoute = new Map();
+for (const r of rows) {
+  if (r.where !== 'top') continue;
+  const lista = perRoute.get(r.route) ?? [];
+  lista.push(r);
+  perRoute.set(r.route, lista);
+}
+
+const svuotate = [];
+for (const [route, lista] of perRoute) {
+  const max = Math.max(...lista.map((r) => r.visible));
+  for (const r of lista) {
+    if (r.visible < max * SVUOTAMENTO) svuotate.push({ route, width: r.width, visible: r.visible, max });
+  }
+}
+
+if (svuotate.length > 0) {
+  failures += svuotate.length;
+  console.error('\nPagine che si svuotano cambiando larghezza:');
+  for (const s of svuotate) {
+    console.error(`  ${s.route} a ${s.width}px mostra ${s.visible} blocchi su ${s.max}`);
   }
 }
 

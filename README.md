@@ -25,7 +25,8 @@ npm run build          # build statica in dist/ (/grid viene rimossa)
 npm run check          # type check
 npm run verify         # tutte le sonde, sorgente e build
 npm run verify:grid    # l'invariante: 13 larghezze x 3 scroll x 7 route
-npm run verify:edges   # i fili dei bordi, letti nei pixel dipinti
+npm run verify:edges   # i fili dei bordi, letti nei pixel dipinti, a 390/768/1440
+npm run verify:rules   # scorrendo le pagine: un blocco fermo ha sempre i suoi fili
 npm run verify:build   # la build servita da Workers: indirizzi, richieste, griglia, fili
 npm run measure        # margine fra uno span e il suo contenuto, larghezza per larghezza
 npm run preview        # la build servita in locale con wrangler
