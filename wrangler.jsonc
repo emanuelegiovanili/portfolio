@@ -1,9 +1,23 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "emanuele-giovanili-portfolio",
+  "name": "portfolio",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist",
+    /*
+     * Ogni link interno del sito e' senza barra finale (`/about`, non
+     * `/about/`). Con il comportamento predefinito Workers risponde 307 e
+     * rimanda a `/about/`: un viaggio in piu' su **ogni** navigazione, e un
+     * URL diverso da quello scritto nel markup. Qui la pagina si serve
+     * all'indirizzo che il sito usa davvero, e la barra finale, se qualcuno la
+     * scrive, viene tolta.
+     */
+    "html_handling": "drop-trailing-slash",
+    /*
+     * Non c'e' una pagina 404 disegnata (NOTES.md B16): Workers risponde con
+     * la sua, essenziale. Il giorno che il file c'e', basta che si chiami
+     * `404.html` e questa riga lo prende da sola.
+     */
     "not_found_handling": "404-page"
   }
 }

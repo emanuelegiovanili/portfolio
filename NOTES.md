@@ -1160,6 +1160,68 @@ pixel della card durante tutto lo scorrimento: zero pixel di fondo scoperto, in 
 
 ---
 
+## 13. Fase 6 — la pubblicazione
+
+### D75. Ogni link interno costava un viaggio in piu'
+
+Il sito scrive `href="/about"`, senza barra finale, e la build mette la pagina in
+`dist/about/index.html`. Servita da Workers con le impostazioni predefinite,
+`/about` risponde **307** e rimanda a `/about/`: la pagina arriva, ma dopo un
+secondo giro completo, e all'indirizzo che il markup non usa. Su ogni
+navigazione, su ogni pagina.
+
+Misurato, non dedotto: sette route interrogate sul runtime di Cloudflare, sei
+rispondevano 307.
+
+`"html_handling": "drop-trailing-slash"` serve la pagina all'indirizzo che il
+sito usa davvero, e toglie la barra a chi la scrive. Ora tutte e sette
+rispondono 200 al primo colpo, e `/about/` e' quella che rimanda alla forma
+canonica.
+
+### D76. I font si ricontrattavano a ogni visita
+
+I file sotto `/_astro/` hanno l'impronta nel nome e Workers li tiene per sempre
+da se'. I font no: il nome ce l'hanno fisso, e prendevano
+`max-age=0, must-revalidate` — cioe' una domanda al server prima di poter
+disegnare il testo, a ogni pagina. `public/_headers` li dichiara immutabili: se
+un giorno cambiassero, cambierebbe il nome.
+
+Nello stesso file due intestazioni che non c'entrano con la cache e che un sito
+pubblico dovrebbe avere: `X-Content-Type-Options: nosniff` e
+`Referrer-Policy: strict-origin-when-cross-origin`.
+
+### D77. Si verifica la build, non solo il sorgente
+
+Tutte le sonde di questo progetto hanno sempre misurato `astro dev`. Fra quello
+e quel che va online ci sono quattro differenze: il CSS e' minificato, i nomi
+hanno l'impronta, `/grid` non esiste piu', e davanti c'e' Workers con le sue
+regole. Quattro posti in cui un difetto puo' stare senza che nessuna misura lo
+veda — che e' esattamente la forma di errore che in questo progetto e' gia'
+passata tre volte (D59, D61, D74).
+
+`scripts/verify-build.mjs` costruisce, serve la build con `wrangler dev`, e
+rimisura li': gli indirizzi (200 al primo colpo, `/grid` in 404), le richieste
+di ogni pagina (niente 404, niente errori in console) e poi le due sonde di
+sempre, puntate sul server di Workers invece che su quello di sviluppo.
+
+`verify-grid.mjs` ha preso un `--paths` per questo: senza, andava a cercare
+`/grid`, che nella build non c'e' piu'.
+
+**Esito sulla build, non sul sorgente:** 286 misure su 7 route, scarto massimo
+**0,0038px**; 45 controlli a livello di pixel sui fili; 21 pagine caricate a
+390, 768 e 1440 senza un errore in console ne' una richiesta fallita.
+
+### D78. Il worker si chiama `portfolio`
+
+Un indirizzo `workers.dev` ha la forma `<nome-worker>.<sottodominio>.workers.dev`.
+`emanuelegiovanili` puo' quindi essere solo il **sottodominio dell'account**, non
+l'indirizzo intero: il nome del worker e' la prima etichetta, e una c'e'
+sempre. Da `emanuele-giovanili-portfolio.emanuelegiovanili.workers.dev` a
+`portfolio.emanuelegiovanili.workers.dev`. E' una riga di `wrangler.jsonc`: si
+cambia in un secondo se il committente preferisce altro.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
@@ -1176,3 +1238,5 @@ pixel della card durante tutto lo scorrimento: zero pixel di fondo scoperto, in 
 | B13 | **Tre testimonial su quattro non hanno un testo** | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |
 | B15 | **Megamenu a base e md: proposta in attesa di conferma** | Composizione derivata dalle regole del file, non disegnata (D66). Se il committente la conferma, B15 si chiude; se preferisce altro, cambia una tabella in `chrome.ts` |
+| B16 | **Nessuna pagina 404** | Non e' disegnata e non l'ho inventata. Oggi risponde quella essenziale di Workers. `not_found_handling: "404-page"` e' gia' pronto: il giorno che il disegno c'e', basta una route `404.astro` |
+| B17 | **Il deploy non parte da questa sessione** | `api.cloudflare.com` risponde **403 al CONNECT** attraverso il proxy di uscita dell'ambiente, e non ci sono credenziali (`wrangler whoami`: "You are not authenticated"). Nemmeno con un token si potrebbe pubblicare da qui. Il comando e' `npm run deploy` da una macchina con `wrangler login` fatto |

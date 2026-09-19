@@ -9,6 +9,7 @@
  * Uso:
  *   node scripts/verify-grid.mjs                 (avvia da solo `astro dev`)
  *   node scripts/verify-grid.mjs --url http://…  (usa un server gia' acceso)
+ *   node scripts/verify-grid.mjs --paths /,/about    (solo queste route)
  *   node scripts/verify-grid.mjs --shots         (salva anche i png in .verify/)
  */
 
@@ -35,7 +36,7 @@ const SMALLEST_DESIGNED_WIDTH = 390;
 const SCROLLS = ['top', 'middle', 'bottom'];
 /** Il megamenu e' lo stesso su ogni pagina: si apre e si misura su una sola. */
 const MENU_ROUTE = '/';
-const PATHS = ['/grid', '/grid/components', '/', '/about', '/works', '/works/seezy', '/contact'];
+const DEFAULT_PATHS = ['/grid', '/grid/components', '/', '/about', '/works', '/works/seezy', '/contact'];
 const SHOT_DIR = '.verify';
 
 const args = process.argv.slice(2);
@@ -44,6 +45,15 @@ const value = (name, fallback) => {
   const i = args.indexOf(name);
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
+
+/*
+ * Le route da misurare si possono restringere.
+ *
+ * Serve per misurare la build di produzione, dove `/grid` non esiste: e' una
+ * route di debug e la build la cancella (`astro.config.mjs`). Senza questo, la
+ * stessa sonda non si poteva puntare sulla cosa che va davvero online.
+ */
+const PATHS = value('--paths', null)?.split(',').filter(Boolean) ?? DEFAULT_PATHS;
 
 const explicitUrl = value('--url', null);
 const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await startDevServer({ probePath: PATHS[0] });

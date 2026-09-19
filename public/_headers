@@ -1,0 +1,13 @@
+# I file con l'impronta nel nome (`/_astro/nome.HASH.css`) cambiano nome quando
+# cambia il contenuto: si possono tenere per sempre. Workers lo fa gia' da se'
+# per quella cartella, e qui vale per i font, che il nome ce l'hanno fisso ma
+# non cambiano mai — se un giorno cambiassero, cambierebbe il nome anche a loro.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Le pagine sono statiche ma si riscrivono a ogni pubblicazione: si rileggono
+# sempre, e la copia di prima vale solo finche' il server dice che va ancora
+# bene.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
