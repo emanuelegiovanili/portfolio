@@ -91,6 +91,34 @@ export function startCarousel(root: ParentNode = document): Carousel | null {
       .to(to, { xPercent: 0 }, 0);
   };
 
+  /*
+   * Le immagini delle slide ferme vanno caricate prima che servano.
+   *
+   * Solo la prima e' `eager`: le altre sono `lazy`, e dentro a `display: none`
+   * il browser non le carica **affatto** — non e' che le rimanda, proprio non
+   * parte. Al primo "avanti" la slide arrivava vuota e l'immagine compariva
+   * dopo. Prima non succedeva solo perche' le slide erano tutte visibili per
+   * sbaglio (NOTES.md D74), che le teneva in carico.
+   *
+   * Si promuovono a `eager` quando il browser ha un momento libero: cosi' sono
+   * pronte molto prima del comando, e non rubano banda al primo disegno della
+   * pagina, che e' l'unica cosa che l'utente sta davvero guardando.
+   */
+  const preload = () => {
+    for (const [i, slide] of slides.entries()) {
+      if (i === current) continue;
+      for (const img of slide.querySelectorAll<HTMLImageElement>('img[loading="lazy"]')) {
+        img.loading = 'eager';
+        // Scaricata non basta: la decodifica di un'immagine grande costa un
+        // fotogramma, e quel fotogramma cadrebbe proprio sul cambio slide.
+        img.decode?.().catch(() => {});
+      }
+    }
+  };
+
+  if ('requestIdleCallback' in window) window.requestIdleCallback(preload, { timeout: 3000 });
+  else window.setTimeout(preload, 1200);
+
   const onPrev = () => go(current - 1);
   const onNext = () => go(current + 1);
   prev?.addEventListener('click', onPrev);

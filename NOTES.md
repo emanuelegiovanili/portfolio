@@ -1146,6 +1146,17 @@ uno stato non passi di nuovo in silenzio.
 Verificato dopo: Seezy -> TAMA caffe' -> Noranutrizione -> TAMA caffe', una sola slide visibile per
 volta tranne durante lo scorrimento, e i riquadri che salgono da 120 a zero a scorrimento finito.
 
+**Uno strascico, scoperto subito dopo.** Con le slide finalmente nascoste davvero, le loro immagini
+non si caricavano piu': solo la prima e' `eager`, le altre sono `lazy`, e dentro a `display: none` il
+browser non le carica **affatto** — non le rimanda, proprio non parte. Al primo "avanti" la slide
+arrivava vuota e l'immagine compariva dopo. Prima non si vedeva solo perche' le slide erano tutte
+visibili per sbaglio, il che le teneva in carico.
+
+Si promuovono a `eager` quando il browser ha un momento libero (`requestIdleCallback`), e si chiede
+anche la decodifica: scaricata non basta, perche' decodificare un'immagine grande costa un
+fotogramma e quel fotogramma cadrebbe proprio sul cambio slide. Misurato campionando una riga di
+pixel della card durante tutto lo scorrimento: zero pixel di fondo scoperto, in ogni istante.
+
 
 ---
 
