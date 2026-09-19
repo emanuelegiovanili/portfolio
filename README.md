@@ -43,9 +43,13 @@ npm run verify:build   # costruisce e rimisura quel che andra' online
 npm run deploy
 ```
 
-L'indirizzo che ne esce ha la forma `<nome-worker>.<sottodominio>.workers.dev`,
-dove il nome del worker e' quello in `wrangler.jsonc` (`emanuelegiovanili`) e il
-sottodominio e' quello scelto una volta per tutte sull'account.
+Il sito e' pubblicato su
+
+    https://emanuelegiovanili.emanuele-giovanili-ap.workers.dev
+
+L'indirizzo ha la forma `<nome-worker>.<sottodominio>.workers.dev`: il nome del
+worker e' quello in `wrangler.jsonc`, il sottodominio lo ha derivato Cloudflare
+dall'email dell'account al primo deploy e si cambia dal pannello.
 
 `wrangler login` e' un giro OAuth nel browser: da un ambiente senza browser
 serve invece `CLOUDFLARE_API_TOKEN` (permesso *Workers Scripts: Edit*) e

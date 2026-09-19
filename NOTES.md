@@ -1250,6 +1250,29 @@ Nel codice non c'e' niente che dipenda dal nome: cambia solo la prima etichetta
 dell'indirizzo `workers.dev`. Il sito non sa dove sta, non ci sono URL assoluti
 in pagina, e i link interni sono tutti relativi alla radice.
 
+### D81. Pubblicato, e il sottodominio se l'e' scelto Cloudflare
+
+Prima run verde il 19 settembre 2026: 130 file caricati, worker
+`emanuelegiovanili` attivo su
+
+    https://emanuelegiovanili.emanuele-giovanili-ap.workers.dev
+
+Il sottodominio dell'account non e' stato chiesto a nessuno: Cloudflare lo
+deriva dall'indirizzo email al primo worker. Di qui la ripetizione
+`emanuelegiovanili.emanuele-giovanili-ap`, che e' brutta ma non e' un difetto
+del sito: e' un'impostazione dell'account, e si cambia dal pannello senza
+toccare una riga di codice. La risposta vera e' un dominio proprio.
+
+**Cosa ha dimostrato la corsa.** La sonda ha girato su una macchina GitHub
+pulita, con un Chromium diverso da quello di questo ambiente: 286 misure,
+scarto massimo 0,0038px, 45 controlli sui fili, 21 pagine senza un errore in
+console. L'invariante non dipendeva dall'ambiente in cui e' stato costruito.
+
+**Quello che non ho potuto misurare.** Il sito pubblicato non lo raggiungo:
+`workers.dev` e' bloccato dal proxy di uscita come `api.cloudflare.com` e
+`figma.com`. Di quell'indirizzo ho la parola del log di wrangler, non una mia
+misura. La verifica sul vivo tocca al committente.
+
 ---
 
 ## 5. Blocchi aperti
@@ -1269,6 +1292,7 @@ in pagina, e i link interni sono tutti relativi alla radice.
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |
 | B15 | **Megamenu a base e md: proposta in attesa di conferma** | Composizione derivata dalle regole del file, non disegnata (D66). Se il committente la conferma, B15 si chiude; se preferisce altro, cambia una tabella in `chrome.ts` |
 | B16 | **Nessuna pagina 404** | Non e' disegnata e non l'ho inventata. Oggi risponde quella essenziale di Workers. `not_found_handling: "404-page"` e' gia' pronto: il giorno che il disegno c'e', basta una route `404.astro` |
-| B17 | **Il deploy non parte da questa sessione** | `api.cloudflare.com` risponde **403 al CONNECT** attraverso il proxy di uscita dell'ambiente, e non ci sono credenziali (`wrangler whoami`: "You are not authenticated"). Nemmeno con un token si potrebbe pubblicare da qui. Il comando e' `npm run deploy` da una macchina con `wrangler login` fatto |
-| B18 | **Il ramo di produzione non esiste** | Il repository ha un ramo solo, `claude/serene-gates-y6076d`, che e' anche il predefinito. Il workflow di deploy parte su `main`: finche' `main` non c'e', non parte niente. Serve creare `main` da questo ramo e renderlo predefinito |
-| B19 | **I secret Cloudflare non sono impostati** | `CLOUDFLARE_API_TOKEN` (permesso *Workers Scripts: Edit*) e `CLOUDFLARE_ACCOUNT_ID` vanno messi nei secret del repository. Senza, il workflow costruisce e verifica ma l'ultimo passo fallisce |
+| ~~B17~~ | ~~Il deploy non parte da questa sessione~~ | **Aggirato.** `api.cloudflare.com` resta bloccato da qui (403 al CONNECT, provato anche con un token valido: `fetch failed`), ma il deploy lo fa GitHub Actions, che a Cloudflare ci arriva |
+| ~~B18~~ | ~~Il ramo di produzione non esiste~~ | **Chiuso.** `main` creato. Resta da renderlo il ramo predefinito del repository, che e' un'impostazione e non cambia il funzionamento del deploy |
+| ~~B19~~ | ~~I secret Cloudflare non sono impostati~~ | **Chiuso.** Entrambi nei secret del repository. Il token passato in chat durante la messa a punto va revocato |
+| B20 | **Il sottodominio `workers.dev` e' quello generato da Cloudflare** | `emanuelegiovanili.emanuele-giovanili-ap.workers.dev` ripete il nome. Si cambia dal pannello (Workers & Pages, scheda Domains) o si mette un dominio proprio |
