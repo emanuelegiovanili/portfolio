@@ -32,9 +32,11 @@ interface Props {
   /** Il megamenu non ha griglia di sfondo: solo blocchi bordati su fondo pieno. */
   lines?: boolean;
   class?: string;
+  /** Il resto passa al contenitore: serve a /works per lo stato del filtro. */
+  [key: string]: unknown;
 }
 
-const { map, tiers, lines = true, class: className } = Astro.props;
+const { map, tiers, lines = true, class: className, ...rest } = Astro.props;
 
 const rows = deriveRows(map);
 
@@ -105,7 +107,7 @@ const horizontals = horizontalGroups(declaredRows);
 ---
 
 <div class="grid-wrap">
-  <div class:list={['grid', className]} style={rowVars} data-tiers={declaredTiers.join(' ')}>
+  <div class:list={['grid', className]} style={rowVars} data-tiers={declaredTiers.join(' ')} {...rest}>
     <div class="grid-lines" aria-hidden="true">
       {lines && (
       <>

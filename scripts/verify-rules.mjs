@@ -92,10 +92,11 @@ try {
             const v = ['--rule-t', '--rule-r', '--rule-b', '--rule-l'].map(
               (n) => Number.parseFloat(getComputedStyle(b).getPropertyValue(n)) || 0,
             );
-            if (Math.min(...v) < 0.99) {
+            // Percentuali, non frazioni: il filo intero e' 100.
+            if (Math.min(...v) < 99) {
               out.push({
                 nome: b.className.replace('block ', '').split(' ')[0] || b.tagName.toLowerCase(),
-                fili: v.map((x) => x.toFixed(2)).join('/'),
+                fili: v.map((x) => `${x.toFixed(0)}%`).join('/'),
               });
             }
           }

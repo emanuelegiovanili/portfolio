@@ -16,8 +16,13 @@
  * Chi lo chiama decide cosa muove l'avanzamento: lo scroll, sulle pagine, o una
  * timeline, nel megamenu.
  *
- * Le quattro variabili sono registrate in `grid.css`, e i quattro gradienti del
- * blocco sono ancorati agli angoli giusti perche' il giro torni.
+ * I quattro gradienti del blocco sono ancorati agli angoli giusti perche' il
+ * giro torni: vedi `grid.css`.
+ *
+ * I valori si scrivono come **percentuali**, e finiscono dritti dentro a
+ * `background-size` senza passare per un `calc`. Erano numeri, moltiplicati per
+ * `100%` in CSS, con le variabili registrate da `@property`: su Safari i bordi
+ * non si vedevano affatto. Il perche' sta in `grid.css`.
  */
 
 import gsap from 'gsap';
@@ -27,7 +32,23 @@ const SIDES = ['--rule-t', '--rule-r', '--rule-b', '--rule-l'] as const;
 
 /** Filo assente: da qui parte il disegno. */
 export function clearRules(blocks: HTMLElement[]): void {
-  gsap.set(blocks, { '--rule-t': 0, '--rule-r': 0, '--rule-b': 0, '--rule-l': 0 });
+  for (const block of blocks) {
+    for (const side of SIDES) block.style.setProperty(side, '0%');
+  }
+}
+
+/**
+ * Filo intero, e nessuna traccia di chi l'ha disegnato.
+ *
+ * Togliere le dichiarazioni invece di metterle a `100%` restituisce il blocco
+ * al fallback del CSS: e' lo stato di una pagina che il JavaScript non ha mai
+ * toccato. Serve quando qualcosa va storto — meglio un bordo senza animazione
+ * che un blocco senza bordo.
+ */
+export function restoreRules(blocks: HTMLElement[]): void {
+  for (const block of blocks) {
+    for (const side of SIDES) block.style.removeProperty(side);
+  }
 }
 
 /**
@@ -65,7 +86,7 @@ export function traceRules(block: HTMLElement, vars: gsap.TweenVars): gsap.core.
       let drawn = at.p * perimeter;
       SIDES.forEach((side, i) => {
         const length = lengths![i] || 1;
-        block.style.setProperty(side, String(clamp(drawn / length)));
+        block.style.setProperty(side, `${clamp(drawn / length) * 100}%`);
         drawn -= length;
       });
     },

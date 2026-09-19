@@ -17,36 +17,89 @@ import Icon from '../../components/Icon.astro';
 import WorkCard from '../../components/WorkCard.astro';
 import ContactSection from '../../components/ContactSection.astro';
 import { headerMap } from '../../lib/blocks/chrome';
-import { worksBlocks, worksCardAt, worksFilterAt, worksFooter } from '../../lib/blocks/pages';
+import {
+  worksBlocks,
+  worksCardAt,
+  worksCardRow,
+  worksFilterAt,
+  worksFilterStates,
+  worksFooter,
+} from '../../lib/blocks/pages';
+import { deriveRows } from '../../lib/layout';
 import { WORK_TAGS } from '../../content.config';
 import '../../styles/pages.css';
 import '../../styles/home.css';
 
 const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
 
-const filters = [
-  { label: 'All', tag: null, count: works.length },
-  ...WORK_TAGS.map((tag) => ({
-    label: tag,
-    tag,
-    count: works.filter((w) => w.data.tags.includes(tag)).length,
-  })),
-];
-
 const cardAt = Object.fromEntries(works.map((w, i) => [w.id, worksCardAt(i)]));
-const filterAt = Object.fromEntries(filters.map((f, i) => [f.label, worksFilterAt(i)]));
+const filterAt = Object.fromEntries(WORK_TAGS.map((_, i) => [i, worksFilterAt(i + 1)]));
 
 const map = {
   ...headerMap,
   ...worksBlocks,
   ...Object.fromEntries(Object.entries(cardAt).map(([k, v]) => [`card-${k}`, v])),
-  ...Object.fromEntries(Object.entries(filterAt).map(([k, v]) => [`filter-${k}`, v])),
+  ...Object.fromEntries(WORK_TAGS.map((_, i) => [`filter-${i}`, filterAt[i]])),
+  filterAll: worksFilterAt(0),
   ...worksFooter,
 };
+
+/*
+ * I quattro stati del filtro, calcolati al build.
+ *
+ * `rowsFull` e' l'ultima riga della pagina con tutte le card: da li' ogni stato
+ * toglie quattro righe per card nascosta. Si legge dalla mappa invece di
+ * scriverlo, per la stessa ragione per cui `--rows` non si scrive a mano: se un
+ * blocco scende, il numero segue.
+ */
+const rowsFull = deriveRows(map).lg ?? 0;
+const states = worksFilterStates(
+  works.map((w) => ({ id: w.id, tags: w.data.tags })),
+  WORK_TAGS,
+  rowsFull,
+);
+
+/**
+ * La riga di una card, stato per stato: il posto che occupa fra quelle visibili.
+ *
+ * Le card **si ricompattano**, non traslano: se nascondo la prima, la seconda
+ * prende il primo posto. Quindi ognuna porta una riga per ogni stato in cui si
+ * vede, calcolata qui.
+ */
+const cardStyle = (id: string) =>
+  states
+    .filter((st) => st.ids.includes(id))
+    .map((st) => `--row-${st.slug}:${worksCardRow(st.ids.indexOf(id))}`)
+    .join(';');
+
+/**
+ * Le regole che accendono uno stato.
+ *
+ * Toccano `--row` e `--rows`, non `--row-lg` e `--rows-lg`: quelli stanno
+ * nell'attributo `style` dei blocchi, e uno stile inline vince su qualunque
+ * selettore. `--row` invece lo assegna grid.css con la specificita' di una
+ * classe, e qui si arriva con una classe piu' un attributo.
+ *
+ * Sotto le card lo scostamento e' **lo stesso per tutti**, quindi basta un
+ * numero per stato e un `calc` sulla riga che il blocco ha gia': misurato che
+ * `grid-row-start: calc(20 - 8)` risolve a 12, cioe' che un `calc` e' accettato
+ * dove sta un numero di linea.
+ */
+const filterCss =
+  `.works-grid [data-flow]{--row:calc(var(--row-lg) - var(--shift, 0))}` +
+  states
+    .map(
+      (st) =>
+        `.works-grid[data-filter="${st.slug}"]{--rows:${st.rows};--shift:${st.shift}}` +
+        `.works-grid[data-filter="${st.slug}"] .works-card{--row:var(--row-${st.slug})}`,
+    )
+    .join('');
 ---
 
+<style set:html={filterCss}></style>
+
 <Base title="Works — Emanuele Giovanili" description="Progetti di branding, web design e product design.">
-  <Grid map={map} tiers={['lg']}>
+  <Grid map={map} tiers={['lg']} class="works-grid" data-filter="all">
     <Header current="/works" />
 
     <Block at={worksBlocks.worksTitle} class="page-title" clip>
@@ -58,18 +111,24 @@ const map = {
     </Block>
 
     {
-      filters.map((filter) => (
+      states.map((state, i) => (
         <Block
-          at={filterAt[filter.label]}
+          at={i === 0 ? worksFilterAt(0) : filterAt[i - 1]}
           as="button"
           type="button"
           class="work-filter"
-          aria-pressed={filter.tag === null ? 'true' : 'false'}
-          data-filter={filter.tag ?? 'all'}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          data-filter={state.slug}
           clip
         >
-          <span class="work-filter__label">{filter.label}</span>
-          <span class="work-filter__count">{filter.count}</span>
+          <span class="work-filter__label">{state.label}</span>
+          <span class="work-filter__count">{state.ids.length}</span>
+          {/* La copia nel colore d'arrivo, come sui bottoni: adesso che i
+              filtri fanno qualcosa, devono anche rispondere al puntatore. */}
+          <span class="hover-fill" aria-hidden="true">
+            <span class="work-filter__label">{state.label}</span>
+            <span class="work-filter__count">{state.ids.length}</span>
+          </span>
         </Block>
       ))
     }
@@ -81,7 +140,8 @@ const map = {
           as="a"
           href={`/works/${work.id}`}
           class="works-card"
-          data-tags={work.data.tags.join(' ')}
+          data-card={work.id}
+          style={cardStyle(work.id)}
           clip
         >
           <WorkCard work={work} eager={i === 0} />
@@ -95,8 +155,15 @@ const map = {
         cta: worksBlocks.worksContactCta,
         send: worksBlocks.worksContactSend,
       }}
+      flow
     />
 
-    <Footer at={worksFooter} current="/works" />
+    <Footer at={worksFooter} current="/works" flow />
   </Grid>
 </Base>
+
+<script>
+  import { startWorksFilter } from '../../scripts/works-filter';
+
+  startWorksFilter();
+</script>

@@ -67,10 +67,16 @@ try {
       };
     }, PAGE_GRID);
     check('le linee sono intere', state.transform === 'none' || state.transform === 'matrix(1, 0, 0, 1, 0, 0)', state.transform ?? '');
+    /*
+     * Sotto reduced motion nessuno scrive le quattro variabili, quindi vale il
+     * fallback del CSS, che e' il filo intero. Il controllo e' che siano
+     * **vuote**: una dichiarazione qui vorrebbe dire che qualcuno ha toccato i
+     * fili quando non doveva.
+     */
     check(
-      'i fili dei blocchi sono interi su tutti e quattro i lati',
-      state.rules?.every((v) => v === '1') === true,
-      (state.rules ?? []).join(' '),
+      'nessuno ha toccato i fili: vale il fallback, cioe\' il filo intero',
+      state.rules?.every((v) => v === '') === true,
+      (state.rules ?? []).map((v) => v || '(vuota)').join(' '),
     );
     check('nessun wrapper fisso: lo scroll e\' del browser', state.wrapperPosition !== 'fixed', state.wrapperPosition);
     check('nessun errore in console', errors.length === 0, errors[0] ?? '');
@@ -131,8 +137,8 @@ try {
     );
     check(
       'tutti i fili dei blocchi hanno chiuso il giro',
-      after.minRule > 0.99,
-      `il lato piu' corto e' a ${after.minRule.toFixed(3)}`,
+      after.minRule > 99,
+      `il lato piu' corto e' al ${after.minRule.toFixed(1)}%`,
     );
     check(
       'le verticali arrivano in fondo alla pagina',

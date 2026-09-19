@@ -1511,6 +1511,103 @@ per Seezy a 1440.
 
 ---
 
+## 16. Fase 8 — i filtri di /works, e i bordi che su Safari non c'erano
+
+### D96. Filtrare e' un layout diverso, non un `display: none`
+
+I quattro elementi sopra ai progetti erano dipinti: contatori giusti, stato
+attivo giusto, nessun effetto. Ora filtrano.
+
+**Il punto e' che filtrare sposta i blocchi.** Con meno card, tutto quello che
+sta sotto — form di contatto, CTA, bottone, footer — sale di quattro righe per
+card nascosta, e la pagina si accorcia di altrettanto. Nascondere le card e
+basta avrebbe lasciato buchi da otto righe in mezzo alla pagina.
+
+**Dove stanno i numeri.** Le righe di ogni stato si calcolano al **build**
+(`worksFilterStates`) e finiscono in pagina come custom property. Il JavaScript
+sceglie quale stato e' attivo: non calcola posizioni, non sa quanto e' alta una
+card, non puo' inventarsi un numero che non cade su una linea. E' la regola di
+sempre — la posizione viene dalla mappa — applicata a quattro mappe invece che
+a una.
+
+Due dettagli tecnici che meritano una riga:
+
+- Le regole toccano `--row` e `--rows`, non `--row-lg` e `--rows-lg`: quelli
+  stanno nell'attributo `style` dei blocchi, e uno stile inline vince su
+  qualunque selettore. `--row` invece lo assegna `grid.css` con la specificita'
+  di una classe.
+- Sotto le card lo scostamento e' lo stesso per tutti, quindi basta un numero
+  per stato e un `calc` sulla riga che il blocco ha gia'. Misurato che
+  `grid-row-start: calc(20 - 8)` risolve a 12: un `calc` e' accettato dove sta
+  un numero di linea.
+
+Le linee orizzontali oltre il nuovo fondo pagina le spegne il JavaScript: una
+linea alla riga 29 dentro una griglia da 21 creerebbe otto righe implicite e la
+pagina tornerebbe lunga come prima, vuota nella meta' inferiore.
+
+Senza JavaScript la pagina resta su "All", che e' quello che il markup dichiara:
+il filtro e' un comodo, non un prerequisito per vedere i progetti.
+
+**E i tre stati filtrati sono misurati** come se fossero pagine a se':
+`verify:grid` passa da 286 a 325 misure. Un layout diverso va misurato.
+
+### D97. L'hover di un filtro e' nero, non viola
+
+Su tutto il resto del sito il riempimento di hover e' viola e vuol dire "questo
+si preme". Qui il viola e' gia' occupato: vuol dire "questo e' selezionato".
+Con l'hover viola se ne vedevano due viola e non si capiva piu' quale fosse
+attivo — visibile nel primo screenshot che ho fatto, e corretto prima di
+consegnare. Il nero e' lo stesso che prende la hamburger a menu aperto: non e'
+un colore nuovo, e' l'altro modo che questo sito ha di dire "stai premendo qui".
+
+### D98. Su Safari non c'era **nessun** bordo
+
+Segnalazione del committente, browser confermato: Safari, nessun bordo su
+nessun blocco della home.
+
+**Non ho potuto riprodurlo.** Qui c'e' solo Chromium, e il motore di Safari non
+e' scaricabile: il CDN di Playwright e' fuori dalla policy di uscita
+dell'ambiente. Quella che segue e' quindi una deduzione dichiarata, non una
+misura.
+
+Il layout da lui e' giusto, quindi `@property` c'e': senza, la registrazione di
+`--cell` fallirebbe e la griglia collasserebbe. Quello che cambia non e' il
+supporto, e' l'**aggiornamento**. I quattro valori del filo si riscrivono a ogni
+fotogramma sul blocco, e a usarli e' uno pseudo-elemento. WebKit ha una storia
+nota di pseudo-elementi che non si ridisegnano quando cambia una custom property
+**registrata** ereditata. Il primo valore scritto e' zero (`clearRules`), e zero
+e' esattamente quello che lui vedeva.
+
+**La correzione.** Le quattro variabili diventano percentuali **non
+registrate**, usate senza `calc`:
+
+    background-size:
+      var(--rule-t, 100%) var(--line),
+      var(--line) var(--rule-r, 100%),
+      ...
+
+Le custom property non registrate hanno il percorso di invalidazione di sempre,
+quello che regge `::after { content: var(--x) }` da dieci anni. Niente
+`@property` e niente `calc` nel punto in cui il difetto si manifestava.
+
+**Il guadagno che vale a prescindere dalla diagnosi** e' il fallback `100%`.
+Prima l'unico stato scritto era lo zero iniziale, e qualunque inciampo dopo di
+quello lasciava i blocchi senza bordo, per sempre, su qualunque browser. Ora un
+blocco senza dichiarazione ha il filo **intero**.
+
+### D99. Ogni fase del movimento ha una rete
+
+Stesso ragionamento, generalizzato. `revealRules` e `revealMedia` cominciano
+**togliendo** qualcosa — i fili a zero, le immagini ritagliate a niente — e lo
+rimettono animandolo. Se una di loro inciampa a meta', quel che ha tolto resta
+tolto: una pagina senza bordi, o con i riquadri delle immagini vuoti.
+
+Ora ognuna gira dentro a un `safely(nome, esegui, ripristina)`: un errore costa
+l'animazione, non il contenuto, e finisce in console invece di somigliare a un
+difetto di disegno.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
@@ -1534,3 +1631,4 @@ per Seezy a 1440.
 | B20 | **Il sottodominio `workers.dev` e' quello generato da Cloudflare** | `emanuelegiovanili.emanuele-giovanili-ap.workers.dev` ripete il nome. Si cambia dal pannello (Workers & Pages, scheda Domains) o si mette un dominio proprio |
 | B21 | **`emanuelegiovanili.it` non e' registrato** | Il form apre un `mailto:` verso `hello@emanuelegiovanili.it` (D90). Finche' il dominio non c'e', quelle mail non arrivano da nessuna parte |
 | B22 | **Il megamenu lascia piu' nero vuoto in fondo** | Conseguenza dei social alti una cella (D89): il pannello e' ancorato in alto e si e' accorciato di una riga. A base finisce a meta' schermo. Se non piace, si redistribuisce, ma quella e' una decisione di disegno |
+| B23 | **Safari non e' verificabile da qui** | Il motore WebKit non e' scaricabile (CDN di Playwright fuori dalla policy di uscita), quindi ogni sonda di questo progetto parla di Chromium. D98 e' una correzione dedotta, non misurata: va confermata sul dispositivo del committente |

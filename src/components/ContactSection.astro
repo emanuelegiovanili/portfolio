@@ -17,9 +17,19 @@ import type { BlockPlacements } from '../lib/layout';
 
 interface Props {
   at: { form: BlockPlacements; cta?: BlockPlacements; send: BlockPlacements };
+  /**
+   * `flow` marca i blocchi che si spostano quando il filtro di /works cambia.
+   *
+   * Su quella pagina, nascondere una card fa salire di quattro righe tutto cio'
+   * che sta sotto. Lo scostamento e' lo stesso per tutti, e il CSS della pagina
+   * lo applica a `[data-flow]`: qui serve solo dire chi ne fa parte. Altrove
+   * l'attributo non c'e' e non cambia niente.
+   */
+  flow?: boolean;
 }
 
-const { at } = Astro.props;
+const { at, flow = false } = Astro.props;
+const flowAttr = flow ? '' : undefined;
 
 const FIELDS = [
   { id: 'name', label: 'Your name', placeholder: 'How can I call you?', required: true, type: 'text', autocomplete: 'name', width: 'half' },
@@ -33,6 +43,7 @@ const CONSENT = 'I agree with the processing my personal data';
 <Block
   at={at.form}
   class="contact-form-block"
+  data-flow={flowAttr}
   clip
   data-known-overflow="321:2861 — a md il form e' alto 633 nel file contro i 616 di otto righe, e il contenuto ne chiede 606 piu' padding"
 >
@@ -116,6 +127,7 @@ const CONSENT = 'I agree with the processing my personal data';
     <Block
       at={at.cta}
       class="cta-section"
+      data-flow={flowAttr}
       clip
       data-known-overflow="314:2402 — a base lead e titolo chiedono 156px dentro 155 di spazio utile"
     >
@@ -135,6 +147,7 @@ const CONSENT = 'I agree with the processing my personal data';
   disabled
   class="send-button"
   data-mailto={CONTACT_EMAIL}
+  data-flow={flowAttr}
 />
 
 <script>

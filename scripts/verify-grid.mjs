@@ -48,6 +48,16 @@ const SMALLEST_DESIGNED_WIDTH = 390;
 const SCROLLS = ['top', 'middle', 'bottom'];
 /** Il megamenu e' lo stesso su ogni pagina: si apre e si misura su una sola. */
 const MENU_ROUTE = '/';
+
+/**
+ * Gli stati del filtro di /works, misurati come se fossero pagine a se'.
+ *
+ * Filtrare sposta i blocchi e accorcia la griglia: e' un layout diverso, e un
+ * layout diverso va misurato. Senza, l'invariante sarebbe verificato su uno
+ * stato su quattro.
+ */
+const FILTER_ROUTE = '/works';
+const FILTER_STATES = ['branding', 'product', 'web-design'];
 const DEFAULT_PATHS = ['/grid', '/grid/components', '/', '/about', '/works', '/works/seezy', '/contact'];
 const SHOT_DIR = '.verify';
 
@@ -152,6 +162,34 @@ try {
      * pixel dipinti. E' identico su tutte le route, e si misura su una sola:
      * dodici misure in piu', non ottantaquattro.
      */
+    if (route === FILTER_ROUTE) {
+      await page.evaluate(() => window.scrollTo(0, 0));
+      for (const slug of FILTER_STATES) {
+        const selector = `.work-filter[data-filter="${slug}"]`;
+        if ((await page.locator(selector).count()) === 0) continue;
+        await page.evaluate((sel) => document.querySelector(sel).click(), selector);
+        await page.waitForTimeout(400);
+
+        const result = await page.evaluate(() => window.__probeGrid?.() ?? null);
+        if (!result) throw new Error(`griglia non trovata su ${route} con filtro ${slug}`);
+
+        const ok = result.maxDrift <= result.tolerance && result.misplaced.length === 0;
+        if (!ok) failures += 1;
+        rows.push({
+          route: `works:${slug}`,
+          width,
+          where: 'top',
+          ...result,
+          ok,
+          belowDesign: width < 1200,
+          errors: errors.length,
+        });
+      }
+      // Si torna allo stato che la pagina dichiara nel markup.
+      await page.evaluate(() => document.querySelector('.work-filter[data-filter="all"]').click());
+      await page.waitForTimeout(300);
+    }
+
     if (route === MENU_ROUTE) {
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.click('#menu-toggle');

@@ -431,15 +431,18 @@
 .square-button,
 .primary-button,
 .menu-voice,
-.menu-social {
+.menu-social,
+.work-filter {
   --hover: 100%;
   --hover-bg: var(--purple);
   --hover-fg: var(--off-white);
 }
 
-/* Chi e' gia' viola va dall'altra parte. */
+/* Chi e' gia' viola va dall'altra parte. Il filtro attivo e' viola per stato,
+   non per superficie: il selettore e' il suo. */
 .square-button[data-surface='accent'],
-.primary-button[data-surface='accent'] {
+.primary-button[data-surface='accent'],
+.work-filter[aria-pressed='true'] {
   --hover-bg: var(--off-white);
   --hover-fg: var(--black);
 }
@@ -539,9 +542,9 @@
  * riempito finche' non se ne tocca un altro.
  */
 @media (hover: hover) {
-  :is(.square-button, .primary-button, .menu-voice, .menu-social):hover:not(:disabled):not(
-      [aria-disabled='true']
-    ) {
+  :is(.square-button, .primary-button, .menu-voice, .menu-social, .work-filter):hover:not(
+      :disabled
+    ):not([aria-disabled='true']) {
     --hover: 0%;
   }
 

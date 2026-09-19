@@ -22,18 +22,28 @@ interface Props {
   at: LayoutMap;
   /** Il path corrente, per l'indicatore di voce attiva. */
   current: string;
+  /**
+   * `flow` marca i blocchi che si spostano quando il filtro di /works cambia.
+   *
+   * Su quella pagina, nascondere una card fa salire di quattro righe tutto cio'
+   * che sta sotto. Lo scostamento e' lo stesso per tutti, e il CSS della pagina
+   * lo applica a `[data-flow]`: qui serve solo dire chi ne fa parte. Altrove
+   * l'attributo non c'e' e non cambia niente.
+   */
+  flow?: boolean;
 }
 
-const { at, current } = Astro.props;
+const { at, current, flow = false } = Astro.props;
+const flowAttr = flow ? '' : undefined;
 
 const WORK_TOGETHER = "Let’s work together";
 ---
 
-<Block at={at.footerBrand!} class="footer-brand" clip>
+<Block at={at.footerBrand!} class="footer-brand" data-flow={flowAttr} clip>
   <span class="t-display footer-brand__text">{SITE_NAME}</span>
 </Block>
 
-{at.footerWorkTogether && <PrimaryButton at={at.footerWorkTogether} label={WORK_TOGETHER} href="/contact" />}
+{at.footerWorkTogether && <PrimaryButton at={at.footerWorkTogether} label={WORK_TOGETHER} href="/contact" data-flow={flowAttr} />}
 
 {
   FOOTER_LINKS.map((link) => {
@@ -50,6 +60,7 @@ const WORK_TOGETHER = "Let’s work together";
         target={link.external ? '_blank' : undefined}
         rel={link.external ? 'noopener noreferrer' : undefined}
         aria-disabled={link.external && isPlaceholder(link.href) ? 'true' : undefined}
+        data-flow={flowAttr}
         clip
       >
         {link.external && <Icon name="arrow-up-right" class="footer-link__arrow" />}
@@ -60,4 +71,4 @@ const WORK_TOGETHER = "Let’s work together";
   })
 }
 
-{at.footerCta && <PrimaryButton at={at.footerCta} label={WORK_TOGETHER} href="/contact" />}
+{at.footerCta && <PrimaryButton at={at.footerCta} label={WORK_TOGETHER} href="/contact" data-flow={flowAttr} />}

@@ -36,7 +36,7 @@
 }
 
 /*
- * Quanto e' disegnato ciascuno dei quattro lati del blocco, da 0 a 1.
+ * Quanto e' disegnato ciascuno dei quattro lati del blocco.
  *
  * Quattro e non due perche' il filo **gira**: parte dall'angolo in alto a
  * sinistra, corre lungo l'alto, scende a destra, torna indietro lungo il basso
@@ -44,39 +44,34 @@
  * i quattro lati crescevano insieme da due origini, e non era un tratto: era
  * una cornice che si gonfiava.
  *
- * Registrate come numeri perche' GSAP possa interpolarle: una custom property
- * non registrata e' una stringa, e una stringa non si anima. Il valore iniziale
- * e' 1, cioe' filo intero: senza JavaScript la pagina resta quella di sempre,
- * ed e' l'animazione ad accorciarli prima di ridisegnarli.
+ * ---------------------------------------------------------------------------
+ * PERCENTUALI NON REGISTRATE, E NON NUMERI REGISTRATI CON @property
  *
- * `inherits: true` non e' un dettaglio: i fili li disegna uno pseudo-elemento,
- * che e' un elemento a se'. Con l'ereditarieta' spenta GSAP animava il valore
- * sul blocco e lo pseudo continuava a leggere il proprio iniziale, cioe' 1:
- * i fili restavano interi e l'animazione non si vedeva.
+ * Erano `<number>` registrati, e la dimensione del gradiente era
+ * `calc(100% * var(--rule-t))`. In Chromium funziona. Su Safari il committente
+ * non vedeva **nessun bordo su nessun blocco**.
+ *
+ * Non ho potuto riprodurlo — qui c'e' solo Chromium e il motore di Safari non
+ * e' scaricabile da questa rete — quindi quella che segue e' una deduzione, non
+ * una misura. Il layout da lui e' giusto, quindi `@property` c'e' (senza, la
+ * registrazione di `--cell` fallirebbe e la griglia collasserebbe). Quello che
+ * cambia fra il suo caso e il mio e' l'**aggiornamento**: i quattro valori si
+ * riscrivono a ogni fotogramma sul blocco, e a usarli e' uno pseudo-elemento.
+ * WebKit ha una storia nota di pseudo-elementi che non si ridisegnano quando
+ * cambia una custom property **registrata** ereditata. Il primo valore scritto
+ * e' zero (`clearRules`), e zero e' esattamente quello che lui vede.
+ *
+ * Qui le quattro variabili diventano percentuali **non registrate**, usate
+ * senza `calc`. Le custom property non registrate hanno il percorso di
+ * invalidazione di sempre, quello che regge `::after { content: var(--x) }` da
+ * dieci anni.
+ *
+ * E c'e' un guadagno che vale a prescindere: il `var(..., 100%)` di fallback.
+ * Se il JavaScript non parte, fallisce a meta' o non arriva mai, i fili sono
+ * **interi**. Prima l'unico stato scritto era lo zero iniziale, e qualunque
+ * inciampo dopo di quello lasciava i blocchi senza bordo.
+ * ---------------------------------------------------------------------------
  */
-@property --rule-t {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-}
-
-@property --rule-r {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-}
-
-@property --rule-b {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-}
-
-@property --rule-l {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-}
 
 .grid-wrap {
   container-type: inline-size;
@@ -326,8 +321,8 @@
  * darebbe due pixel di spazio interno in piu' a ogni blocco del sito.
  * ---------------------------------------------------------------------------
  *
- * Il valore iniziale delle quattro variabili e' 1: senza JavaScript i fili sono
- * interi.
+ * Le quattro variabili hanno `100%` come fallback: senza JavaScript, e a
+ * JavaScript rotto, i fili sono interi.
  */
 .block[data-surface='line'] {
   position: relative;
@@ -364,11 +359,12 @@
     right top,
     right bottom,
     left bottom;
+  /* Il fallback e' il filo intero: senza JavaScript il bordo c'e'. */
   background-size:
-    calc(100% * var(--rule-t)) var(--line),
-    var(--line) calc(100% * var(--rule-r)),
-    calc(100% * var(--rule-b)) var(--line),
-    var(--line) calc(100% * var(--rule-l));
+    var(--rule-t, 100%) var(--line),
+    var(--line) var(--rule-r, 100%),
+    var(--rule-b, 100%) var(--line),
+    var(--line) var(--rule-l, 100%);
 }
 
 /* Un blocco viola copre la linea e non la rimpiazza (NOTES.md D2), quindi deve

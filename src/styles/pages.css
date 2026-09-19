@@ -193,6 +193,41 @@
   color: var(--accent-fg);
 }
 
+/*
+ * L'hover di un filtro non attivo e' **nero**, non viola.
+ *
+ * Su tutto il resto del sito il riempimento di hover e' viola, e li' vuol dire
+ * "questo si preme". Qui il viola e' gia' occupato: vuol dire "questo e'
+ * selezionato". Con l'hover viola, passando sopra a un filtro spento se ne
+ * vedevano due viola e non si capiva piu' quale fosse quello attivo.
+ *
+ * Il nero e' lo stesso che prende la hamburger a menu aperto, quindi non e' un
+ * colore nuovo: e' l'altro modo che questo sito ha di dire "stai premendo qui".
+ */
+.work-filter:not([aria-pressed='true']) {
+  --hover-bg: var(--black);
+  --hover-fg: var(--off-white);
+}
+
+/* Lo strato dell'hover ripete la colonna dell'originale: etichetta sopra,
+   conteggio sotto, con lo stesso spaziatore in alto. */
+.work-filter > .hover-fill {
+  flex-direction: column;
+  justify-content: space-between;
+  padding-block: var(--pad);
+}
+
+.work-filter > .hover-fill::before {
+  content: '';
+  display: block;
+  width: calc(var(--u) * 8);
+  height: calc(var(--u) * 18);
+}
+
+.work-filter > .hover-fill .work-filter__count {
+  color: inherit;
+}
+
 /* ---------- /works/[slug] ---------- */
 
 .work-tag {

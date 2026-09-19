@@ -62,9 +62,62 @@ export function worksFilterAt(index: number): LayoutMap[string] {
   return { lg: [3 + index * 2, 4, 2, 1] };
 }
 
+/** Quante righe occupa una card, contando lo stacco dalla successiva. */
+export const WORKS_CARD_STRIDE = 4;
+
+/** La riga della card che occupa il posto `index`. */
+export function worksCardRow(index: number): number {
+  return 5 + index * WORKS_CARD_STRIDE;
+}
+
 /** Le card progetto: 8x4 da col 3, una ogni quattro righe a partire dalla 5. */
 export function worksCardAt(index: number): LayoutMap[string] {
-  return { lg: [3, 5 + index * 4, 8, 4] };
+  return { lg: [3, worksCardRow(index), 8, 4] };
+}
+
+/**
+ * Gli stati del filtro di /works.
+ *
+ * Filtrare **sposta i blocchi sulla griglia**: con meno card, tutto quello che
+ * sta sotto sale di quattro righe per card tolta, e la pagina si accorcia di
+ * altrettanto. Non e' un `display: none` su qualche elemento, e' un layout
+ * diverso.
+ *
+ * Le righe di ogni stato si calcolano **qui, al build**. In pagina diventano
+ * una custom property per stato, e il JavaScript sceglie quale stato e' attivo:
+ * non calcola posizioni, non sa quanto e' alta una card, non puo' inventarsi un
+ * numero che non cade su una linea. E' la stessa regola di sempre — la
+ * posizione viene dalla mappa — applicata a quattro mappe invece che a una.
+ */
+export interface WorksFilterState {
+  /** Identificatore usato nell'attributo e nei nomi delle custom property. */
+  slug: string;
+  label: string;
+  /** `null` per "All". */
+  tag: string | null;
+  /** Gli id dei progetti visibili, nell'ordine in cui compaiono. */
+  ids: string[];
+  /** Di quante righe sale tutto cio' che sta sotto le card. */
+  shift: number;
+  /** L'ultima riga occupata dalla pagina in questo stato. */
+  rows: number;
+}
+
+export function worksFilterStates(
+  works: { id: string; tags: readonly string[] }[],
+  tags: readonly string[],
+  rowsFull: number,
+): WorksFilterState[] {
+  const build = (slug: string, label: string, tag: string | null): WorksFilterState => {
+    const ids = works.filter((w) => tag === null || w.tags.includes(tag)).map((w) => w.id);
+    const shift = WORKS_CARD_STRIDE * (works.length - ids.length);
+    return { slug, label, tag, ids, shift, rows: rowsFull - shift };
+  };
+
+  return [
+    build('all', 'All', null),
+    ...tags.map((tag) => build(tag.toLowerCase().replace(/\s+/g, '-'), tag, tag)),
+  ];
 }
 
 export const worksFooter = footerMap(WORKS_FOOTER_ROWS);

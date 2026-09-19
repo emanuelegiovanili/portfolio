@@ -20,7 +20,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { DURATION, EASE, SMOOTH } from '../motion/tokens';
-import { clearRules, traceRules } from '../motion/trace';
+import { clearRules, restoreRules, traceRules } from '../motion/trace';
 import { startMarquee } from '../motion/marquee';
 import { startCarousel } from '../motion/carousel';
 import { startTestimonials } from '../motion/testimonials';
@@ -81,9 +81,27 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
     normalizeScroll: false,
   });
 
-  revealRules();
-  revealMedia();
-  revealCards();
+  /*
+   * Ogni fase ha la sua rete.
+   *
+   * Queste funzioni cominciano **togliendo** qualcosa — i fili vanno a zero, le
+   * immagini si ritagliano a niente — e lo rimettono animandolo. Se una di loro
+   * inciampa a meta', quel che ha tolto resta tolto: una pagina senza bordi, o
+   * con i riquadri delle immagini vuoti. E' successo, su un motore che qui non
+   * posso provare.
+   *
+   * Con la rete, un errore costa l'animazione e non il contenuto. E si vede in
+   * console, invece di somigliare a un difetto di disegno.
+   */
+  safely('fili dei blocchi', revealRules, () =>
+    restoreRules(gsap.utils.toArray<HTMLElement>('.block[data-surface="line"]')),
+  );
+  safely('immagini', revealMedia, () =>
+    gsap.set(gsap.utils.toArray<HTMLElement>('[data-reveal]'), { clipPath: 'none' }),
+  );
+  safely('titoli delle card', revealCards, () =>
+    gsap.set(gsap.utils.toArray<HTMLElement>('.works-card__tags > *'), { yPercent: 0 }),
+  );
   const marquee = startMarquee();
 
   return () => {
@@ -91,6 +109,25 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
     smoother.kill();
   };
 });
+
+/**
+ * Esegue una fase del movimento, e se fallisce rimette le cose a posto.
+ *
+ * `restore` non deve ricostruire niente: deve riportare gli elementi allo stato
+ * che avrebbero senza questo modulo, cioe' quello che il CSS gia' descrive.
+ */
+function safely(nome: string, run: () => void, restore: () => void): void {
+  try {
+    run();
+  } catch (error) {
+    try {
+      restore();
+    } catch {
+      // Se fallisce anche il ripristino non c'e' altro da tentare.
+    }
+    console.error(`movimento: "${nome}" non e' partito, quella parte resta ferma`, error);
+  }
+}
 
 /**
  * Le linee si disegnano quando le raggiungi.
