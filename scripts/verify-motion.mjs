@@ -140,6 +140,22 @@ try {
       `la piu' corta e' al ${(after.minVertical * 100).toFixed(1)}%`,
     );
     check('nessun errore in console', errors.length === 0, errors[0] ?? '');
+
+    /*
+     * Cio' che e' `hidden` non deve occupare spazio.
+     *
+     * Sembra ovvio e non lo e': `[hidden]` dell'UA ha la specificita' di una
+     * classe, e una regola d'autore con `display` lo scavalca in silenzio. Le
+     * slide del carosello erano tutte visibili, sovrapposte, e si vedeva
+     * l'ultima del markup.
+     */
+    const nascosti = await page.evaluate(() =>
+      [...document.querySelectorAll('[hidden]')]
+        .filter((el) => getComputedStyle(el).display !== 'none')
+        .map((el) => el.className || el.tagName.toLowerCase()),
+    );
+    check('gli elementi nascosti non si vedono', nascosti.length === 0, nascosti.slice(0, 3).join(', '));
+
     await context.close();
   }
 } finally {

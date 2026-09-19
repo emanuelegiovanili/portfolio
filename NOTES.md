@@ -1120,6 +1120,33 @@ Le durate sono una scelta — l'effetto non e' nel Figma — abbastanza lente da
 sfalsate da sentirsi come una sequenza e non come un blocco solo che si alza.
 
 
+### D74. `hidden` perdeva contro `display: block`
+Il committente ha descritto quello che vedeva nel video: il primo progetto senza titolo ne'
+categorie, poi un "avanti" che mostrava per un attimo il progetto giusto e tornava su quello
+sbagliato. Non erano due difetti dell'animazione: era **una sola slide che ne copriva tre**.
+
+Nel foglio di stile dell'UA `[hidden]` vale `display: none`, ma ha la specificita' di una classe.
+`.works-card__slide { display: block }` lo scavalcava. Misurato: tutte e tre le slide con
+`display: block`, due delle quali marcate `hidden`.
+
+Le slide sono `position: absolute; inset: 0`, quindi si sovrapponevano tutte nello stesso posto e a
+schermo vinceva **l'ultima del markup**, che e' l'ultimo progetto per ordine. I suoi riquadri erano
+a `yPercent: 100` perche' per il JavaScript quella slide era nascosta e la sua timeline non era mai
+partita: da qui "senza titolo e campi". E ogni comando del carosello muoveva slide che nessuno
+poteva vedere.
+
+La regola sta ora nel reset, con `!important`, ed e' il punto: **`hidden` e' un'affermazione di
+stato, non di presentazione**, e non deve poter essere contraddetta da una regola di impaginazione.
+E' il rimedio che i reset moderni adottano da anni.
+
+`verify:motion` ora controlla che nessun elemento con `hidden` abbia un `display` diverso da `none`.
+Sembra un controllo ovvio: non lo e', ed e' l'unico modo perche' una regola d'autore che scavalca
+uno stato non passi di nuovo in silenzio.
+
+Verificato dopo: Seezy -> TAMA caffe' -> Noranutrizione -> TAMA caffe', una sola slide visibile per
+volta tranne durante lo scorrimento, e i riquadri che salgono da 120 a zero a scorrimento finito.
+
+
 ---
 
 ## 5. Blocchi aperti

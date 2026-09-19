@@ -131,6 +131,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * `hidden` vince su qualunque `display` d'autore.
+ *
+ * Nel foglio di stile dell'UA `[hidden]` vale `display: none`, ma ha la stessa
+ * specificita' di una classe: `.works-card__slide { display: block }` lo
+ * scavalcava, e le tre slide del carosello erano **tutte visibili**,
+ * sovrapposte. A schermo si vedeva l'ultima del markup, con i riquadri mai
+ * animati perche' per il JavaScript era nascosta.
+ *
+ * L'`!important` qui e' il punto: `hidden` e' un'affermazione di stato, non di
+ * presentazione, e non deve poter essere contraddetta da una regola di
+ * impaginazione. E' il rimedio che i reset moderni adottano da anni.
+ */
+[hidden] {
+  display: none !important;
+}
+
 img,
 svg,
 picture,
