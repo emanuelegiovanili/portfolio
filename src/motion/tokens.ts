@@ -51,3 +51,43 @@ export const MENU = {
   /** Sotto reduced motion resta la sola dissolvenza. */
   reducedFade: 0.2,
 } as const;
+
+/**
+ * Il marquee.
+ *
+ * La velocita' e' in pixel al secondo e non in secondi per giro: la durata la
+ * detta la larghezza, cosi' su uno schermo largo il testo non scorre piu' in
+ * fretta. Il file non da' ne' l'una ne' l'altra — dice solo "autoscroll" nel
+ * nome del layer — quindi 70px/s e' una scelta, tarata perche' una parola da
+ * 32px resti leggibile mentre passa.
+ */
+export const MARQUEE = {
+  speed: 70,
+  /** Il passo di riposo, da 250:196: 48 pixel di disegno. */
+  minGap: 48,
+} as const;
+
+/**
+ * Il carosello.
+ *
+ * La slide che esce e quella che entra si muovono insieme: la durata e' quella
+ * di un gesto, non di un'entrata, ed e' la stessa della tendina del megamenu
+ * diviso due.
+ */
+export const CAROUSEL = {
+  slide: 0.55,
+  ease: 'power3.inOut',
+} as const;
+
+/**
+ * I testimonial.
+ *
+ * `dwell` e' quanto resta su una scheda prima di passare alla successiva, ed e'
+ * anche la durata della barra sotto la scheda attiva: sono la stessa cosa vista
+ * da due parti. Il Figma non lo dice — mostra la barra a tre quarti, cioe' un
+ * fermo-immagine — e finche' c'e' una citazione sola non parte comunque.
+ */
+export const TESTIMONIAL = {
+  dwell: 7,
+  fade: 0.22,
+} as const;

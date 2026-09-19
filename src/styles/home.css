@@ -161,6 +161,21 @@
   list-style: none;
 }
 
+/*
+ * In movimento il passo lo detta il JavaScript.
+ *
+ * Da fermo — senza JavaScript, o sotto reduced motion — restano la
+ * distribuzione e il passo del Figma, che sono una composizione che sta in
+ * piedi da sola. `--marquee-gap` e' misurato in modo che un giro riempia
+ * esattamente il contenitore: la differenza con `space-between` e' un passo su
+ * cinque, e in cambio la sequenza si ripete senza salti.
+ */
+.marquee__track[data-running] {
+  gap: var(--marquee-gap);
+  justify-content: flex-start;
+  will-change: transform;
+}
+
 .marquee__item {
   flex-shrink: 0;
   text-box: trim-both cap alphabetic;
@@ -175,6 +190,11 @@
   .marquee__track {
     gap: 0;
     justify-content: space-between;
+  }
+
+  .marquee__track[data-running] {
+    gap: var(--marquee-gap);
+    justify-content: flex-start;
   }
 }
 
@@ -300,6 +320,13 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Il ritaglio delle slide, senza il margine che il blocco concede al filo. */
+.works-card__viewport {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
 }
 
 /* Le slide del carosello: ognuna riempie la card. */

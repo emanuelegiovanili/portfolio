@@ -7,6 +7,7 @@
  * 2. Il disegno delle linee: i bordi si completano quando il blocco entra in
  *    vista.
  * 3. Le immagini, che si scoprono dall'alto verso il basso.
+ * 4. Il marquee, che e' l'unico movimento che non dipende dallo scroll.
  *
  * Tutto passa da `gsap.matchMedia()`. Sotto `prefers-reduced-motion: reduce`
  * non viene creato niente: lo scroll resta nativo e le linee restano intere.
@@ -19,12 +20,25 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { DURATION, EASE, SMOOTH } from '../motion/tokens';
 import { clearRules, traceRules } from '../motion/trace';
+import { startMarquee } from '../motion/marquee';
+import { startCarousel } from '../motion/carousel';
+import { startTestimonials } from '../motion/testimonials';
 
 /** Dove comincia e dove finisce l'ingresso, in frazioni di schermata. */
 const ENTER_FROM = 0.9;
 const ENTER_TO = 0.4;
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+/*
+ * Carosello e testimonial stanno qui fuori, non dentro `matchMedia`.
+ *
+ * Cambiare slide o scheda e' un comando, non un'animazione: sotto reduced
+ * motion i comandi devono continuare a funzionare, e li' il cambio e'
+ * istantaneo e l'avanzamento automatico non parte.
+ */
+startCarousel();
+startTestimonials();
 
 const mm = gsap.matchMedia();
 
@@ -43,8 +57,10 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
 
   revealRules();
   revealMedia();
+  const marquee = startMarquee();
 
   return () => {
+    marquee?.stop();
     smoother.kill();
   };
 });

@@ -986,6 +986,86 @@ come fa gia' il footer, e il rientro di una colonna che e' la regola del punto 1
 Misurato: 13 righe a base (507px), 10 a md (767px), 7 a lg (840px, cioe' il frame esatto). Nessuno
 sforo a nessuna delle tredici larghezze.
 
+### D67. Il bottone di chiusura ha il filo
+Era `bare`, cioe' senza superficie: nel pannello nero risultava un quadrato senza contorno, e
+usciva dalla griglia. Ora e' un blocco bordato come gli altri — fondo nero al 50% sul nero del
+pannello, cioe' nero, e filo off-white come tutto il resto del megamenu.
+
+Resta fuori **anche dal giro del filo**, oltre che dalla dissolvenza: quel quadrato non si
+costruisce sotto gli occhi di chi guarda, e' gia' fatto quando la tendina lo scopre (D57).
+
+`verify:edges` ora apre il megamenu e misura i fili di due suoi blocchi, con l'off-white come
+colore atteso invece del grigio dei componenti.
+
+---
+
+## 12. Fase 5 — marquee, carosello, testimonial
+
+### D68. Il marquee scorre, e il passo lo decide la misura
+Il file chiama quel layer "Marquee autoscroll" ma non dice ne' a che velocita' ne' con che
+spaziatura: a 1440 mette le cinque parole distribuite sull'intera larghezza, che e' una
+composizione **ferma**.
+
+Il punto e' tutto nel passo. Si misura quanto spazio avanza fra le parole quando un solo giro
+riempie esattamente il contenitore, e quello diventa il gap:
+
+```
+passo = (larghezza utile − somma delle parole) / numero di parole
+```
+
+Si divide per `n` e non per `n − 1` come farebbe `space-between`: un passo in piu' serve fra
+l'ultima parola di un giro e la prima del giro dopo, altrimenti la sequenza si incolla a se'
+stessa. In cambio il ciclo e' largo quanto il contenitore, e la ripetizione non ha salti. E' uno
+scarto di un passo su cinque rispetto alla distribuzione ferma.
+
+Da fermo — senza JavaScript, o sotto reduced motion — restano la distribuzione e il passo del
+Figma. Misurato a 1440: passo 143,2px, tre copie della lista, 70px al secondo.
+
+**La velocita' e' in pixel al secondo e non in secondi per giro**, cosi' su uno schermo largo il
+testo non scorre piu' in fretta. 70px/s e' una scelta, tarata perche' una parola da 32px resti
+leggibile mentre passa.
+
+Si ferma sotto al puntatore e quando qualcosa dentro prende il fuoco. Non e' nel Figma: e' il
+requisito 2.2.2 delle WCAG, che su un contenuto in movimento automatico piu' lungo di cinque
+secondi chiede un modo per metterlo in pausa.
+
+### D69. Il carosello non gira in tondo
+Il file mostra una paginazione e due frecce. Un contatore che dice a che punto sei ha senso se una
+fine c'e': ai capi la freccia si disabilita, e l'animazione dell'icona non parte, che era gia'
+previsto in `icons.ts` (§12 degli handoff: "quando la freccia e' disabilitata l'hover non deve
+partire").
+
+La slide che esce e quella che entra scorrono insieme, nella direzione del comando. Non e' un blocco
+che si muove: le slide sono contenuto dentro un blocco che resta dov'e'.
+
+**Il ritaglio sta su un contenitore proprio**, non sul blocco. Il blocco bordato concede al proprio
+filo due pixel oltre il padding box (D61), e in quei due pixel si sarebbe vista spuntare la slide in
+uscita.
+
+### D70. Carosello e testimonial stanno fuori dal contesto del movimento
+Tutto il resto vive dentro `gsap.matchMedia('(prefers-reduced-motion: no-preference)')`, e sotto
+reduced motion semplicemente non esiste. Questi due no: **cambiare slide o scheda e' un comando**,
+e un comando deve funzionare sempre. Li' il cambio dura zero e l'avanzamento automatico non parte,
+che e' esattamente quello che quella preferenza chiede.
+
+### D71. I testimonial sono pronti per testi che non ci sono
+Il modulo fa quello che serve — tablist, frecce da tastiera fra le sole schede raggiungibili,
+dissolvenza del pannello, avanzamento automatico con la barra come conto alla rovescia — ma oggi
+**non fa niente di visibile**, perche' le schede selezionabili sono una sola (B13).
+
+Due conseguenze scritte apposta:
+
+- **L'avanzamento automatico parte solo da due schede in su.** Con una sola non c'e' nessun
+  avanzamento da annunciare, e la barra resta piena invece che a zero: una barra a zero sotto la
+  scheda attiva sembra rotta.
+- **Il testo di ogni scheda viaggia sui suoi attributi**, non in un secondo pacchetto di dati
+  spedito a parte. Al server la lista la conosce gia' Astro; al client serve solo poterla
+  rileggere.
+
+Nel Figma la barra e' a 191 su 240, cioe' tre quarti: un fermo-immagine a meta' corsa, che e'
+l'unico indizio del fatto che l'avanzamento automatico esista. La durata, 7 secondi, e' una scelta.
+
+
 ---
 
 ## 5. Blocchi aperti

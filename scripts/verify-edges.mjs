@@ -36,13 +36,20 @@ const HOVER = [
   { route: '/', selector: '.primary-button', nome: 'primario (viola)' },
 ];
 
-/** I blocchi bordati che si guardano, uno per forma e per vicinato. */
+/**
+ * I blocchi bordati che si guardano, uno per forma e per vicinato.
+ *
+ * `apri` apre il megamenu prima di misurare, e `filo` cambia il colore atteso:
+ * dentro al pannello i fili sono off-white, non il grigio dei componenti.
+ */
 const CASES = [
   { route: '/', selector: '.skill-card', nome: 'skill card (isolata)' },
   { route: '/', selector: '.about-section', nome: 'about (larga)' },
   { route: '/', selector: '.logo', nome: 'logo di testa' },
   { route: '/about', selector: '.prose', nome: 'bio (/about)' },
   { route: '/works', selector: '.works-card', nome: 'card progetto (/works)' },
+  { route: '/', selector: '.menu-close', nome: 'chiudi (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
+  { route: '/', selector: '.menu-voice', nome: 'voce (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
 ];
 
 const RULE = [0x50, 0x4d, 0x5c];
@@ -100,7 +107,7 @@ async function strip(page, clip) {
 try {
   console.log('\nI fili cadono sulla linea?\n');
 
-  for (const { route, selector, nome } of CASES) {
+  for (const { route, selector, nome, apri, filo } of CASES) {
     // Densita' 1: un pixel dell'immagine e' un pixel CSS, e i conti tornano.
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
     const page = await context.newPage();
@@ -119,10 +126,16 @@ try {
       continue;
     }
 
-    // Il blocco va portato in vista e il suo filo deve aver finito il giro:
-    // a meta' tratto non c'e' niente da misurare.
-    await page.evaluate((top) => window.scrollTo(0, Math.max(0, top - 250)), found);
-    await page.waitForTimeout(2600);
+    if (apri) {
+      // Il pannello va aperto, e il suo filo deve aver finito il giro.
+      await page.click('#menu-toggle');
+      await page.waitForTimeout(2600);
+    } else {
+      // Il blocco va portato in vista e il suo filo deve aver finito il giro:
+      // a meta' tratto non c'e' niente da misurare.
+      await page.evaluate((top) => window.scrollTo(0, Math.max(0, top - 250)), found);
+      await page.waitForTimeout(2600);
+    }
 
     const box = await page.evaluate(new Function('return ' + BOX_OF)(), selector);
 
@@ -157,8 +170,9 @@ try {
       ['basso', rows[dy], rows[dy + 1] ?? null],
     ];
 
+    const atteso = filo ?? RULE;
     for (const [lato, dentro, fuori] of lati) {
-      const haFilo = near(dentro, RULE);
+      const haFilo = near(dentro, atteso);
       const lineaScoperta = fuori !== null && near(fuori, GRID);
       const ok = haFilo && !lineaScoperta;
       if (!ok) failures += 1;

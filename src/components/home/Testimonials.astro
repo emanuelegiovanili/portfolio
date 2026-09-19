@@ -11,6 +11,10 @@
  *
  * Solo il primo testimonial ha un testo nel Figma. Gli altri tre hanno il nome
  * e basta: le loro schede ci sono ma non sono selezionabili. Vedi NOTES.md B13.
+ *
+ * Il testo di ogni scheda viaggia sugli attributi della scheda stessa: al
+ * server la lista la conosce gia' Astro, e al client serve solo poterla
+ * rileggere quando si cambia scheda (`src/motion/testimonials.ts`).
  */
 import Block from '../Block.astro';
 import SquareButton from '../SquareButton.astro';
@@ -45,6 +49,9 @@ const shown = items[active];
           disabled={!complete}
           tabindex={i === active ? 0 : -1}
           data-testimonial={i}
+          data-quote={item.quote}
+          data-author={item.author}
+          data-role={item.role}
         >
           {item.client}
           {i === active && <span class="testimonial-tab__progress" aria-hidden="true" />}

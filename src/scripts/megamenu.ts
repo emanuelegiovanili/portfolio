@@ -102,7 +102,9 @@ function wipe(menu: HTMLElement): gsap.core.Timeline {
    * viene coperto, lui no. Per questo e' fuori dalla dissolvenza.
    */
   const fading = blocks.filter((block) => !block.classList.contains('menu-close'));
-  const ruled = blocks.filter((block) => block.dataset.surface === 'line');
+  // Fuori dalla dissolvenza e **anche** dal giro del filo: quel quadrato non si
+  // costruisce sotto gli occhi di chi guarda, e' gia' fatto.
+  const ruled = fading.filter((block) => block.dataset.surface === 'line');
 
   clearRules(ruled);
 
