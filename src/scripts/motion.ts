@@ -26,9 +26,18 @@ import { startCarousel } from '../motion/carousel';
 import { startTestimonials } from '../motion/testimonials';
 import { revealCards } from '../motion/card';
 
-/** Dove comincia e dove finisce l'ingresso, in frazioni di schermata. */
-const ENTER_FROM = 0.9;
-const ENTER_TO = 0.4;
+/**
+ * Dove comincia e dove finisce l'ingresso, in frazioni di schermata.
+ *
+ * `ENTER_TO` e' la posizione del bordo **alto** del blocco quando il filo si
+ * chiude. A 0,4 il giro finiva sopra la meta' dello schermo, cioe' quando il
+ * blocco aveva gia' passato il centro: il committente ha chiesto che a meta'
+ * schermo i bordi siano gia' fatti. A 0,6 il bordo alto e' ancora nella meta'
+ * bassa quando il filo si chiude, quindi il blocco arriva al centro gia'
+ * finito, qualunque sia la sua altezza.
+ */
+const ENTER_FROM = 0.95;
+const ENTER_TO = 0.6;
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
@@ -171,8 +180,8 @@ function isBelowTheFold(el: HTMLElement): boolean {
 /**
  * La finestra di scroll in cui un blocco "arriva nella view".
  *
- * Da quando il bordo alto e' a nove decimi di schermata a quando e' a quattro:
- * mezza schermata di scroll, uguale per tutti i blocchi, alti o bassi.
+ * Da quando il bordo alto e' a `ENTER_FROM` di schermata a quando e' a
+ * `ENTER_TO`: la stessa corsa per tutti i blocchi, alti o bassi.
  *
  * La finestra ovvia sarebbe "da quando il blocco spunta dal fondo a quando e'
  * entrato tutto", ma li' il giro finisce nell'istante esatto in cui il bordo

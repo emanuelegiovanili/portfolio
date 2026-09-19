@@ -158,6 +158,143 @@ try {
 
     await context.close();
   }
+
+  /*
+   * Il carosello, andata e ritorno.
+   *
+   * Il difetto che si sta misurando: tornando indietro si vedevano i campi
+   * della slide **gia' su**, poi l'azzeramento, poi l'animazione. Succedeva
+   * perche' la slide che usciva restava a fine corsa, e chi la rivedeva la
+   * trovava cosi' per il fotogramma prima che GSAP rendesse.
+   *
+   * Non si guarda l'animazione: si guarda lo **stato a riposo** di una slide
+   * nascosta. Se e' giusto quello, non c'e' nessun fotogramma da cui possa
+   * uscire l'errore.
+   */
+  console.log('\nIl carosello: una slide nascosta ha i campi giu\'?');
+  {
+    const { context, page, errors } = await open('no-preference');
+    const meta = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[data-slide]')].map((slide) => ({
+          nascosta: slide.hasAttribute('hidden'),
+          // La percentuale di traslazione dei riquadri: 0 vuol dire su, al loro
+          // posto; 100 vuol dire giu', sotto la maschera.
+          giu: [...(slide.querySelector('.works-card__tags')?.children ?? [])].every((box) => {
+            const m = new DOMMatrixReadOnly(getComputedStyle(box).transform);
+            return m.f >= box.getBoundingClientRect().height - 1;
+          }),
+        })),
+      );
+
+    await page.locator('[data-carousel-next]').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1200);
+
+    await page.click('[data-carousel-next]');
+    await page.waitForTimeout(1600);
+    const dopoAvanti = await meta();
+    check(
+      'dopo "avanti", le slide nascoste hanno i campi giu\'',
+      dopoAvanti.filter((s) => s.nascosta).every((s) => s.giu),
+      dopoAvanti.map((s) => `${s.nascosta ? 'nascosta' : 'attiva'}:${s.giu ? 'giu' : 'su'}`).join(' '),
+    );
+
+    await page.click('[data-carousel-prev]');
+    await page.waitForTimeout(1600);
+    const dopoIndietro = await meta();
+    check(
+      'dopo "indietro", le slide nascoste hanno i campi giu\'',
+      dopoIndietro.filter((s) => s.nascosta).every((s) => s.giu),
+      dopoIndietro.map((s) => `${s.nascosta ? 'nascosta' : 'attiva'}:${s.giu ? 'giu' : 'su'}`).join(' '),
+    );
+    check(
+      'e la slide tornata attiva ha i campi su',
+      dopoIndietro.filter((s) => !s.nascosta).every((s) => !s.giu),
+      '',
+    );
+    check('nessun errore in console', errors.length === 0, errors[0] ?? '');
+    await context.close();
+  }
+
+  /*
+   * I testimonial girano da soli, e la barra dice a che punto sono.
+   *
+   * Dieci secondi a scheda sono troppi da aspettare in una verifica, e non c'e'
+   * bisogno: quello che conta e' che la barra della scheda corrente **cresca**
+   * e che le altre restino a zero. Se cresce, arriva in fondo, e in fondo c'e'
+   * il passaggio alla scheda dopo.
+   */
+  console.log('\nI testimonial: la barra si riempie?');
+  {
+    const { context, page, errors } = await open('no-preference');
+    await page.locator('[data-testimonial]').first().scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+
+    const barre = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[data-testimonial]')].map((tab) => ({
+          attiva: tab.getAttribute('aria-selected') === 'true',
+          // `a` della matrice e' la scala orizzontale, cioe' l'avanzamento.
+          x: new DOMMatrixReadOnly(
+            getComputedStyle(tab.querySelector('.testimonial-tab__progress')).transform,
+          ).a,
+        })),
+      );
+
+    const prima = await barre();
+    await page.waitForTimeout(2500);
+    const dopo = await barre();
+
+    check('ci sono quattro schede, tutte selezionabili', prima.length === 4, `ne vedo ${prima.length}`);
+    check(
+      'la barra della scheda corrente cresce',
+      dopo.find((t) => t.attiva).x > prima.find((t) => t.attiva).x + 0.1,
+      `da ${prima.find((t) => t.attiva).x.toFixed(2)} a ${dopo.find((t) => t.attiva).x.toFixed(2)}`,
+    );
+    check(
+      'le altre restano a zero',
+      dopo.filter((t) => !t.attiva).every((t) => t.x < 0.01),
+      dopo.map((t) => t.x.toFixed(2)).join(' '),
+    );
+
+    /*
+     * E il comando manuale porta alla scheda dopo.
+     *
+     * La freccia va portata in vista **a mano** prima di premerla: sta cinque
+     * celle sotto la riga delle schede, cioe' fuori da una finestra da 900.
+     * Ne' `scrollIntoViewIfNeeded` di Playwright ne' lo scroll automatico del
+     * click ci arrivano, perche' qui lo scroll lo fa ScrollSmoother e la
+     * posizione che il browser crede di avere non e' quella dipinta: il click
+     * partiva, atterrava sul vuoto, e il gestore non si accorgeva di niente.
+     *
+     * Non e' un difetto del sito — con il mouse quella freccia si preme — ma la
+     * distinzione si poteva fare solo guardando: il rettangolo e' fuori dalla
+     * finestra, e un click a vuoto e un gestore rotto danno lo stesso esito.
+     * Da qui il controllo in piu' sulla raggiungibilita': se un giorno fallisse
+     * quello, si sa subito da che parte guardare.
+     */
+    await page.evaluate(() =>
+      document.querySelector('[data-testimonial-next]').scrollIntoView({ block: 'center' }),
+    );
+    // ScrollSmoother insegue la posizione richiesta: si aspetta che arrivi.
+    await page.waitForTimeout(1500);
+    const inVista = await page.evaluate(() => {
+      const r = document.querySelector('[data-testimonial-next]').getBoundingClientRect();
+      return r.top >= 0 && r.bottom <= window.innerHeight;
+    });
+    check('la freccia e\' raggiungibile dal puntatore', inVista, 'resta fuori dalla finestra');
+
+    await page.click('[data-testimonial-next]');
+    await page.waitForTimeout(900);
+    const dopoFreccia = await barre();
+    check(
+      'la freccia porta alla scheda successiva',
+      dopoFreccia.findIndex((t) => t.attiva) === 1,
+      `attiva la ${dopoFreccia.findIndex((t) => t.attiva) + 1}a`,
+    );
+    check('nessun errore in console', errors.length === 0, errors[0] ?? '');
+    await context.close();
+  }
 } finally {
   await browser.close();
   server.stop();

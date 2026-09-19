@@ -4,9 +4,11 @@
  * Il Figma mostra **quattro nomi** nella riga (266:1148) ma **un solo testo**,
  * quello attivo. Gli altri tre non esistono da nessuna parte nel file.
  *
- * Qui i quattro nomi ci sono tutti, perche' sono dati reali letti dal Figma, e
- * la citazione sta dove esiste. La scheda di chi non ce l'ha non e' cliccabile,
- * invece di mostrarne una inventata. Vedi NOTES.md B13.
+ * Le tre schede senza testo hanno una citazione **vuota**, non inventata: il
+ * committente ha chiesto di tenerle nel giro perche' la rotazione e la barra di
+ * avanzamento si possano vedere e mettere a punto subito. Sono segnaposto, e
+ * finche' restano cosi' quelle tre schede mostrano un pannello vuoto per dieci
+ * secondi. B13 resta aperto: il testo vero va scritto qui e basta.
  */
 
 export interface Testimonial {
@@ -25,9 +27,11 @@ export const TESTIMONIALS: Testimonial[] = [
     author: 'Leonardo De Cesare',
     role: 'COO',
   },
-  { client: 'Noranutrizione' },
-  { client: 'TAMA caffè' },
-  { client: 'Aggrego' },
+  // Segnaposto: vedi la nota in testa al file e NOTES.md B13.
+  { client: 'Noranutrizione', quote: '', author: '', role: '' },
+  { client: 'TAMA caffè', quote: '', author: '', role: '' },
+  { client: 'Aggrego', quote: '', author: '', role: '' },
 ];
 
-export const COMPLETE_TESTIMONIALS = TESTIMONIALS.filter((t) => t.quote !== undefined);
+/** Quelli che hanno davvero qualcosa da leggere. */
+export const COMPLETE_TESTIMONIALS = TESTIMONIALS.filter((t) => t.quote);

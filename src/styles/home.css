@@ -57,6 +57,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  /* Niente `gap` qui: lo stacco fra il gruppo e la localita' lo fa gia'
+     `space-between` con lo spazio che avanza, e un `gap` in piu' e' spazio
+     chiesto due volte allo stesso blocco. Misurato: chiedeva venti pixel che
+     non c'erano. */
   justify-content: space-between;
   padding-top: var(--pad);
 }
@@ -64,9 +68,11 @@
 .hero-desc__copy {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--u) * 8);
+  /* Meta' del padding: il titolo e il corpo sono un pezzo solo, e devono
+     stare piu' vicini fra loro di quanto ciascuno stia ai bordi. */
+  gap: var(--pad-sm);
   width: 100%;
-  padding-inline: var(--pad) calc(var(--u) * 32);
+  padding-inline: var(--pad);
 }
 
 .hero-desc__lead {
@@ -89,19 +95,45 @@
 .hero-desc__location {
   width: 100%;
   margin: 0;
-  padding-inline: var(--pad) calc(var(--u) * 16);
+  padding-inline: var(--pad);
 }
 
-/* I due bottoni dell'ultima riga sono blocchi a se': qui si riserva solo lo
-   spazio che occupano, cosi' la descrizione e la localita' non ci finiscono
-   sotto. Due celle a base, una da md in su. */
+/*
+ * I due bottoni dell'ultima riga sono blocchi a se': qui si riserva lo spazio
+ * che occupano, cosi' la descrizione e la localita' non ci finiscono sotto. Due
+ * celle a base, una da md in su.
+ *
+ * Al riservato si aggiunge un `--pad`, lo stesso di sopra e dei lati: senza, la
+ * localita' si appoggiava direttamente sulla riga dei bottoni, e il committente
+ * l'ha vista attaccata al bordo basso perche' era attaccata davvero.
+ *
+ * ---------------------------------------------------------------------------
+ * QUELLO CHE LA MISURA HA DETTO
+ *
+ * Questo blocco **era gia' pieno al pixel**. A 1440 il contenuto chiedeva 220px
+ * dentro 220px di spazio utile: zero avanzo. Non c'era nessun margine da cui
+ * prendere il respiro, e infatti il primo tentativo sforava di 17-30px a cinque
+ * larghezze su dieci. I venti pixel di sotto sono quindi **presi**, non
+ * aggiunti: dieci dallo stacco fra titolo e corpo, dieci dal `gap` di troppo.
+ *
+ * A md si riserva meta': li' il blocco e' piu' stretto in proporzione al testo
+ * e venti pixel non ci sono. E' la stessa strettoia che il Figma ha da solo sul
+ * form a quel tier (NOTES.md B12).
+ * ---------------------------------------------------------------------------
+ */
 .hero-desc {
-  padding-bottom: calc(var(--cell) * 2);
+  padding-bottom: calc(var(--cell) * 2 + var(--pad));
 }
 
-@media (min-width: 720px) {
+@media (720px <= width < 1200px) {
   .hero-desc {
-    padding-bottom: var(--cell);
+    padding-bottom: calc(var(--cell) + var(--pad-sm));
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero-desc {
+    padding-bottom: calc(var(--cell) + var(--pad));
   }
 }
 
@@ -487,36 +519,64 @@
 /*
  * 314:2683 · 321:2946 · 266:1148
  *
- * A base la riga e' larga 468px su una viewport da 390: diventa a scorrimento
- * orizzontale con scatto, come deciso in home-handoff §4-bis. Da md in su ci
- * sta e lo scorrimento non serve.
+ * A base le quattro schede stanno su **due righe da due**, non su una riga sola
+ * a scorrimento orizzontale come prevedeva home-handoff §4-bis.
+ *
+ * Il motivo e' il bordo. Il committente ha chiesto un filo attorno a ogni nome,
+ * e un filo deve cadere su una linea di griglia: dentro un contenitore che
+ * scorre, il filo di una scheda si stacca dalla propria linea non appena si
+ * trascina. Le due cose non possono stare insieme. Il blocco della riga e' alto
+ * due celle a base, quindi quattro schede da quattro colonne ci stanno esatte:
+ * 4x4 su 8 colonne, due righe piene, ogni lato su una linea. Da md in su le
+ * schede sono da due colonne e la riga e' una sola, come nel file.
+ */
+/*
+ * Tracce fisse da `--cell`, non `flex` ne' `1fr`.
+ *
+ * Con quattro schede a `flex-basis: cell * 2` dentro un contenitore da otto
+ * celle la somma e' esatta **in aritmetica**, e in layout no: a 719px di
+ * viewport la cella vale 71,9 e i quattro pezzi arrotondavano un capello oltre
+ * il contenitore, quindi l'ultima scheda andava a capo e la riga diventava alta
+ * il doppio. Misurato a 719, 1024 e 1199; a 720 e 768 no, che e' il modo in cui
+ * un errore di sotto-pixel si fa riconoscere.
+ *
+ * Le tracce fisse usano lo stesso numero della griglia di pagina, quindi i lati
+ * delle schede cadono sugli stessi valori delle linee invece che su una
+ * divisione che gli assomiglia.
  */
 .testimonial-row {
-  display: flex;
-  align-items: stretch;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-
-.testimonial-row::-webkit-scrollbar {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(2, calc(var(--cell) * 4));
+  grid-template-rows: repeat(2, var(--cell));
 }
 
 @media (min-width: 720px) {
   .testimonial-row {
-    overflow-x: visible;
+    grid-template-columns: repeat(4, calc(var(--cell) * 2));
+    grid-template-rows: var(--cell);
   }
 }
 
+/*
+ * Il filo, con lo stesso meccanismo dei blocchi (grid.css).
+ *
+ * La scheda non e' un `.block` — sta dentro al blocco della riga — ma eredita
+ * da lui `--edge-x` e `--edge-y`, che e' tutto quello che serve allo pseudo per
+ * sapere di quanto sporgere. La riga non tocca mai il bordo destro della
+ * griglia a nessun tier, quindi valgono zero: il filo destro cade sulla linea
+ * un pixel oltre, come su qualunque altro blocco.
+ *
+ * Fili interi e basta, senza il giro animato dello scroll: le quattro schede
+ * sono affiancate e condividono i lati, e quattro tratti che partono insieme da
+ * quattro angoli diversi sulla stessa linea si leggono come un disturbo.
+ */
 .testimonial-tab {
   position: relative;
   display: flex;
-  flex: 0 0 calc(var(--cell) * 3);
+  min-width: 0;
   align-items: center;
   justify-content: center;
   gap: var(--pad-sm);
-  scroll-snap-align: start;
   background: none;
   font-weight: 700;
   font-size: calc(var(--u) * 12);
@@ -524,26 +584,38 @@
   color: var(--light-grey);
   cursor: pointer;
   appearance: none;
-  /* Nessun bordo proprio: ogni scheda e' larga un numero intero di celle, quindi
-     i suoi lati cadono gia' su linee di griglia. Nel Figma il filo a destra
-     della scheda attiva e' scuro e quello delle altre e' grigio chiaro: qui
-     sono tutti la linea di griglia. E' una sfumatura da un pixel, annotata. */
-  border: 0;
+  /* Trasparente e non `0`: regge il modello di scatola, come sui blocchi. */
+  border: var(--line) solid transparent;
+}
+
+.testimonial-tab::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--line) * -1);
+  left: calc(var(--line) * -1);
+  right: calc(var(--line) * (-2 + var(--edge-x)));
+  bottom: calc(var(--line) * (-2 + var(--edge-y)));
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color));
+  background-repeat: no-repeat;
+  background-position:
+    left top,
+    right top,
+    right bottom,
+    left bottom;
+  background-size:
+    100% var(--line),
+    var(--line) 100%,
+    100% var(--line),
+    var(--line) 100%;
 }
 
 .testimonial-tab[aria-selected='true'] {
   color: var(--black);
-}
-
-/* Chi non ha ancora un testo non e' selezionabile: vedi NOTES.md B13. */
-.testimonial-tab[aria-disabled='true'] {
-  cursor: default;
-}
-
-@media (min-width: 720px) {
-  .testimonial-tab {
-    flex-basis: calc(var(--cell) * 2);
-  }
 }
 
 @media (min-width: 1200px) {
@@ -552,8 +624,17 @@
   }
 }
 
-/* La barra di avanzamento: nel Figma e' 191 su 240, cioe' un countdown a meta'
-   corsa. Qui parte da zero e la anima la timeline in Fase 5. */
+/*
+ * La barra di avanzamento.
+ *
+ * Nel Figma e' 191 su 240, cioe' un fermo-immagine a tre quarti: qui e' il
+ * conto alla rovescia vero dei dieci secondi, e quando arriva in fondo passa
+ * alla scheda dopo. Ce n'e' una per scheda, ferma a zero su quelle che non sono
+ * correnti.
+ *
+ * Sta **sotto** allo pseudo del filo, che e' l'ultimo a dipingere: il pixel
+ * della linea di griglia resta la linea di griglia anche mentre la barra corre.
+ */
 .testimonial-tab__progress {
   position: absolute;
   inset-inline-start: 0;

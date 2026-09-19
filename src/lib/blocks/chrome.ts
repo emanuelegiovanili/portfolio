@@ -92,9 +92,10 @@ export const FOOTER_LINKS = [
  * Megamenu (268:1498).
  *
  * Il frame e' 1440x840: dodici colonne da 120 e sette righe. I nodi del file
- * lasciano l'ultima riga vuota e mettono i social in sesta; per decisione del
- * committente i social occupano **sesta e settima**, cosi' il menu riempie il
- * frame invece di lasciarne fuori un ottavo.
+ * lasciano l'ultima riga vuota e mettono i social in sesta. Qui i social stanno
+ * in sesta e sono alti una cella, su richiesta del committente: il pannello
+ * finisce con loro, cioe' e' alto sei righe invece di sette, e non resta nessuna
+ * riga vuota in fondo.
  *
  * La riga 1 va da bordo a bordo — logo, CTA, chiudi — e tutto il resto rientra
  * di **una colonna per lato**, a ogni tier. E' la regola che il file applica a
@@ -107,21 +108,26 @@ export const FOOTER_LINKS = [
  *
  *   base       md          lg
  *   10 colonne 10 colonne  12 colonne
- *   13 righe   10 righe    7 righe
+ *   12 righe   9 righe     6 righe
  */
 export const megamenuMap = {
   // Riga 1: da bordo a bordo, come nel frame.
   menuLogo: { base: [1, 1, 5, 2], md: [1, 1, 6, 1], lg: [1, 1, 4, 1] },
   menuClose: { base: [9, 1, 2, 2], md: [10, 1, 1, 1], lg: [12, 1, 1, 1] },
-  menuCta: { base: [2, 12, 8, 2], md: [7, 1, 3, 1], lg: [8, 1, 4, 1] },
+  menuCta: { base: [2, 11, 8, 2], md: [7, 1, 3, 1], lg: [8, 1, 4, 1] },
 
   // Il resto rientra di una colonna per lato.
   menuWork: { base: [2, 4, 8, 3], md: [2, 3, 8, 3], lg: [2, 2, 10, 2] },
   menuAbout: { base: [2, 7, 8, 3], md: [2, 6, 8, 3], lg: [2, 4, 10, 2] },
 
-  // Attaccati sotto ad About, e alti due celle come le voci.
-  menuLinkedin: { base: [2, 10, 4, 2], md: [4, 9, 3, 2], lg: [8, 6, 2, 2] },
-  menuInstagram: { base: [6, 10, 4, 2], md: [7, 9, 3, 2], lg: [10, 6, 2, 2] },
+  // Attaccati sotto ad About, alti **una** cella.
+  //
+  // Erano due, come le voci, perche' cosi' il menu riempiva il frame senza
+  // lasciarne fuori un ottavo. Il committente li ha visti troppo alti e ha
+  // chiesto di dimezzarli: restano attaccati ad About, e l'altezza del pannello
+  // scende di una riga da se' (`deriveRows` conta l'ultima riga occupata).
+  menuLinkedin: { base: [2, 10, 4, 1], md: [4, 9, 3, 1], lg: [8, 6, 2, 1] },
+  menuInstagram: { base: [6, 10, 4, 1], md: [7, 9, 3, 1], lg: [10, 6, 2, 1] },
 } as const satisfies LayoutMap;
 
 /**

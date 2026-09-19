@@ -9,8 +9,9 @@
  * di conseguenza parte una riga piu' sotto. Il risultato in pagina e' identico,
  * senza dover duplicare il markup delle schede.
  *
- * Solo il primo testimonial ha un testo nel Figma. Gli altri tre hanno il nome
- * e basta: le loro schede ci sono ma non sono selezionabili. Vedi NOTES.md B13.
+ * Solo il primo testimonial ha un testo nel Figma. Gli altri tre hanno una
+ * citazione vuota di proposito (`src/data/testimonials.ts`): sono segnaposto,
+ * servono a far girare la rotazione, e restano selezionabili. Vedi NOTES.md B13.
  *
  * Il testo di ogni scheda viaggia sugli attributi della scheda stessa: al
  * server la lista la conosce gia' Astro, e al client serve solo poterla
@@ -28,7 +29,7 @@ interface Props {
 
 const { at, items } = Astro.props;
 
-const firstComplete = items.findIndex((t) => t.quote !== undefined);
+const firstComplete = items.findIndex((t) => t.quote);
 const active = firstComplete >= 0 ? firstComplete : 0;
 const shown = items[active];
 ---
@@ -36,17 +37,16 @@ const shown = items[active];
 <Block at={at.row} class="testimonial-row" role="tablist" aria-label="Clienti" surface="bare">
   {
     items.map((item, i) => {
-      const complete = item.quote !== undefined;
       return (
         <button
           class="testimonial-tab"
           type="button"
           role="tab"
+          data-ruled
           id={`tt-${i}`}
           aria-controls="testimonial-panel"
           aria-selected={i === active ? 'true' : 'false'}
-          aria-disabled={complete ? undefined : 'true'}
-          disabled={!complete}
+          data-placeholder={item.quote ? undefined : ''}
           tabindex={i === active ? 0 : -1}
           data-testimonial={i}
           data-quote={item.quote}
@@ -54,7 +54,10 @@ const shown = items[active];
           data-role={item.role}
         >
           {item.client}
-          {i === active && <span class="testimonial-tab__progress" aria-hidden="true" />}
+          {/* Una barra per scheda, non una sola sulla scheda attiva: e' il conto
+              alla rovescia dei dieci secondi, e deve poter ripartire da zero su
+              qualunque scheda diventi quella corrente. */}
+          <span class="testimonial-tab__progress" aria-hidden="true" />
         </button>
       );
     })

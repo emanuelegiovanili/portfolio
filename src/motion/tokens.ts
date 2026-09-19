@@ -84,11 +84,11 @@ export const CAROUSEL = {
  *
  * `dwell` e' quanto resta su una scheda prima di passare alla successiva, ed e'
  * anche la durata della barra sotto la scheda attiva: sono la stessa cosa vista
- * da due parti. Il Figma non lo dice — mostra la barra a tre quarti, cioe' un
- * fermo-immagine — e finche' c'e' una citazione sola non parte comunque.
+ * da due parti. Il Figma non lo dice, mostra la barra a tre quarti, cioe' un
+ * fermo-immagine. I dieci secondi sono una richiesta del committente.
  */
 export const TESTIMONIAL = {
-  dwell: 7,
+  dwell: 10,
   fade: 0.22,
 } as const;
 

@@ -89,6 +89,29 @@ export function revealCards(root: ParentNode = document): void {
 }
 
 /**
+ * Rimette i riquadri sotto la maschera, **subito**.
+ *
+ * "Subito" e' il punto. `pause(0)` sposta la testina della timeline ma il
+ * disegno arriva al tick successivo di GSAP, e in quel fotogramma il browser ha
+ * gia' dipinto: tornando indietro nel carosello si vedevano i campi ancora su,
+ * poi l'azzeramento, poi l'animazione. Il committente ha descritto esattamente
+ * questa sequenza. Il `gsap.set` invece scrive lo stile ora, quindi non esiste
+ * nessun fotogramma in cui la slide sia visibile con i campi alzati.
+ *
+ * `invalidate` rimisura la percentuale: la timeline di una slide nasce mentre
+ * la slide e' `hidden`, e li' l'altezza e' zero, cioe' il 100% da cui i riquadri
+ * dovrebbero salire varrebbe zero pixel.
+ */
+export function resetCardMeta(root: ParentNode): void {
+  if (reduced.matches) return;
+  const meta = metaOf(root);
+  if (!meta) return;
+
+  timelineFor(meta).invalidate().pause(0);
+  gsap.set([...meta.children], { yPercent: 100 });
+}
+
+/**
  * Rigioca i riquadri dentro `root`: lo usa il carosello a ogni cambio slide.
  *
  * `delay` serve a farli salire **dopo** che la slide ha finito di entrare. Senza,
@@ -101,11 +124,8 @@ export function playCardMeta(root: ParentNode, delay = 0): void {
   const meta = metaOf(root);
   if (!meta) return;
 
-  // `invalidate` rimisura la percentuale: la timeline di una slide nasce mentre
-  // la slide e' `hidden`, e li' l'altezza e' zero — cioe' il 100% da cui i
-  // riquadri dovrebbero salire varrebbe zero pixel. Il `pause(0)` subito dopo
-  // li rimanda sotto la maschera mentre la slide viaggia.
-  const tl = timelineFor(meta).invalidate().pause(0);
+  resetCardMeta(root);
+  const tl = timelineFor(meta);
 
   // Un solo appuntamento alla volta: due comandi rapidi non devono accavallarsi.
   pending?.kill();

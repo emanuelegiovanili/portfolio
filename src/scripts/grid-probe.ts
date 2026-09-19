@@ -113,8 +113,14 @@ function measureOverflow(block: Element, rect: DOMRect, style: CSSStyleDeclarati
    */
   const bordato = block.getAttribute('data-surface') === 'line';
   const conRiempimento = block.querySelector(':scope > .hover-fill') !== null;
+  // Un blocco puo' non avere filo proprio e contenere figli che ce l'hanno: le
+  // schede dei testimonial stanno dentro un blocco `bare` e disegnano ognuna il
+  // suo. L'ultima sporge di un pixel oltre il contenitore, ed e' il pixel della
+  // linea di griglia, non uno sforo. `data-ruled` e' la dichiarazione: lo mette
+  // chi disegna un filo senza essere un blocco.
+  const figliBordati = block.querySelector(':scope > [data-ruled]') !== null;
   const line = Number.parseFloat(style.getPropertyValue('--line')) || 0;
-  const bleed = bordato || conRiempimento ? line + parseFloat(style.borderRightWidth) : 0;
+  const bleed = bordato || conRiempimento || figliBordati ? line + parseFloat(style.borderRightWidth) : 0;
 
   const top = rect.top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop);
   const bottom = rect.bottom - parseFloat(style.borderBottomWidth) - parseFloat(style.paddingBottom);
@@ -209,12 +215,15 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
     // Un blocco marcato `data-bleed` ha un figlio che esce di proposito dal
     // proprio span, come il marquee: li' l'eccedenza e' il disegno, non un
     // errore. I suoi quattro bordi restano comunque misurati come tutti.
-    // Un blocco marcato `data-bleed` esce di proposito dal proprio span, come
-    // il marquee. Un contenitore che scorre pure: la riga dei testimonial a
-    // base e' larga dodici celle dentro uno span da otto, ed e' il disegno.
+    //
+    // C'era anche un'esenzione per i contenitori che scorrono, messa per la
+    // riga dei testimonial quando era larga dodici celle dentro uno span da
+    // otto. Da quando quella riga ha i fili non scorre piu' — un filo dentro a
+    // un contenitore che scorre non puo' restare sulla sua linea — e
+    // l'esenzione non copriva piu' niente: era solo un modo per non vedere lo
+    // sforo di qualunque cosa avesse un `overflow: auto`.
     const style = getComputedStyle(block);
-    const scrolls = /auto|scroll/.test(style.overflowX) || /auto|scroll/.test(style.overflowY);
-    if (!block.hasAttribute('data-bleed') && !scrolls) {
+    if (!block.hasAttribute('data-bleed')) {
       const over = measureOverflow(block, rect, style);
       if (over.dx > 0 || over.dy > 0) {
         // Un blocco che dichiara `data-known-overflow` sfora gia' nel Figma: il

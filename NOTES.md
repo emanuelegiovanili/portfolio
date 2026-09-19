@@ -1275,6 +1275,145 @@ misura. La verifica sul vivo tocca al committente.
 
 ---
 
+## 14. Fase 7 — nove correzioni dal committente
+
+### D82. I bordi si chiudono prima di meta' schermo
+
+La finestra d'ingresso andava da `top 90%` a `top 40%`: il filo si chiudeva
+quando il bordo alto del blocco era **sopra** la meta' dello schermo, cioe'
+quando il blocco l'aveva gia' passata. Ora va da `top 95%` a `top 60%`: il
+bordo alto e' ancora nella meta' bassa quando il giro finisce, quindi il blocco
+arriva al centro gia' fatto, qualunque sia la sua altezza.
+
+### D83. Una slide nascosta ha sempre i campi giu'
+
+Tornando indietro nel carosello si vedevano i campi gia' alzati, poi
+l'azzeramento, poi l'animazione: il committente ha descritto la sequenza
+esatta. La slide che usciva restava a fine corsa, e chi la rivedeva la trovava
+cosi' per il fotogramma prima che GSAP rendesse — `pause(0)` sposta la testina,
+ma il disegno arriva al tick dopo, e in mezzo il browser ha gia' dipinto.
+
+`resetCardMeta` scrive lo stile **adesso**, con un `gsap.set`, e il carosello lo
+chiama nel momento in cui la slide sparisce. Non c'e' piu' nessun fotogramma in
+cui una slide visibile abbia i campi su prima del tempo.
+
+Misurato da `verify:motion`, che ora guarda lo stato a riposo delle slide
+nascoste dopo un avanti e un indietro.
+
+### D84. I nomi dei clienti hanno un filo, e a base vanno a capo
+
+Il committente ha chiesto il bordo attorno a ogni nome. Un bordo deve cadere su
+una linea di griglia, e a base la riga era **a scorrimento orizzontale**
+(home-handoff §4-bis): dentro un contenitore che scorre il filo si stacca dalla
+sua linea appena trascini. Le due cose non stanno insieme.
+
+Il blocco della riga a base e' alto due celle, quindi quattro schede da quattro
+colonne ci stanno esatte: 2x2, ogni lato su una linea, niente scorrimento. Da md
+in su restano su una riga sola come nel file.
+
+**E le tracce sono fisse, non `flex`.** Quattro schede a `flex-basis: cell * 2`
+dentro otto celle fanno una somma esatta in aritmetica e non in layout: a 719px
+di viewport arrotondavano un capello oltre il contenitore e l'ultima scheda
+andava a capo, raddoppiando l'altezza della riga. A 720 e 768 no. E' il modo in
+cui un errore di sotto-pixel si fa riconoscere, e l'ha trovato `verify:grid`.
+
+### D85. La sonda sa che un figlio puo' disegnare un filo
+
+Le schede stanno dentro un blocco `bare` e il filo se lo disegnano da sole:
+l'ultima sporge di un pixel oltre il contenitore, che e' il pixel della linea, e
+`scrollWidth` lo contava come sforo. Lo scorporo del decoro c'era gia' per i
+blocchi bordati e per i bottoni; ora c'e' anche per chi dichiara `data-ruled`.
+
+Nello stesso passaggio e' sparita l'esenzione per i contenitori che scorrono:
+c'era per questa riga, e questa riga non scorre piu'. Restava solo un modo per
+non vedere lo sforo di qualunque cosa avesse un `overflow: auto`.
+
+### D86. I testimonial girano, e girano quando li guardi
+
+Dieci secondi a scheda, barra viola che si riempie, passaggio automatico alla
+successiva. Le tre schede senza testo hanno una citazione **vuota**, non
+inventata: servono a far girare la rotazione finche' i testi veri non
+arrivano (B13 resta aperto).
+
+**Il conto alla rovescia parte quando la riga entra in vista**, non al
+caricamento. Non l'ha chiesto nessuno: l'ha trovato `verify:motion`, che ha
+misurato la barra a **0,88** appena aperta la pagina. I testimonial stanno in
+fondo, e chi ci arrivava dopo venti secondi di scroll trovava la rotazione gia'
+al terzo giro. Dieci secondi a scheda vogliono dire dieci secondi *di chi
+guarda*. E' anche la cosa giusta comunque: niente che si muove da solo fuori
+dallo schermo.
+
+### D87. Le frecce dei testimonial esistono anche sotto i 1200
+
+Nel file ci sono solo a lg. Sotto, il carosello dei testimonial non aveva
+comandi: si poteva solo aspettare. Ora stanno nelle ultime due colonne del
+contenitore, riga subito sotto, che e' la stessa regola con cui stanno le frecce
+del carosello dei lavori.
+
+### D88. Hover sulle voci del megamenu, e sul bottone di chiusura
+
+Stesso meccanismo dei bottoni: uno strato che sale dal basso con dentro una
+copia del contenuto nel colore d'arrivo, e il ritaglio che li taglia insieme.
+
+Dentro al pannello il riempimento e' **off-white**, non viola: su pagina chiara
+un blocco che si riempie diventa viola perche' il fondo e' chiaro, ma qui il
+fondo e' nero, e viola su nero non e' un'inversione, e' un secondo colore scuro.
+
+Sul bottone di chiusura l'hover era spento insieme a quello della hamburger di
+pagina, che a menu aperto resta nera. Sono due bottoni diversi e due stati
+diversi: ora la regola riguarda solo la hamburger.
+
+**Il filo, dentro al pannello, e' dello stesso colore del riempimento.** Non e'
+un difetto: su nero e' il riempimento stesso a fare da bordo, e quello che va
+verificato e' che il suo margine cada sulla linea. `verify:edges` lo controlla
+cosi', con il colore del pannello al posto di quello del filo.
+
+### D89. I social del megamenu sono alti una cella
+
+Erano due, per riempire il frame. Il committente li ha visti troppo alti.
+Restano attaccati ad About, e il pannello si accorcia di una riga da se':
+`deriveRows` conta l'ultima riga occupata. A lg passa da sette righe a sei.
+
+**Conseguenza da guardare:** sotto ai social resta piu' nero vuoto di prima, a
+tutti i tier. Non e' un errore, e' quello che succede togliendo una riga a un
+pannello ancorato in alto. Vedi B22.
+
+### D90. Il form apre la mail
+
+Il bottone si accendeva gia' quando il form diventava valido. Mancava il
+seguito: ora l'invio compone un `mailto:` con nome, azienda, email e messaggio,
+in inglese come il resto del form.
+
+Non e' un form che spedisce, e' un form che scrive la mail al posto tuo e la
+lascia a te. Chi non ha un client configurato non va da nessuna parte, e nessuno
+sapra' mai che ci ha provato: la risposta vera resta un endpoint che riceve il
+POST (B3).
+
+L'indirizzo e' `hello@emanuelegiovanili.it`, scelto dal committente. **Il
+dominio non e' ancora registrato** (B21), e l'indirizzo sta in chiaro nel
+sorgente pubblico: e' una conseguenza di `mailto:`, e se diventasse un problema
+la risposta e' un backend, non offuscare la stringa.
+
+### D91. L'hero era pieno al pixel
+
+"Based in San Benedetto del Tronto" era attaccata al bordo basso perche' era
+attaccata davvero: il blocco non aveva nessun margine sotto, oltre alle celle
+riservate ai due bottoni.
+
+Misurato prima di toccare niente: a 1440 il contenuto chiedeva **220px dentro
+220px** di spazio utile. Zero avanzo. Il primo tentativo — venti pixel di
+respiro in fondo — sforava di 17-30px a cinque larghezze su dieci.
+
+I venti pixel sono quindi **presi**, non aggiunti: dieci dallo stacco fra titolo
+e corpo, dieci da un `gap` che chiedeva spazio gia' assegnato da
+`space-between`. A md se ne riservano dieci invece di venti: li' il blocco e'
+piu' stretto in proporzione al testo, ed e' la stessa strettoia che il Figma ha
+da solo sul form a quel tier (B12).
+
+Dopo: avanzo positivo a tutte e dieci le larghezze, da 5px a 1200 a 309px a 719.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
@@ -1296,3 +1435,5 @@ misura. La verifica sul vivo tocca al committente.
 | ~~B18~~ | ~~Il ramo di produzione non esiste~~ | **Chiuso.** `main` creato. Resta da renderlo il ramo predefinito del repository, che e' un'impostazione e non cambia il funzionamento del deploy |
 | ~~B19~~ | ~~I secret Cloudflare non sono impostati~~ | **Chiuso.** Entrambi nei secret del repository. Il token passato in chat durante la messa a punto va revocato |
 | B20 | **Il sottodominio `workers.dev` e' quello generato da Cloudflare** | `emanuelegiovanili.emanuele-giovanili-ap.workers.dev` ripete il nome. Si cambia dal pannello (Workers & Pages, scheda Domains) o si mette un dominio proprio |
+| B21 | **`emanuelegiovanili.it` non e' registrato** | Il form apre un `mailto:` verso `hello@emanuelegiovanili.it` (D90). Finche' il dominio non c'e', quelle mail non arrivano da nessuna parte |
+| B22 | **Il megamenu lascia piu' nero vuoto in fondo** | Conseguenza dei social alti una cella (D89): il pannello e' ancorato in alto e si e' accorciato di una riga. A base finisce a meta' schermo. Se non piace, si redistribuisce, ma quella e' una decisione di disegno |

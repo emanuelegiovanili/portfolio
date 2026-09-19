@@ -24,7 +24,7 @@
 
 import gsap from 'gsap';
 import { CAROUSEL } from './tokens';
-import { playCardMeta } from './card';
+import { playCardMeta, resetCardMeta } from './card';
 
 export interface Carousel {
   stop(): void;
@@ -84,6 +84,10 @@ export function startCarousel(root: ParentNode = document): Carousel | null {
         onComplete: () => {
           from.hidden = true;
           gsap.set(from, { xPercent: 0 });
+          // La slide che esce torna allo stato di partenza nello stesso istante
+          // in cui sparisce: una slide nascosta ha sempre i campi giu', quindi
+          // quando si torna indietro non c'e' niente da azzerare a vista.
+          resetCardMeta(from);
           running = null;
         },
       })

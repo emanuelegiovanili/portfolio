@@ -34,7 +34,45 @@ const HOVER = [
   { route: '/', selector: '#menu-toggle', nome: 'menu (bordato)' },
   { route: '/', selector: '.square-button[data-variant="mail"]', nome: 'mail (viola)' },
   { route: '/', selector: '.primary-button', nome: 'primario (viola)' },
+  // Dentro al megamenu: le voci e il bottone di chiusura hanno lo stesso
+  // riempimento dei bottoni, su richiesta del committente. `apri` apre il
+  // pannello prima di guardarli, e da li' in poi resta aperto.
+  //
+  // `filo` off-white, e non e' un dettaglio di colore: nel pannello il filo
+  // **e' dello stesso colore del riempimento**. Su pagina chiara un bottone
+  // riempito di off-white ha bisogno del contorno scuro per non galleggiare;
+  // su nero e' il riempimento stesso a fare da bordo, e quello che va
+  // verificato e' che il suo margine cada sulla linea, non che ci sia sopra un
+  // secondo pixel di un altro colore che non esisterebbe comunque.
+  { route: '/', selector: '.menu-voice', nome: 'voce (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
+  { route: '/', selector: '.menu-social', nome: 'social (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
+  { route: '/', selector: '.menu-close', nome: 'chiudi (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
 ];
+
+const menuAperto = (page) =>
+  page.evaluate(() => document.getElementById('megamenu')?.hasAttribute('data-open') ?? false);
+
+/** Apre il megamenu e aspetta che sia fermo. */
+async function apriMenu(page) {
+  if (await menuAperto(page)) return;
+  await page.click('#menu-toggle');
+  await page.waitForTimeout(1400);
+}
+
+/**
+ * Chiude il megamenu e aspetta che sia sparito.
+ *
+ * Serve fra un giro di controlli e l'altro: a pannello aperto la hamburger di
+ * pagina c'e' ancora e si vede, ma sta **sotto** al pannello, e un `hover` su
+ * di lei va in timeout perche' il pannello intercetta il puntatore. E' la
+ * stessa cosa che succederebbe a un visitatore, quindi non e' un difetto del
+ * sito: e' lo script che deve rimettere la pagina com'era.
+ */
+async function chiudiMenu(page) {
+  if (!(await menuAperto(page))) return;
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1200);
+}
 
 /**
  * I blocchi bordati che si guardano, uno per forma e per vicinato.
@@ -50,6 +88,10 @@ const CASES = [
   { route: '/works', selector: '.works-card', nome: 'card progetto (/works)' },
   { route: '/', selector: '.menu-close', nome: 'chiudi (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
   { route: '/', selector: '.menu-voice', nome: 'voce (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
+  // Il nome di un cliente non e' un blocco: sta dentro al blocco `bare` della
+  // riga e il filo se lo disegna da solo. Il committente ne ha notato
+  // l'assenza, quindi ora c'e' e va misurato come tutti gli altri.
+  { route: '/', selector: '.testimonial-tab', nome: 'nome cliente (testimonial)' },
 ];
 
 const RULE = [0x50, 0x4d, 0x5c];
@@ -242,7 +284,8 @@ try {
     await page.goto(server.base + HOVER[0].route, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
 
-    for (const { selector, nome } of HOVER) {
+    for (const { selector, nome, apri } of HOVER) {
+      if (apri) await apriMenu(page);
       const scarti = await page.evaluate((sel) => {
         const el = document.querySelector(sel);
         if (!el) return null;
@@ -288,7 +331,12 @@ try {
      */
     console.log('\nE con il riempimento su, il filo c\'e\' ancora?\n');
 
-    for (const { selector, nome } of HOVER) {
+    // Si riparte dalla pagina, non dal pannello aperto del giro precedente.
+    await chiudiMenu(page);
+
+    for (const { selector, nome, apri, filo } of HOVER) {
+      if (apri) await apriMenu(page);
+      else await chiudiMenu(page);
       const box = await page.evaluate(new Function('return ' + BOX_OF)(), selector);
 
       await page.hover(selector);
@@ -309,7 +357,7 @@ try {
         ['alto', rows[padT]],
         ['basso', rows[padT + h - (box.edgeY ? 1 : 0)]],
       ]) {
-        const ok = near(px, RULE);
+        const ok = near(px, filo ?? RULE);
         if (!ok) failures += 1;
         console.log(`  ${ok ? 'ok     ' : 'FALLITO'} ${nome} in hover · lato ${lato}` + (ok ? '' : ` — ${px.join(',')} invece del filo`));
       }

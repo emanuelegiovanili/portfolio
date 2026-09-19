@@ -67,14 +67,29 @@ export function startTestimonials(root: ParentNode = document): Testimonials | n
     panel.setAttribute('aria-labelledby', usable[current].id);
   };
 
+  /*
+   * Il conto alla rovescia gira solo mentre la riga si vede.
+   *
+   * Senza, partiva al caricamento della pagina: i testimonial stanno in fondo,
+   * e chi arrivava fin li' dopo venti secondi di scroll trovava la rotazione
+   * gia' a meta' del terzo giro. Dieci secondi a scheda vogliono dire dieci
+   * secondi **di chi guarda**. Trovato da `verify:motion`, che misurava la
+   * barra e l'ha beccata a 0,88 appena aperta la pagina.
+   *
+   * E' anche la cosa giusta da fare comunque: niente che si muove da solo
+   * fuori dallo schermo.
+   */
+  let visible = false;
+
   /** La barra: conto alla rovescia se si avanza da soli, piena se no. */
   const restartBar = () => {
     countdown?.kill();
+    countdown = null;
     for (const tab of tabs) {
       const bar = barOf(tab);
       if (bar) gsap.set(bar, { scaleX: tab === usable[current] && !auto ? 1 : 0 });
     }
-    if (!auto) return;
+    if (!auto || !visible) return;
     const bar = barOf(usable[current]);
     if (!bar) return;
     countdown = gsap.fromTo(
@@ -83,6 +98,21 @@ export function startTestimonials(root: ParentNode = document): Testimonials | n
       { scaleX: 1, duration: TESTIMONIAL.dwell, ease: 'none', onComplete: () => show(current + 1) },
     );
   };
+
+  /*
+   * `0` e non una soglia piu' alta: a base la riga e' alta due celle e su uno
+   * schermo corto potrebbe non entrarci mai per intero. Basta che se ne veda
+   * un pezzo perche' il conto sia onesto.
+   */
+  const watcher = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting === visible) return;
+      visible = entry.isIntersecting;
+      if (visible) restartBar();
+      else countdown?.pause();
+    },
+    { threshold: 0 },
+  );
 
   const show = (index: number) => {
     const target = ((index % usable.length) + usable.length) % usable.length;
@@ -145,9 +175,13 @@ export function startTestimonials(root: ParentNode = document): Testimonials | n
 
   sync();
   restartBar();
+  // Si guarda la **riga delle schede**, non il pannello: e' li' che sta la
+  // barra, ed e' quella che deve essere sotto gli occhi mentre corre.
+  watcher.observe(usable[0].parentElement ?? panel);
 
   return {
     stop() {
+      watcher.disconnect();
       for (const tab of usable) {
         tab.removeEventListener('click', onTab);
         tab.removeEventListener('keydown', onKey);

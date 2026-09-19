@@ -422,8 +422,16 @@
  * e' animata lei — non e' registrata, e una custom property non registrata non
  * si anima — ma il `clip-path` che la usa si', e basta.
  */
+/*
+ * Chi ha il riempimento di hover.
+ *
+ * I due bottoni del Figma, piu' le voci e i social del megamenu: il committente
+ * ha chiesto per loro la stessa animazione dei bottoni, con fondo bianco.
+ */
 .square-button,
-.primary-button {
+.primary-button,
+.menu-voice,
+.menu-social {
   --hover: 100%;
   --hover-bg: var(--purple);
   --hover-fg: var(--off-white);
@@ -531,19 +539,19 @@
  * riempito finche' non se ne tocca un altro.
  */
 @media (hover: hover) {
-  :is(.square-button, .primary-button):hover:not(:disabled):not([aria-disabled='true']) {
+  :is(.square-button, .primary-button, .menu-voice, .menu-social):hover:not(:disabled):not(
+      [aria-disabled='true']
+    ) {
     --hover: 0%;
   }
 
-  .hover-fill,
-  :is(.square-button, .primary-button)[data-surface='line']::after {
+  .hover-fill {
     transition: clip-path var(--hover-time) var(--hover-ease);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hover-fill,
-  :is(.square-button, .primary-button)[data-surface='line']::after {
+  .hover-fill {
     transition: none;
   }
 }
@@ -627,6 +635,28 @@
 }
 
 /*
+ * Dentro al pannello il riempimento e' off-white su nero, non viola.
+ *
+ * Fuori, un blocco bordato che si riempie diventa viola perche' la pagina e'
+ * chiara. Qui la pagina e' nera: viola su nero non e' un'inversione, e' un
+ * secondo colore scuro. Il committente ha chiesto il fondo bianco.
+ *
+ * Il CTA e' gia' viola e va dall'altra parte da se': la regola dei blocchi
+ * `accent` gli da' gia' questi due valori.
+ */
+.megamenu :is(.square-button, .primary-button, .menu-voice, .menu-social) {
+  --hover-bg: var(--off-white);
+  --hover-fg: var(--black);
+}
+
+/* La copia dentro allo strato ha lo stesso stacco fra etichetta e freccia
+   dell'originale: se differisse, il testo si sposterebbe di qualche pixel nel
+   momento in cui il riempimento gli passa sopra. */
+.menu-social > .hover-fill {
+  gap: var(--pad);
+}
+
+/*
  * A menu aperto la hamburger diventa nera e ci resta.
  *
  * E' la variante `Menu / Open` del file (268:1518). Prima restava off-white
@@ -645,9 +675,15 @@
   color: var(--off-white);
 }
 
-/* Niente riempimento di hover sui due bottoni del menu: aperto e' nero e basta. */
-#menu-toggle[aria-expanded='true'] > .hover-fill,
-.menu-close > .hover-fill {
+/*
+ * Niente riempimento di hover sulla hamburger di pagina a menu aperto.
+ *
+ * Quella resta nera per decisione del committente, e sta sotto la tendina: un
+ * riempimento li' non si vedrebbe comunque, ma se il puntatore ci resta sopra
+ * dopo il clic la farebbe lampeggiare al momento della chiusura. Il bottone di
+ * chiusura, che e' un altro bottone, l'hover ce l'ha.
+ */
+#menu-toggle[aria-expanded='true'] > .hover-fill {
   display: none;
 }
 

@@ -12,6 +12,7 @@
  */
 import Block from './Block.astro';
 import PrimaryButton from './PrimaryButton.astro';
+import { CONTACT_EMAIL } from '../lib/site';
 import type { BlockPlacements } from '../lib/layout';
 
 interface Props {
@@ -126,7 +127,15 @@ const CONSENT = 'I agree with the processing my personal data';
   )
 }
 
-<PrimaryButton at={at.send} label="Send" type="submit" form="contact-form" disabled class="send-button" />
+<PrimaryButton
+  at={at.send}
+  label="Send"
+  type="submit"
+  form="contact-form"
+  disabled
+  class="send-button"
+  data-mailto={CONTACT_EMAIL}
+/>
 
 <script>
   /**
@@ -135,6 +144,13 @@ const CONSENT = 'I agree with the processing my personal data';
    * significa accenderlo quando il form diventa valido.
    *
    * Parte disabilitato nell'HTML, quindi senza JS resta com'e' disegnato.
+   *
+   * **Dove va a finire.** Non c'e' un backend (NOTES.md B3), quindi l'invio apre
+   * il client di posta del visitatore gia' compilato. Non e' un form che
+   * spedisce: e' un form che scrive la mail al posto tuo e la lascia a te. Il
+   * limite si vede e va detto: chi non ha un client configurato non va da
+   * nessuna parte, e nessuno sapra' mai che ci ha provato. La risposta vera e'
+   * un endpoint che riceve il POST.
    */
   const form = document.getElementById('contact-form') as HTMLFormElement | null;
   const send = document.querySelector<HTMLButtonElement>('.send-button');
@@ -146,5 +162,40 @@ const CONSENT = 'I agree with the processing my personal data';
     form.addEventListener('input', sync);
     form.addEventListener('change', sync);
     sync();
+
+    form.addEventListener('submit', (event) => {
+      // `novalidate` spegne i messaggi del browser, che non sono disegnati da
+      // nessuna parte nel file. La validita' la si chiede comunque: il bottone
+      // e' acceso solo se il form la soddisfa, ma un invio da tastiera arriva
+      // qui lo stesso.
+      event.preventDefault();
+      if (!form.checkValidity()) return;
+
+      const to = send.dataset.mailto;
+      if (!to) return;
+
+      const data = new FormData(form);
+      const value = (key: string) => String(data.get(key) ?? '').trim();
+
+      // In inglese come tutto il resto del form: chi la scrive legge quelle
+      // etichette mentre compila, e la mail che si apre deve sembrare la stessa
+      // cosa, non una traduzione.
+      const company = value('company');
+      const subject = `New enquiry from the website — ${value('name')}`;
+      const body = [
+        `Name: ${value('name')}`,
+        company ? `Company: ${company}` : null,
+        `Email: ${value('email')}`,
+        '',
+        value('details'),
+      ]
+        .filter((line) => line !== null)
+        .join('\n');
+
+      // `encodeURIComponent` e non `URLSearchParams`: quest'ultimo codifica lo
+      // spazio come `+`, che in un corpo di `mailto:` resta un piu' letterale.
+      window.location.href =
+        `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    });
   }
 </script>

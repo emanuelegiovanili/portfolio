@@ -52,8 +52,14 @@ export const homeBlocks = {
   testimonialsRow: { base: [2, 61, 8, 2], md: [2, 40, 8, 1], lg: [2, 27, 8, 1] },
   testimonialsContainer: { base: [2, 63, 8, 10], md: [2, 41, 8, 4], lg: [2, 28, 10, 3] },
   // 266:1178 e 266:1181: due celle in fondo a destra della riga di navigazione.
-  testimonialsPrev: { lg: [10, 31, 1, 1] },
-  testimonialsNext: { lg: [11, 31, 1, 1] },
+  //
+  // A base e md nel file non ci sono, e il carosello restava senza comandi: da
+  // li' si poteva solo aspettare i dieci secondi. Sono su richiesta del
+  // committente, nella stessa posizione che hanno a lg — ultime due colonne del
+  // contenitore, riga subito sotto — che e' la stessa regola con cui stanno le
+  // frecce del carosello dei lavori.
+  testimonialsPrev: { base: [8, 73, 1, 1], md: [8, 45, 1, 1], lg: [10, 31, 1, 1] },
+  testimonialsNext: { base: [9, 73, 1, 1], md: [9, 45, 1, 1], lg: [11, 31, 1, 1] },
 
   contactForm: { base: [2, 80, 8, 16], md: [3, 51, 7, 8], lg: [3, 33, 5, 6] },
   contactCta: { base: [2, 75, 7, 5], md: [2, 47, 6, 5], lg: [8, 34, 4, 3] },

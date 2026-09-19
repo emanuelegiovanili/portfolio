@@ -59,6 +59,11 @@ import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
           Superficie bordata come tutti gli altri blocchi: il filo, qui
           off-white come il resto del pannello, e' quello che lo tiene dentro
           la griglia. Il fondo e' nero al 50% sul nero del pannello, cioe' nero.
+
+          L'hover ce l'ha come tutto il resto del pannello: riempimento
+          off-white che sale dal basso. Prima era spento perche' la hamburger di
+          pagina, sotto la tendina, deve restare nera: ma quella e' l'altro
+          bottone, e i due stati non sono lo stesso stato.
         */}
         <SquareButton
           at={megamenuMap.menuClose}
@@ -73,6 +78,12 @@ import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
           MENU_LINKS.map((link) => (
             <Block at={megamenuMap[link.key]} as="a" class="menu-voice" href={link.href} clip>
               <span class="t-display t-display--page">{link.label}</span>
+              {/* La copia nel colore d'arrivo, come sui bottoni: e' lo strato che
+                  sale a ritagliare se stesso e la propria scritta, cosi' il
+                  testo cambia colore dove passa il bordo del riempimento. */}
+              <span class="hover-fill" aria-hidden="true">
+                <span class="t-display t-display--page">{link.label}</span>
+              </span>
             </Block>
           ))
         }
@@ -90,6 +101,10 @@ import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
             >
               <span class="t-link">{social.label}</span>
               <Icon name="arrow-up-right" />
+              <span class="hover-fill" aria-hidden="true">
+                <span class="t-link">{social.label}</span>
+                <Icon name="arrow-up-right" />
+              </span>
             </Block>
           ))
         }
