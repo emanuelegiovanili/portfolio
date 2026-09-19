@@ -27,6 +27,7 @@ import { CARD } from './tokens';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 const timelines = new WeakMap<HTMLElement, gsap.core.Timeline>();
+let pending: gsap.core.Tween | null = null;
 
 /** Il gruppo dei riquadri di una card, se ce l'ha. */
 function metaOf(card: ParentNode): HTMLElement | null {
@@ -66,23 +67,47 @@ export function revealCards(root: ParentNode = document): void {
     // quando diventa attiva, non quando la pagina scorre.
     if (meta.closest('[data-slide]')?.hasAttribute('hidden')) continue;
 
+    /*
+     * Il trigger sta sul **gruppo dei riquadri**, non sulla card.
+     *
+     * I riquadri sono appoggiati al fondo della card, e una card e' alta cinque
+     * celle: con il trigger sul suo bordo alto l'animazione partiva quando i
+     * riquadri erano ancora quattrocento pixel sotto la piega, e finiva prima
+     * che diventassero visibili. Misurato, non dedotto. E' lo stesso errore di
+     * D59, che li' riguardava il filo.
+     *
+     * `bottom bottom` fa partire il giro quando il gruppo e' entrato per
+     * intero: e' il primo istante in cui c'e' qualcosa da vedere.
+     */
     ScrollTrigger.create({
-      trigger: meta.closest('.works-card') ?? meta,
-      start: 'top 85%',
+      trigger: meta,
+      start: 'bottom bottom',
       once: true,
       onEnter: () => tl.play(0),
     });
   }
 }
 
-/** Rigioca i riquadri dentro `root`: lo usa il carosello a ogni cambio slide. */
-export function playCardMeta(root: ParentNode): void {
+/**
+ * Rigioca i riquadri dentro `root`: lo usa il carosello a ogni cambio slide.
+ *
+ * `delay` serve a farli salire **dopo** che la slide ha finito di entrare. Senza,
+ * salivano mentre la slide era ancora in viaggio da destra: l'animazione c'era
+ * e non si vedeva, perche' succedeva fuori dallo schermo o su un'immagine che
+ * si stava ancora spostando.
+ */
+export function playCardMeta(root: ParentNode, delay = 0): void {
   if (reduced.matches) return;
   const meta = metaOf(root);
   if (!meta) return;
 
   // `invalidate` rimisura la percentuale: la timeline di una slide nasce mentre
   // la slide e' `hidden`, e li' l'altezza e' zero — cioe' il 100% da cui i
-  // riquadri dovrebbero salire varrebbe zero pixel.
-  timelineFor(meta).invalidate().play(0);
+  // riquadri dovrebbero salire varrebbe zero pixel. Il `pause(0)` subito dopo
+  // li rimanda sotto la maschera mentre la slide viaggia.
+  const tl = timelineFor(meta).invalidate().pause(0);
+
+  // Un solo appuntamento alla volta: due comandi rapidi non devono accavallarsi.
+  pending?.kill();
+  pending = gsap.delayedCall(delay, () => tl.play(0));
 }

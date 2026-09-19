@@ -73,8 +73,10 @@ export function startCarousel(root: ParentNode = document): Carousel | null {
     sync();
 
     // La card che entra e' nuova: titolo e categorie si ricompongono davanti a
-    // chi guarda, invece di arrivare gia' fatte da fuori schermo.
-    playCardMeta(to);
+    // chi guarda, invece di arrivare gia' fatte da fuori schermo. Partono a
+    // scorrimento finito, cioe' nel primo istante in cui la slide e' ferma e
+    // tutta visibile.
+    playCardMeta(to, reduced.matches ? 0 : CAROUSEL.slide);
 
     running = gsap
       .timeline({

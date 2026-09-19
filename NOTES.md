@@ -1096,9 +1096,25 @@ Parte in due momenti:
 - quando una slide del carosello diventa quella attiva, perche' li' la card e' nuova e si compone
   davanti a chi guarda.
 
-Una trappola: la timeline di una slide nasce mentre la slide e' `hidden`, e li' l'altezza e' zero,
-cioe' il 100% da cui i riquadri dovrebbero salire vale zero pixel. Al cambio slide serve
-`invalidate()` prima di `play(0)`. Misurato: da 120px sotto la maschera a zero, sfalsati.
+Tre trappole, tutte trovate misurando e non guardando.
+
+**1. Il trigger stava sulla card, e i riquadri stanno in fondo alla card.** Una card e' alta cinque
+celle: con `start: 'top 85%'` sul suo bordo alto l'animazione partiva quando i riquadri erano ancora
+quattrocento pixel sotto la piega, e finiva prima che diventassero visibili. C'era e non si vedeva
+mai. E' lo stesso errore di D59, che li' riguardava il filo, e la correzione e' la stessa: il
+trigger va sull'elemento che si anima, non sul suo contenitore. Ora sta sul gruppo dei riquadri con
+`start: 'bottom bottom'`, cioe' il primo istante in cui il gruppo e' entrato per intero.
+
+Misurato a finestra 800: prima partivano col gruppo a `808..928`, cioe' fuori; ora a `628..748`.
+
+**2. Al cambio slide salivano mentre la slide era ancora in viaggio.** Lo scorrimento dura 0,55s e i
+riquadri ne duravano 0,5: finivano prima che la slide si fermasse. Ora partono a scorrimento finito,
+che e' il primo istante in cui la slide e' ferma e tutta visibile. Misurato: fermi fino a 450ms,
+salgono a 620ms.
+
+**3. La timeline di una slide nasce mentre la slide e' `hidden`**, e li' l'altezza e' zero, cioe' il
+100% da cui i riquadri dovrebbero salire vale zero pixel. Al cambio slide serve `invalidate()`, e
+subito dopo un `pause(0)` che li rimanda sotto la maschera mentre la slide viaggia.
 
 Le durate sono una scelta — l'effetto non e' nel Figma — abbastanza lente da leggersi e abbastanza
 sfalsate da sentirsi come una sequenza e non come un blocco solo che si alza.
