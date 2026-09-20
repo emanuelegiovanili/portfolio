@@ -18,6 +18,7 @@
  *   node scripts/verify-edges.mjs
  *   node scripts/verify-edges.mjs --url http://…
  *   node scripts/verify-edges.mjs --width 390
+ *   node scripts/verify-edges.mjs --senza-clip-margin
  *
  * **La larghezza conta.** Fino alla Fase 7 questo script guardava solo 1440, e
  * quindi diceva qualcosa sui fili di **un tier su tre**. Il committente ha
@@ -121,6 +122,24 @@ const value = (name, fallback) => {
  */
 const WIDTHS = value('--width', null) ? [Number(value('--width', null))] : [390, 768, 1440];
 
+/**
+ * Finge un browser che non implementa `overflow-clip-margin`.
+ *
+ * Safari e' quel browser, e per questo su Safari non si vedeva **nessun** bordo
+ * su **nessun** blocco: il filo sta un pixel oltre il border box, il ritaglio
+ * si misura dal padding box, e senza margine di franchigia il disegno finiva
+ * buttato via dopo essere stato calcolato giusto. Tre settimane di ipotesi
+ * sbagliate perche' nessuna sonda guardava i pixel di un motore diverso da
+ * Chromium, e questo e' il modo piu' vicino che ho per farlo senza avere
+ * quel motore.
+ *
+ * Il ritaglio ora lo fa `clip-path`, che non ha quel buco. Questo interruttore
+ * serve a non tornarci mai piu': se qualcuno rimette `overflow: clip` con un
+ * margine, qui i fili spariscono e la verifica fallisce.
+ */
+const SENZA_CLIP_MARGIN = args.includes('--senza-clip-margin');
+const NEUTRALIZZA = '*, *::before, *::after { overflow-clip-margin: 0px !important; }';
+
 const explicitUrl = value('--url', null);
 const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await startDevServer({ probePath: CASES[0].route });
 
@@ -163,7 +182,7 @@ async function strip(page, clip) {
 }
 
 try {
-  console.log('\nI fili cadono sulla linea?\n');
+  console.log(`\nI fili cadono sulla linea?${SENZA_CLIP_MARGIN ? ' (fingendo un browser senza overflow-clip-margin)' : ''}\n`);
 
   for (const larghezza of WIDTHS)
   for (const { route, selector, nome, apri, filo } of CASES) {
@@ -174,6 +193,7 @@ try {
     });
     const page = await context.newPage();
     await page.goto(server.base + route, { waitUntil: 'networkidle' });
+    if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
     await page.evaluate(() => document.fonts.ready);
 
     const found = await page.evaluate((sel) => {
@@ -276,6 +296,7 @@ try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
     const page = await context.newPage();
     await page.goto(server.base + '/', { waitUntil: 'networkidle' });
+    if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
     await page.evaluate(() => document.fonts.ready);
 
     const top = await page.evaluate(() => {
@@ -316,6 +337,7 @@ try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
     const page = await context.newPage();
     await page.goto(server.base + HOVER[0].route, { waitUntil: 'networkidle' });
+    if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
     await page.evaluate(() => document.fonts.ready);
 
     for (const { selector, nome, apri } of HOVER) {

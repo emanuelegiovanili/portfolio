@@ -385,12 +385,36 @@
   background: none;
 }
 
+/*
+ * Il ritaglio si fa con `clip-path`, non con `overflow: clip`.
+ *
+ * ---------------------------------------------------------------------------
+ * PERCHE' NON `overflow-clip-margin`
+ *
+ * Il filo sporge di un pixel oltre il border box — e' li' che cade la linea di
+ * griglia che chiude il blocco — mentre il ritaglio di `overflow: clip` si
+ * misura dal **padding box**. Senza margine, quel ritaglio si mangia tutti e
+ * quattro i fili. `overflow-clip-margin: 2px` glielo concedeva.
+ *
+ * Solo che `overflow-clip-margin` **Safari non lo implementa**, e `clip`
+ * senza margine si comporta come se il margine fosse zero. Risultato: su
+ * Safari nessun bordo su nessun blocco, con le variabili del filo al 100%, lo
+ * pseudo-elemento della misura giusta, `background-size` corretto e zero
+ * errori. Tutto in ordine, e niente dipinto, perche' il disegno finiva fuori
+ * dal ritaglio.
+ *
+ * Misurato simulando l'assenza della proprieta' su Chromium: il pixel sulla
+ * linea passa da 80,77,92 (il filo) a 232,230,235 (la linea scoperta). E'
+ * esattamente quello che il committente vedeva, e spiega perche' due ipotesi
+ * precedenti — su `@property` e su `max()` dentro `calc()` — non avessero
+ * cambiato niente: guardavano cosa disegnare, non il fatto che il disegno
+ * venisse buttato via dopo.
+ *
+ * `clip-path: inset(-2px)` fa la stessa cosa e la fanno tutti: ritaglia il
+ * contenuto che sfora lasciando due pixel di franchigia, e quei due pixel sono
+ * quelli in cui vive il filo.
+ * ---------------------------------------------------------------------------
+ */
 .block[data-clip] {
-  overflow: clip;
-  /* Il filo sporge di un pixel oltre il border box, e il ritaglio di `clip` si
-     misura dal padding box: senza questo margine se lo mangerebbe tutto, su
-     tutti e quattro i lati. Due pixel, cioe' --line per due — scritto per
-     esteso perche' con un calc su custom property la dichiarazione viene
-     scartata e il valore calcolato torna a zero. Verificato. */
-  overflow-clip-margin: 2px;
+  clip-path: inset(-2px);
 }

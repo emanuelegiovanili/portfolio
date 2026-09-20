@@ -27,9 +27,9 @@ const { at, works } = Astro.props;
   {/*
     Il ritaglio delle slide sta qui e non sul blocco.
 
-    Il blocco concede al proprio filo due pixel oltre il padding box
-    (`overflow-clip-margin`, grid.css), e in quei due pixel si vedrebbe
-    spuntare la slide che esce. Questo contenitore ritaglia netto.
+    Il blocco concede al proprio filo due pixel oltre il border box
+    (`clip-path`, grid.css), e in quei due pixel si vedrebbe spuntare la slide
+    che esce. Questo contenitore ritaglia netto.
   */}
   <div class="works-card__viewport">
     {

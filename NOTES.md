@@ -1623,6 +1623,92 @@ avere piu' contenuto, non righe piu' alte.
 
 ---
 
+## 17. Fase 9 — perche' su Safari non c'era nessun bordo
+
+Tre giri di ipotesi, due sbagliate, e la terza misurata. Vale la pena scrivere
+anche le due sbagliate: il modo in cui hanno fallito e' quello che ha portato
+alla terza.
+
+### D101. La caccia
+
+**Prima ipotesi: `@property`.** I quattro valori del filo erano numeri
+registrati, moltiplicati per `100%` dentro `background-size`, e a usarli era uno
+pseudo-elemento. WebKit ha una storia di pseudo-elementi che non si ridisegnano
+quando cambia una custom property registrata ereditata. Plausibile, e sbagliata:
+diventate percentuali non registrate, su Safari non e' cambiato niente.
+
+**Seconda ipotesi: `max()` dentro `calc()`.** `--edge-x` e' un `max()` con un
+`calc()` dentro, e finisce dentro a un altro `calc()` che decide `right` e
+`bottom` dello pseudo. Se quella catena non risolvesse, le due distanze
+diventerebbero `auto` e lo pseudo collasserebbe a zero: nessun bordo, con il
+resto della pagina intatto. Plausibile, e sbagliata.
+
+A smentirla e' stata una pagina di prova (`/diagnostica`) aperta sul dispositivo
+del committente: sei prove, dalla piu' semplice alla regola vera, **tutte
+passate**. `@property` registra, `max()` dentro `calc()` risolve, lo pseudo e'
+122x58 con le distanze giuste.
+
+**Ed e' li' che la caccia ha girato.** Se il CSS e' giusto e il disegno non si
+vede, il disegno viene buttato via *dopo*. Un pannello sulla pagina vera
+(`?diag`) l'ha confermato: valori al 100%, pseudo della misura giusta,
+`background-size` corretto, zero errori, e nessun bordo sullo schermo.
+
+### D102. `overflow-clip-margin` non esiste su Safari
+
+Il filo sta **un pixel oltre** il border box, perche' e' li' che cade la linea
+di griglia che chiude il blocco (D61). Il ritaglio di `overflow: clip` si misura
+invece dal **padding box**. I due pixel di `overflow-clip-margin` erano quello
+che glielo concedeva.
+
+Safari non implementa `overflow-clip-margin`, e `clip` senza margine si comporta
+come se il margine fosse zero: si mangia tutti e quattro i fili di tutti i
+blocchi che dichiarano `clip`, che sul sito sono quasi tutti.
+
+**Misurato**, simulando l'assenza della proprieta' su Chromium. Il pixel sulla
+linea del bordo alto di `hero-text`:
+
+    con il margine      80,77,92      il filo
+    senza il margine    232,230,235   la linea scoperta
+
+La correzione e' `clip-path: inset(-2px)`, che fa la stessa cosa e la fanno
+tutti: ritaglia il contenuto che sfora lasciando due pixel di franchigia, e quei
+due pixel sono quelli in cui vive il filo.
+
+### D103. I punti erano tre, non uno
+
+La correzione sui blocchi ne ha scoperti altri due.
+
+**La card progetto** aveva un `overflow: clip` suo, senza margine. Non si vedeva
+perche' la franchigia gliela passava la regola del blocco: tolta quella, i suoi
+quattro fili sparivano anche su Chromium. L'ha trovato `verify:webkit` al primo
+giro.
+
+**Il marquee** e' andato al contrario. Sostituire li' `overflow: clip` con
+`clip-path` ha fatto sparire due fili a 390, e il motivo non c'entra con il
+ritaglio: dentro al marquee c'e' un nastro di testo largo molte volte lo
+schermo, e `overflow: clip` non lo nasconde soltanto, lo **contiene**. Con un
+`clip-path`, che e' solo visivo, quella larghezza tornava nell'area scorribile
+del documento, la pagina si allargava, e le finestre d'ingresso dei fili — che
+si misurano in frazioni di schermata — cadevano altrove.
+
+Li' `overflow: clip` serve davvero. Il filo basso e' passato **fuori** dal
+contenitore che ritaglia: sta sul blocco, che non ritaglia niente, e lo sbordo a
+tutta larghezza se lo rifa da se'. Trovato da `verify:rules`, che e' la sonda
+nata due fasi fa per un difetto completamente diverso.
+
+### D104. `verify:webkit`
+
+Rigira i 128 controlli a livello di pixel **fingendo un browser che non
+implementa `overflow-clip-margin`**. E' il modo piu' vicino a misurare Safari
+che questa sessione abbia, visto che il motore non e' scaricabile (B23).
+
+Non copre le altre differenze di WebKit, e non va spacciato per una verifica su
+Safari. Copre pero' esattamente la classe di difetto che e' costata tre giri:
+un disegno calcolato bene e ritagliato via, che nessuna sonda vedeva perche'
+tutte guardavano il motore in cui il ritaglio funziona.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
