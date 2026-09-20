@@ -100,6 +100,11 @@ const CASES = [
   // riga e il filo se lo disegna da solo. Il committente ne ha notato
   // l'assenza, quindi ora c'e' e va misurato come tutti gli altri.
   { route: '/', selector: '.testimonial-tab', nome: 'nome cliente (testimonial)' },
+  // Questi due avevano un `overflow: clip` proprio, come ce l'aveva la card
+  // progetto: taglia al padding box e si mangia i quattro fili. Non lo vedeva
+  // nessuno perche' nessuna sonda li guardava. Ora li guarda.
+  { route: '/about', selector: '.spotify-cover', nome: 'copertina playlist' },
+  { route: '/works/seezy', selector: '.media-block', nome: 'media (case study)' },
 ];
 
 const RULE = [0x50, 0x4d, 0x5c];
@@ -137,6 +142,16 @@ const WIDTHS = value('--width', null) ? [Number(value('--width', null))] : [390,
  * serve a non tornarci mai piu': se qualcuno rimette `overflow: clip` con un
  * margine, qui i fili spariscono e la verifica fallisce.
  */
+/**
+ * Finestra alta, perche' i blocchi vanno fotografati interi.
+ *
+ * La copertina di un case study e' alta sei celle, cioe' 720px a 1440: con una
+ * finestra da 900 e il blocco che comincia a 240 non ci stava, e la prova
+ * veniva saltata invece che fatta. Un blocco saltato in silenzio e' un blocco
+ * non verificato.
+ */
+const HEIGHT = 1200;
+
 const SENZA_CLIP_MARGIN = args.includes('--senza-clip-margin');
 const NEUTRALIZZA = '*, *::before, *::after { overflow-clip-margin: 0px !important; }';
 
@@ -188,7 +203,7 @@ try {
   for (const { route, selector, nome, apri, filo } of CASES) {
     // Densita' 1: un pixel dell'immagine e' un pixel CSS, e i conti tornano.
     const context = await browser.newContext({
-      viewport: { width: larghezza, height: 900 },
+      viewport: { width: larghezza, height: HEIGHT },
       deviceScaleFactor: 1,
     });
     const page = await context.newPage();
@@ -229,7 +244,7 @@ try {
      * righe di contenuto. Si dichiara saltato invece di ritagliare fuori dallo
      * schermo, che darebbe un errore di sharp e nessuna informazione.
      */
-    if (box.top < 0 || box.bottom > 900) {
+    if (box.top < 0 || box.bottom > HEIGHT) {
       console.log(`  SALTATO ${etichetta} — non ci sta nella finestra (${box.top}…${box.bottom})`);
       await context.close();
       continue;
@@ -293,7 +308,7 @@ try {
   console.log('\nE il marquee ha i suoi due fili?\n');
 
   {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+    const context = await browser.newContext({ viewport: { width: 1440, height: HEIGHT }, deviceScaleFactor: 1 });
     const page = await context.newPage();
     await page.goto(server.base + '/', { waitUntil: 'networkidle' });
     if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
@@ -334,7 +349,7 @@ try {
   console.log('\nLo strato dell\'hover copre il blocco e la sua linea?\n');
 
   {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+    const context = await browser.newContext({ viewport: { width: 1440, height: HEIGHT }, deviceScaleFactor: 1 });
     const page = await context.newPage();
     await page.goto(server.base + HOVER[0].route, { waitUntil: 'networkidle' });
     if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });

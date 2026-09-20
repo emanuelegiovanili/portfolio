@@ -1723,6 +1723,64 @@ l'animazione. Con la rete costa solo l'animazione.
 
 ---
 
+## 18. Fase 10 — il disco gira
+
+### D106. Gira tutto il disco, e gira dentro all'SVG
+
+Richiesta del committente. `data-spin` era gia' nel markup dalla Fase 4: era
+un'intenzione che nessuno leggeva.
+
+**Gira tutto il disegno, non una sua parte.** Il primo tentativo faceva girare i
+soli due archi off-white, sul ragionamento che il resto fosse sfondo. Lo
+screenshot dice altro: la copertina e' un vinile con un morso tolto in alto a
+sinistra, e il morso e' proprio quello che rende leggibile la rotazione. Un
+disco fermo con i solchi che girano dentro sembra rotto.
+
+**E gira un gruppo dentro all'SVG, non l'elemento `<svg>`.** Girando l'`<svg>`,
+che e' una scatola di layout, la scatola si allarga agli angoli: un quadrato
+ruotato di 45 gradi sporge di un quinto del proprio lato. A schermo non si
+vedeva niente — il disco e' un cerchio e i suoi angoli sono vuoti — ma
+`verify:grid` l'ha misurato: **46 pixel fuori dal blocco a 1440**. Un pezzo
+fuori dalla griglia resta fuori dalla griglia anche quando e' trasparente.
+
+La trasformazione di un gruppo SVG non tocca il layout: misurato, la scatola
+resta 238x238 a qualunque angolo e lo sforo torna ai due pixel del decoro.
+
+Il perno e' `50% 50%`: il centro del disegno (162,29 su 325) coincide con il
+centro del viewBox (162,5) a meno di due decimi di unita', cioe' un settimo di
+pixel a schermo. Cade giusto comunque il browser risolva `transform-origin`
+dentro a un SVG, e non dipendere da quella risoluzione e' il punto.
+
+Sei secondi a giro e' una scelta: un 33 giri ne farebbe uno ogni 1,8, e a quella
+velocita' un elemento decorativo in un angolo diventa un disturbo. Sotto
+`prefers-reduced-motion: reduce` sta fermo.
+
+**La copertina e' inline.** Era un `<img src>`, e a un indirizzo esterno non si
+arriva dal CSS della pagina. E' la stessa ragione per cui le icone di questo
+sito sono inline.
+
+### D107. Altri due blocchi si ritagliavano i fili da soli
+
+Cercando dove mettere la rotazione e' saltato fuori che `.spotify-cover` e
+`.media-block` avevano un `overflow: clip` proprio, come ce l'aveva la card
+progetto (D103): taglia al padding box e si mangia i quattro fili. Il ritaglio
+glielo fa gia' il blocco con `clip-path`, quindi il loro e' sparito.
+
+Non lo vedeva nessuno perche' nessuna sonda li guardava. Ora `verify:edges` e
+`verify:webkit` li guardano: le prove passano da 128 a 152.
+
+Nello stesso passaggio, la finestra delle sonde a pixel e' salita da 900 a 1200
+di altezza. La copertina di un case study e' alta 720px a 1440 e non ci stava:
+veniva **saltata**, e un blocco saltato in silenzio e' un blocco non verificato.
+
+### D108. Il testimonial di TAMA caffe'
+
+Testo fornito dal committente, riprodotto come sta. **Manca la firma**: chi
+l'ha scritta e con che ruolo. Finche' non arriva, quella scheda mostra la
+citazione senza attribuzione. B13 scende da tre schede vuote a due.
+
+---
+
 ## 5. Blocchi aperti
 
 | # | Cosa manca | Conseguenza |
@@ -1736,7 +1794,7 @@ l'animazione. Con la rete costa solo l'animazione.
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |
 | B14 | **`/about` si stringe fra 1200 e 1365** | Quattro blocchi di testo tengono a 1440 e chiedono fino a 17px in piu' a 1200. Dichiarati con `data-known-overflow`. Si risolve allargando qualche span o alzando il confine lg: e' una decisione di disegno |
-| B13 | **Tre testimonial su quattro non hanno un testo** | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
+| B13 | **Due testimonial su quattro non hanno un testo, e uno non ha la firma** | TAMA caffe' ha la citazione ma non il nome di chi l'ha scritta (D108). | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |
 | B15 | **Megamenu a base e md: proposta in attesa di conferma** | Composizione derivata dalle regole del file, non disegnata (D66). Se il committente la conferma, B15 si chiude; se preferisce altro, cambia una tabella in `chrome.ts` |
 | B16 | **Nessuna pagina 404** | Non e' disegnata e non l'ho inventata. Oggi risponde quella essenziale di Workers. `not_found_handling: "404-page"` e' gia' pronto: il giorno che il disegno c'e', basta una route `404.astro` |

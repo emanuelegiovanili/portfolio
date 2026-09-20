@@ -18,7 +18,15 @@ import { aboutBlocks, aboutFooter } from '../lib/blocks/pages';
 import { BIO, LOCATION, RECIPE, REMOTE, SPOTIFY } from '../data/about';
 import portrait from '../assets/about/portrait.jpg';
 import desk from '../assets/about/desk.jpg';
-import spotifyCover from '../assets/about/spotify-cover.svg';
+/*
+ * La copertina si incorpora, non si linka.
+ *
+ * Dentro ci sono due archi che devono girare (`pages.css`), e a un `<img src>`
+ * non si arriva dal CSS della pagina. E' la stessa ragione per cui le icone di
+ * questo sito sono inline: un disegno su cui si deve intervenire non puo'
+ * stare dietro a un indirizzo.
+ */
+import spotifyCover from '../assets/about/spotify-cover.svg?raw';
 import '../styles/pages.css';
 
 const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
@@ -143,8 +151,9 @@ const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
       />
     </Block>
 
-    <Block at={aboutBlocks.spotifyCover} class="spotify-cover" data-spin clip>
-      <img src={spotifyCover.src} alt="" width="240" height="240" />
+    <Block at={aboutBlocks.spotifyCover} class="spotify-cover" clip>
+      {/* Decorativa: il titolo della playlist e' scritto accanto. */}
+      <Fragment set:html={spotifyCover} />
     </Block>
 
     <Block at={aboutBlocks.spotifyTitle} class="section-title" clip>

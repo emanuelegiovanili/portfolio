@@ -40,8 +40,10 @@
   justify-content: center;
 }
 
+/* Niente `overflow` proprio: il ritaglio lo fa il blocco, con `clip-path`.
+   Un `overflow: clip` qui taglierebbe al padding box e si mangerebbe i quattro
+   fili, che stanno un pixel piu' in la'. Vedi la nota in grid.css. */
 .media-block {
-  overflow: clip;
 }
 
 .media-block :is(img, picture) {
@@ -110,17 +112,64 @@
 /* 301:522 — la copertina gira su se stessa al passaggio del mouse. Qui e'
    ferma: il movimento arriva in Fase 5, con i valori reali letti dal file
    (2,515s, senso antiorario). */
+/* Come `.media-block`: nessun ritaglio proprio, o si mangia i fili. */
 .spotify-cover {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: clip;
   background: var(--off-white);
 }
 
-.spotify-cover img {
+.spotify-cover svg {
+  display: block;
   width: 100%;
   height: 100%;
+}
+
+/*
+ * Il disco gira.
+ *
+ * Gira **tutto il disegno**, non una sua parte. La copertina e' un vinile con
+ * un morso tolto in alto a sinistra: e' quel morso a rendere leggibile la
+ * rotazione, e a farlo restare fermo mentre girano i solchi il disco
+ * sembrerebbe rotto. Un primo tentativo faceva girare i soli due archi
+ * off-white, ed e' bastato guardarlo per buttarlo.
+ *
+ * La rotazione sta su un gruppo **dentro** l'SVG, non sull'elemento `<svg>`.
+ *
+ * Girando l'`<svg>`, che e' una scatola di layout, la scatola si allarga agli
+ * angoli: un quadrato ruotato di 45 gradi sporge di un quinto del proprio
+ * lato. A schermo non si vedeva niente — il disco e' un cerchio, e i suoi
+ * angoli sono vuoti — ma `verify:grid` l'ha misurato: 46 pixel fuori dal blocco
+ * a 1440. Un pezzo fuori dalla griglia resta fuori dalla griglia anche se e'
+ * trasparente.
+ *
+ * La trasformazione di un gruppo SVG non tocca il layout: la scatola resta
+ * 240x240 a qualunque angolo. Il perno e' `50% 50%`, e il centro del disegno
+ * (162,29 su 325) coincide con il centro del viewBox (162,5) a meno di due
+ * decimi di unita', cioe' un settimo di pixel a schermo: cade giusto comunque
+ * il browser lo risolva.
+ *
+ * Sei secondi a giro e' una scelta: un 33 giri ne farebbe uno ogni 1,8, e a
+ * quella velocita' un elemento decorativo in un angolo della pagina diventa un
+ * disturbo.
+ */
+@keyframes gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spotify-cover [data-disc] {
+  transform-origin: 50% 50%;
+  animation: gira 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotify-cover [data-disc] {
+    animation: none;
+  }
+}
 }
 
 /* 300:440 */
