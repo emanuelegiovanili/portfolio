@@ -19,6 +19,30 @@
   margin: 0;
 }
 
+/*
+ * Sopra la foto, e opachi.
+ *
+ * "In the kitchen" (300:354) e la riga della playlist (300:440) cadono sulla
+ * stessa area della foto della scrivania. Il fondo dei blocchi e' al 50% su
+ * tutto il sito (NOTES.md D1), e al 50% sopra una fotografia il titolo si legge
+ * attraverso la scrivania: su richiesta del committente questi blocchi vanno al
+ * 100%. Dove sotto non c'e' niente — il disco, che e' fuori dalla foto — il
+ * colore e' lo stesso identico, perche' e' il colore della pagina: la riga resta
+ * uniforme e non si vede la giuntura.
+ *
+ * `z-index: 2` serve al solo titolo: nel documento viene **prima** della foto, e
+ * a parita' di z-index vince l'ultimo, cioe' la foto. E' lo stesso valore con
+ * cui i blocchi viola stanno sopra ai vicini (grid.css), e i due casi non si
+ * incontrano mai in pagina.
+ */
+.block.is-opaque {
+  --block-bg: var(--page-bg);
+}
+
+.block.is-over {
+  z-index: 2;
+}
+
 .label-cell,
 .text-cell {
   display: flex;

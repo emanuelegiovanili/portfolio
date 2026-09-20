@@ -103,6 +103,17 @@ export interface WorksFilterState {
   rows: number;
 }
 
+/**
+ * Lo slug di un tag, dentro un indirizzo e dentro il CSS.
+ *
+ * Serve in due posti che non si parlano — lo stato del filtro qui, e il link
+ * dalle card del "mix" in home — e due copie della stessa riga divergono al
+ * primo tag con un carattere fuori dall'alfabeto.
+ */
+export function tagSlug(tag: string): string {
+  return tag.toLowerCase().replace(/\s+/g, '-');
+}
+
 export function worksFilterStates(
   works: { id: string; tags: readonly string[] }[],
   tags: readonly string[],
@@ -116,7 +127,7 @@ export function worksFilterStates(
 
   return [
     build('all', 'All', null),
-    ...tags.map((tag) => build(tag.toLowerCase().replace(/\s+/g, '-'), tag, tag)),
+    ...tags.map((tag) => build(tagSlug(tag), tag, tag)),
   ];
 }
 

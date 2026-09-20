@@ -1805,6 +1805,99 @@ scheda.
 
 Con la firma di Michael Angelini, CEO, B13 scende a due schede vuote su quattro.
 
+## 19. Fase 11 — due testimonial, un piede cliccabile, e il mix che porta da qualche parte
+
+### D110. La riga dei testimonial non sa piu' quante schede ha
+
+Il committente ha chiesto di togliere dalla home Noranutrizione e Aggrego, che
+sono le due schede senza citazione. La home riceve `COMPLETE_TESTIMONIALS` al
+posto di `TESTIMONIALS`, e i due clienti restano nel file: il giorno che arriva
+un testo, lo si scrive nella citazione vuota e la scheda torna in pagina.
+
+**Il problema non era togliere due schede, era che il CSS ne contava quattro.**
+`grid-template-columns: repeat(2, calc(var(--cell) * 4))` a base e
+`repeat(4, calc(var(--cell) * 2))` da md: due numeri scritti a mano che con due
+schede lasciavano meta' riga vuota, e che il prossimo cambio di lista avrebbe
+sbagliato di nuovo.
+
+Ora la riga non sa quante schede ha. Le tracce sono **otto da una cella** — lo
+stesso numero con cui la pagina disegna le sue linee, non una divisione che gli
+assomiglia — e quante colonne prenda ciascuna scheda lo conta il componente e lo
+passa inline: `--tab-col-md` e `--tab-span-md` per scheda, `--tab-cols` e
+`--tab-rows` sulla riga. A base resta una scheda per riga, larga tutte e otto le
+colonne.
+
+**Due guardie di build**, perche' la liberta' si paga: se le schede non dividono
+le otto colonne (cinque, per dire) i loro lati smettono di cadere sulle linee, e
+se a base non sono tante quante le righe del blocco la riga resta mezza vuota o
+sborda. In tutti e due i casi la build si ferma e dice quale numero rivedere,
+invece di consegnare una riga storta.
+
+### D111. Il nome a fondo pagina porta a casa
+
+Richiesta del committente. Stessa ragione, e stessa soluzione, del logo del
+megamenu (D50): un nome grande che non fa niente e' un vicolo cieco. Il blocco
+diventa un `<a href="/">`, e non serve altro — `:where(a)` azzera gia' colore e
+sottolineatura in tutto il sito.
+
+### D112. Sopra una fotografia, il 50% non tiene
+
+Il fondo dei blocchi e' al 50% su tutto il sito per decisione del committente
+(D1). Funziona perche' sotto c'e' il colore della pagina, che e' lo stesso: il
+50% di off-white su off-white **e' off-white**, e la differenza non si vede da
+nessuna parte.
+
+Tranne dove sotto c'e' un'immagine. In /about il titolo "In the kitchen"
+(`300:354`) e la riga della playlist (`300:440`) cadono sulla foto della
+scrivania, e li' il 50% si vede tutto: si legge la scrivania attraverso
+"Now playing". Su richiesta del committente quei blocchi vanno al 100%.
+
+Una classe sola, `.is-opaque`, che ridefinisce `--block-bg` sul blocco invece di
+scrivergli un `background`: il meccanismo resta quello di `grid.css`, cambia solo
+il valore. L'ho messa anche sul disco, che la foto non la tocca: li' il colore e'
+identico — e' lo stesso `--page-bg` — quindi non cambia niente a schermo, e la
+riga non ha una giuntura a meta' il giorno che la foto si allarga.
+
+**E il titolo andava anche sollevato.** Nel documento viene *prima* della foto, e
+fra due blocchi con lo stesso `z-index` vince l'ultimo: era la foto a coprirlo, e
+di quel titolo si leggeva "In the" e mezza "k". `.is-over` lo porta a `z-index: 2`,
+lo stesso valore con cui i blocchi viola stanno sopra ai vicini, e i due casi in
+pagina non si incontrano mai.
+
+Il blocco porta un `data-known-overflow` che parla di 438px chiesti dentro tre
+colonne. E' la misura del **text node Figma**, non di quello che il browser
+disegna: misurato ora che si vede, "In the kitchen" sta dentro i 360px del
+blocco e non viene tagliato da niente. La nota resta perche' descrive il file.
+
+### D113. Le card del "mix" portano a /works filtrata
+
+Richiesta del committente. Erano tre riquadri che dicevano cosa faccio e
+finivano li'; ora ognuno e' un link a `/works?filter=<ambito>`.
+
+**L'etichetta e il tag non sono la stessa parola.** La card dice "Product
+Design", il filtro dice "Product". Il tag sta sulla card e passa da
+`WORK_TAGS`, quindi una card che puntasse a un ambito inesistente non
+compilerebbe; una seconda guardia a runtime regge anche se qualcuno allenta i
+tipi.
+
+Lo slug viene da `tagSlug()`, che adesso e' una funzione sola usata dai due lati:
+prima la riga `tag.toLowerCase().replace(...)` stava solo dentro
+`worksFilterStates`, e una seconda copia in home sarebbe divergente al primo tag
+con un carattere fuori dall'alfabeto.
+
+**Perche' la querystring e non una pagina per ambito.** Il filtro e' gia' tutto
+nel client (D99): gli stati li scrive il build come custom property, il modulo
+sceglie quale e' attivo. Prerenderizzare `/works/filter/branding` vorrebbe dire
+quattro copie della stessa pagina e quattro indirizzi che nel Figma non esistono.
+Con la querystring la pagina e' una, e uno slug sconosciuto viene ignorato:
+si resta su "All" invece di mostrare zero progetti a chi ha sbagliato a copiare
+un link.
+
+**Il prezzo e' un lampo.** La pagina arriva su "All" e il filtro si applica
+quando il modulo parte, quindi per un fotogramma si vedono tutte le card. Senza
+JavaScript si vedono tutte e basta, che e' il comportamento gia' scelto per i
+filtri.
+
 ---
 
 ## 5. Blocchi aperti
@@ -1820,7 +1913,7 @@ Con la firma di Michael Angelini, CEO, B13 scende a due schede vuote su quattro.
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |
 | B14 | **`/about` si stringe fra 1200 e 1365** | Quattro blocchi di testo tengono a 1440 e chiedono fino a 17px in piu' a 1200. Dichiarati con `data-known-overflow`. Si risolve allargando qualche span o alzando il confine lg: e' una decisione di disegno |
-| B13 | **Due testimonial su quattro non hanno un testo** | Noranutrizione e Aggrego: le schede girano nel carosello ma il pannello resta vuoto. Seezy e TAMA caffe' sono complete | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
+| B13 | **Due testimonial su quattro non hanno un testo** | Noranutrizione e Aggrego: su richiesta del committente da oggi **non compaiono affatto** in pagina (D110). Restano in `src/data/testimonials.ts`: scrivere la citazione li' e la scheda torna nel giro da sola. Seezy e TAMA caffe' sono complete | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |
 | B15 | **Megamenu a base e md: proposta in attesa di conferma** | Composizione derivata dalle regole del file, non disegnata (D66). Se il committente la conferma, B15 si chiude; se preferisce altro, cambia una tabella in `chrome.ts` |
 | B16 | **Nessuna pagina 404** | Non e' disegnata e non l'ho inventata. Oggi risponde quella essenziale di Workers. `not_found_handling: "404-page"` e' gia' pronto: il giorno che il disegno c'e', basta una route `404.astro` |

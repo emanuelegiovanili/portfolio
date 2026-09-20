@@ -9,9 +9,17 @@
  * di conseguenza parte una riga piu' sotto. Il risultato in pagina e' identico,
  * senza dover duplicare il markup delle schede.
  *
- * Solo il primo testimonial ha un testo nel Figma. Gli altri tre hanno una
- * citazione vuota di proposito (`src/data/testimonials.ts`): sono segnaposto,
- * servono a far girare la rotazione, e restano selezionabili. Vedi NOTES.md B13.
+ * Il numero di schede non e' fisso. Il Figma ne disegna quattro, in pagina ne
+ * arrivano due (quelle con un testo vero: vedi `src/data/testimonials.ts` e
+ * NOTES.md B13), e domani possono essere tre. La riga non lo sa in anticipo: si
+ * divide le otto celle in parti uguali a md e lg, e a base mette una scheda per
+ * riga. Le due misure che ne discendono — quante colonne prende ogni scheda,
+ * quante righe e' alta la riga a base — escono da qui come custom property
+ * inline, e il CSS le legge senza sapere quante schede ci sono.
+ *
+ * Le due guardie qui sotto sono il prezzo di quella liberta': se le schede non
+ * dividono le colonne, o se a base non sono tante quante le righe del blocco,
+ * la build si ferma invece di consegnare una riga storta.
  *
  * Il testo di ogni scheda viaggia sugli attributi della scheda stessa: al
  * server la lista la conosce gia' Astro, e al client serve solo poterla
@@ -32,9 +40,37 @@ const { at, items } = Astro.props;
 const firstComplete = items.findIndex((t) => t.quote);
 const active = firstComplete >= 0 ? firstComplete : 0;
 const shown = items[active];
+
+const tabs = items.length;
+// Le colonne sono le stesse a tutti e tre i tier (8); le righe cambiano.
+const tabCols = at.row.base?.[2] ?? at.row.lg![2];
+const rowsBase = at.row.base?.[3] ?? 1;
+
+if (tabCols % tabs !== 0) {
+  throw new Error(
+    `testimonial: ${tabs} schede non dividono ${tabCols} colonne. ` +
+      `Con parti disuguali i lati delle schede non cadono piu' sulle linee di griglia.`,
+  );
+}
+if (at.row.base && rowsBase !== tabs) {
+  throw new Error(
+    `testimonial: a base la riga e' alta ${rowsBase} righe ma le schede sono ${tabs}. ` +
+      `A base va una scheda per riga: aggiorna testimonialsRow in src/lib/blocks/home.ts, ` +
+      `e con lui le righe dei blocchi che stanno sotto.`,
+  );
+}
+
+const tabSpan = tabCols / tabs;
 ---
 
-<Block at={at.row} class="testimonial-row" role="tablist" aria-label="Clienti" surface="bare">
+<Block
+  at={at.row}
+  class="testimonial-row"
+  role="tablist"
+  aria-label="Clienti"
+  surface="bare"
+  style={`--tab-cols:${tabCols};--tab-rows:${rowsBase}`}
+>
   {
     items.map((item, i) => {
       return (
@@ -46,7 +82,7 @@ const shown = items[active];
           id={`tt-${i}`}
           aria-controls="testimonial-panel"
           aria-selected={i === active ? 'true' : 'false'}
-          data-placeholder={item.quote ? undefined : ''}
+          style={`--tab-row-base:${i + 1};--tab-col-md:${i * tabSpan + 1};--tab-span-md:${tabSpan}`}
           tabindex={i === active ? 0 : -1}
           data-testimonial={i}
           data-quote={item.quote}

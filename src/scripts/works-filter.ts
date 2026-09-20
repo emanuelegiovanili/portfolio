@@ -14,6 +14,12 @@
  * Senza JavaScript la pagina resta nello stato "All", che e' quello che il
  * markup dichiara: il filtro e' un comodo, non un prerequisito per vedere i
  * progetti.
+ *
+ * **Lo stato iniziale puo' arrivare dall'indirizzo**: `/works?filter=branding`.
+ * Ci arrivano le tre card del "mix" in home, che da li' portano a /works gia'
+ * ristretta al proprio ambito. Lo slug e' lo stesso che il build ha scritto sui
+ * bottoni, e uno sconosciuto viene ignorato: la pagina resta su "All" invece di
+ * mostrare zero progetti a chi ha sbagliato a copiare un link.
  */
 
 interface WorksFilter {
@@ -87,6 +93,17 @@ export function startWorksFilter(root: ParentNode = document): WorksFilter | nul
   };
 
   for (const button of buttons) button.addEventListener('click', onClick);
+
+  /*
+   * Lo stato d'apertura. `apply` si chiama solo se c'e' davvero qualcosa da
+   * cambiare: su "All" il markup e' gia' a posto, e chiamarlo per niente
+   * manderebbe un `resize` finto prima che il movimento abbia finito di
+   * montarsi.
+   */
+  const wanted = new URLSearchParams(window.location.search).get('filter');
+  if (wanted && wanted !== 'all' && buttons.some((button) => button.dataset.filter === wanted)) {
+    apply(wanted);
+  }
 
   return {
     stop() {

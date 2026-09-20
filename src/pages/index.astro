@@ -20,20 +20,38 @@ import WorksCarousel from '../components/home/WorksCarousel.astro';
 import Testimonials from '../components/home/Testimonials.astro';
 import { headerMap } from '../lib/blocks/chrome';
 import { homeBlocks, homeFooter } from '../lib/blocks/home';
+import { tagSlug } from '../lib/blocks/pages';
+import { WORK_TAGS } from '../content.config';
 import { SERVICES } from '../data/services';
-import { TESTIMONIALS } from '../data/testimonials';
+import { COMPLETE_TESTIMONIALS } from '../data/testimonials';
 import '../styles/home.css';
 
 const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
 
 const map = { ...headerMap, ...homeBlocks, ...homeFooter };
 
-/** Le tre skill card. L'icona e l'etichetta vengono da 262:937, 262:939, 262:930. */
+/**
+ * Le tre skill card. L'icona e l'etichetta vengono da 262:937, 262:939, 262:930.
+ *
+ * Ognuna porta a /works gia' filtrata sul proprio ambito, su richiesta del
+ * committente: erano tre riquadri che descrivevano cosa faccio e finivano li'.
+ *
+ * `tag` e' il tag del progetto, non l'etichetta: nel Figma la card dice
+ * "Product Design" e il filtro dice "Product". Il tipo lo tiene dentro
+ * `WORK_TAGS`, quindi una card che punta a un ambito inesistente non arriva
+ * alla build.
+ */
 const SKILLS = [
-  { at: homeBlocks.skillProduct, icon: 'tablet-smartphone', label: 'Product Design' },
-  { at: homeBlocks.skillWeb, icon: 'app-window', label: 'Web Design' },
-  { at: homeBlocks.skillBranding, icon: 'swatch-book', label: 'Branding' },
+  { at: homeBlocks.skillProduct, icon: 'tablet-smartphone', label: 'Product Design', tag: 'Product' },
+  { at: homeBlocks.skillWeb, icon: 'app-window', label: 'Web Design', tag: 'Web Design' },
+  { at: homeBlocks.skillBranding, icon: 'swatch-book', label: 'Branding', tag: 'Branding' },
 ] as const;
+
+// La guardia e' doppia: `includes` non compila se un tag esce da WORK_TAGS, e se
+// qualcuno allenta i tipi la build si ferma comunque qui.
+if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
+  throw new Error('home: una skill card punta a un ambito che /works non conosce.');
+}
 ---
 
 <Base
@@ -94,7 +112,13 @@ const SKILLS = [
 
     {
       SKILLS.map((skill) => (
-        <Block at={skill.at} class="skill-card" clip>
+        <Block
+          at={skill.at}
+          as="a"
+          href={`/works?filter=${tagSlug(skill.tag)}`}
+          class="skill-card"
+          clip
+        >
           <Icon name={skill.icon} />
           <p class="skill-card__label">{skill.label}</p>
         </Block>
@@ -144,7 +168,7 @@ const SKILLS = [
         prev: homeBlocks.testimonialsPrev,
         next: homeBlocks.testimonialsNext,
       }}
-      items={TESTIMONIALS}
+      items={COMPLETE_TESTIMONIALS}
     />
 
     <ContactSection

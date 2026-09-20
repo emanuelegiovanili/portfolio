@@ -251,7 +251,23 @@ try {
     await page.waitForTimeout(2500);
     const dopo = await barre();
 
-    check('ci sono quattro schede, tutte selezionabili', prima.length === 4, `ne vedo ${prima.length}`);
+    /*
+     * Non un numero fisso: quante schede ci siano lo decide la lista dei
+     * testimonial, e la sonda contava quattro perche' quattro ce n'erano il
+     * giorno che e' stata scritta. La domanda vera e' un'altra — ne bastano due
+     * perche' ci sia una rotazione, e ognuna deve avere un testo da mostrare,
+     * altrimenti la barra corre per dieci secondi su un pannello vuoto.
+     */
+    const tutteConTesto = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-testimonial]')].every(
+        (tab) => !tab.disabled && (tab.dataset.quote ?? '').trim() !== '',
+      ),
+    );
+    check(
+      'le schede sono almeno due, tutte con un testo e selezionabili',
+      prima.length >= 2 && tutteConTesto,
+      `ne vedo ${prima.length}${tutteConTesto ? '' : ', e almeno una e\' vuota o disabilitata'}`,
+    );
     check(
       'la barra della scheda corrente cresce',
       dopo.find((t) => t.attiva).x > prima.find((t) => t.attiva).x + 0.1,

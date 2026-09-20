@@ -128,7 +128,7 @@ const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
 
     <Block
       at={aboutBlocks.kitchenTitle}
-      class="section-title"
+      class="section-title is-opaque is-over"
       clip
       data-known-overflow="300:354 — il blocco e' largo 3 colonne ma il testo ne chiede 438px: sfora di 78 nel file"
     >
@@ -156,17 +156,17 @@ const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
       <Fragment set:html={spotifyCover} />
     </Block>
 
-    <Block at={aboutBlocks.spotifyTitle} class="section-title" clip>
+    <Block at={aboutBlocks.spotifyTitle} class="section-title is-opaque" clip>
       <h2 class="t-display t-display--section">{SPOTIFY.heading}</h2>
     </Block>
 
-    <Block at={aboutBlocks.spotifyDisc} class="icon-cell" clip>
+    <Block at={aboutBlocks.spotifyDisc} class="icon-cell is-opaque" clip>
       <Icon name="disc-3" />
     </Block>
 
     <Block
       at={aboutBlocks.spotifyPlaylist}
-      class="playlist"
+      class="playlist is-opaque"
       clip
       data-known-overflow="300:440 — tiene a 1440, chiede 3px in piu' a 1200"
     >

@@ -550,13 +550,12 @@
  * Il motivo e' il bordo. Il committente ha chiesto un filo attorno a ogni nome,
  * e un filo deve cadere su una linea di griglia: dentro un contenitore che
  * scorre, il filo di una scheda si stacca dalla propria linea non appena si
- * trascina. Le due cose non possono stare insieme. Il blocco della riga e' alto
- * due celle a base, quindi quattro schede da quattro colonne ci stanno esatte:
- * 4x4 su 8 colonne, due righe piene, ogni lato su una linea. Da md in su le
- * schede sono da due colonne e la riga e' una sola, come nel file.
+ * trascina. Le due cose non possono stare insieme. A base le schede stanno una
+ * per riga, alte una cella e larghe tutte e otto le colonne; da md in su si
+ * dividono le otto colonne in parti uguali su una riga sola, come nel file.
  */
 /*
- * Tracce fisse da `--cell`, non `flex` ne' `1fr`.
+ * Tracce fisse da `--cell`, non `flex` ne' `1fr`, e una traccia per colonna.
  *
  * Con quattro schede a `flex-basis: cell * 2` dentro un contenitore da otto
  * celle la somma e' esatta **in aritmetica**, e in layout no: a 719px di
@@ -565,20 +564,31 @@
  * il doppio. Misurato a 719, 1024 e 1199; a 720 e 768 no, che e' il modo in cui
  * un errore di sotto-pixel si fa riconoscere.
  *
- * Le tracce fisse usano lo stesso numero della griglia di pagina, quindi i lati
- * delle schede cadono sugli stessi valori delle linee invece che su una
- * divisione che gli assomiglia.
+ * Otto tracce da `--cell` e non due da `cell * 4`: e' lo stesso numero con cui
+ * la pagina disegna le sue linee, quindi i lati delle schede cadono sugli
+ * stessi valori invece che su una divisione che gli assomiglia. Quante colonne
+ * prenda ciascuna scheda lo decide il componente, non questo foglio: qui
+ * arrivano gia' contate in `--tab-col-md` e `--tab-span-md`.
  */
 .testimonial-row {
   display: grid;
-  grid-template-columns: repeat(2, calc(var(--cell) * 4));
-  grid-template-rows: repeat(2, var(--cell));
+  grid-template-columns: repeat(var(--tab-cols), var(--cell));
+  grid-template-rows: repeat(var(--tab-rows), var(--cell));
+}
+
+.testimonial-tab {
+  grid-column: 1 / span var(--tab-cols);
+  grid-row: var(--tab-row-base);
 }
 
 @media (min-width: 720px) {
   .testimonial-row {
-    grid-template-columns: repeat(4, calc(var(--cell) * 2));
     grid-template-rows: var(--cell);
+  }
+
+  .testimonial-tab {
+    grid-column: var(--tab-col-md) / span var(--tab-span-md);
+    grid-row: 1;
   }
 }
 
@@ -591,9 +601,9 @@
  * griglia a nessun tier, quindi valgono zero: il filo destro cade sulla linea
  * un pixel oltre, come su qualunque altro blocco.
  *
- * Fili interi e basta, senza il giro animato dello scroll: le quattro schede
- * sono affiancate e condividono i lati, e quattro tratti che partono insieme da
- * quattro angoli diversi sulla stessa linea si leggono come un disturbo.
+ * Fili interi e basta, senza il giro animato dello scroll: le schede sono
+ * affiancate e condividono i lati, e piu' tratti che partono insieme da angoli
+ * diversi sulla stessa linea si leggono come un disturbo.
  */
 .testimonial-tab {
   position: relative;

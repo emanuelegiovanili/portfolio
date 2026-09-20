@@ -4,12 +4,15 @@
  * Il Figma mostra **quattro nomi** nella riga (266:1148) ma **un solo testo**,
  * quello attivo. Gli altri tre non esistono da nessuna parte nel file.
  *
- * Due schede su quattro hanno un testo vero; le altre due hanno una citazione
- * **vuota**, non inventata: il
- * committente ha chiesto di tenerle nel giro perche' la rotazione e la barra di
- * avanzamento si possano vedere e mettere a punto subito. Sono segnaposto, e
- * finche' restano cosi' quelle tre schede mostrano un pannello vuoto per dieci
- * secondi. B13 resta aperto: il testo vero va scritto qui e basta.
+ * Due schede su quattro hanno un testo vero. Le altre due sono senza citazione,
+ * e su richiesta del committente **non vanno in pagina**: la home riceve
+ * `COMPLETE_TESTIMONIALS`, non `TESTIMONIALS`. Restano qui perche' i clienti
+ * esistono e il testo puo' arrivare: scriverlo nella citazione vuota e basta,
+ * la scheda torna nel giro da sola. B13 resta aperto per questo.
+ *
+ * La riga delle schede si dispone sul numero di schede che riceve — otto celle
+ * divise in parti uguali a md e lg, una scheda per riga a base — quindi non c'e'
+ * niente da toccare nel CSS quando questa lista cambia di lunghezza.
  */
 
 export interface Testimonial {
@@ -28,7 +31,8 @@ export const TESTIMONIALS: Testimonial[] = [
     author: 'Leonardo De Cesare',
     role: 'COO',
   },
-  // Segnaposto: vedi la nota in testa al file e NOTES.md B13.
+  // Senza citazione: fuori dalla home finche' resta cosi'. Vedi la nota in
+  // testa al file e NOTES.md B13.
   { client: 'Noranutrizione', quote: '', author: '', role: '' },
   {
     client: 'TAMA caffè',
@@ -40,5 +44,5 @@ export const TESTIMONIALS: Testimonial[] = [
   { client: 'Aggrego', quote: '', author: '', role: '' },
 ];
 
-/** Quelli che hanno davvero qualcosa da leggere. */
+/** Quelli che hanno davvero qualcosa da leggere: e' questa la lista in home. */
 export const COMPLETE_TESTIMONIALS = TESTIMONIALS.filter((t) => t.quote);
