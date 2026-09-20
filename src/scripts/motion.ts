@@ -56,27 +56,6 @@ const ENTER_END = 0.85;
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
-/*
- * Un quaderno di bordo, temporaneo.
- *
- * Serve al pannello `?diag` (NOTES.md B23): su Safari i bordi non si vedono e
- * da qui Safari non e' misurabile, quindi le informazioni vanno raccolte dove
- * il difetto succede. Costa quattro proprieta' su `window` e niente altro.
- */
-const motion = {
-  gsap: gsap.version,
-  smoother: undefined as string | undefined,
-  errori: [] as string[],
-  triggers: () => ScrollTrigger.getAll().length,
-};
-(window as unknown as { __motion: typeof motion }).__motion = motion;
-
-if (location.search.includes('diag')) {
-  import('./diag-overlay').then(({ mostraDiagnosi }) => {
-    // Dopo il primo giro di tween e di refresh, non durante.
-    window.setTimeout(mostraDiagnosi, 2500);
-  });
-}
 
 /*
  * Carosello e testimonial stanno qui fuori, non dentro `matchMedia`.
@@ -115,8 +94,6 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
    * Con la rete, un errore costa l'animazione e non il contenuto. E si vede in
    * console, invece di somigliare a un difetto di disegno.
    */
-  motion.smoother = 'creato';
-
   safely('fili dei blocchi', revealRules, () =>
     restoreRules(gsap.utils.toArray<HTMLElement>('.block[data-surface="line"]')),
   );
@@ -149,7 +126,6 @@ function safely(nome: string, run: () => void, restore: () => void): void {
     } catch {
       // Se fallisce anche il ripristino non c'e' altro da tentare.
     }
-    motion.errori.push(`${nome}: ${String(error)}`);
     console.error(`movimento: "${nome}" non e' partito, quella parte resta ferma`, error);
   }
 }

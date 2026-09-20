@@ -1707,6 +1707,20 @@ Safari. Copre pero' esattamente la classe di difetto che e' costata tre giri:
 un disegno calcolato bene e ritagliato via, che nessuna sonda vedeva perche'
 tutte guardavano il motore in cui il ritaglio funziona.
 
+### D105. Gli strumenti di diagnosi sono stati tolti
+
+`/diagnostica`, il pannello `?diag` e il quaderno di bordo su `window` erano
+temporanei e sono spariti con la causa. Restano nella storia di git per chi un
+giorno dovesse rifarli.
+
+Quello che resta e' `verify:webkit`, che e' la versione permanente della stessa
+domanda: **quello che disegno sopravvive a un browser che ritaglia diversamente?**
+
+La rete di `safely()` resta anche lei, e non era una correzione al difetto:
+serve perche' le fasi del movimento cominciano togliendo qualcosa e lo rimettono
+animandolo, quindi un errore a meta' costa il contenuto e non solo
+l'animazione. Con la rete costa solo l'animazione.
+
 ---
 
 ## 5. Blocchi aperti
@@ -1732,4 +1746,4 @@ tutte guardavano il motore in cui il ritaglio funziona.
 | B20 | **Il sottodominio `workers.dev` e' quello generato da Cloudflare** | `emanuelegiovanili.emanuele-giovanili-ap.workers.dev` ripete il nome. Si cambia dal pannello (Workers & Pages, scheda Domains) o si mette un dominio proprio |
 | B21 | **`emanuelegiovanili.it` non e' registrato** | Il form apre un `mailto:` verso `hello@emanuelegiovanili.it` (D90). Finche' il dominio non c'e', quelle mail non arrivano da nessuna parte |
 | B22 | **Il megamenu lascia piu' nero vuoto in fondo** | Conseguenza dei social alti una cella (D89): il pannello e' ancorato in alto e si e' accorciato di una riga. A base finisce a meta' schermo. Se non piace, si redistribuisce, ma quella e' una decisione di disegno |
-| B23 | **Safari non e' verificabile da qui** | Il motore WebKit non e' scaricabile (CDN di Playwright fuori dalla policy di uscita), quindi ogni sonda di questo progetto parla di Chromium. D98 e' una correzione dedotta, non misurata: va confermata sul dispositivo del committente |
+| B23 | **Safari resta un punto cieco** | Il motore WebKit non e' scaricabile (CDN di Playwright fuori dalla policy di uscita), quindi ogni sonda parla di Chromium. `verify:webkit` (D104) copre **una** differenza, quella costata la caccia di D101-D103, e non va spacciato per una verifica su Safari. Il difetto dei bordi e' chiuso e confermato dal committente sul suo dispositivo |
