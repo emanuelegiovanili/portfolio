@@ -26,7 +26,7 @@ export const EASE = {
  *
  * Sotto 0,6 non si sente, sopra 1,5 la pagina sembra scollegata dalla rotella.
  */
-export const SMOOTH = 0.8;
+export const SMOOTH = 0.9;
 
 /**
  * L'entrata del megamenu.
