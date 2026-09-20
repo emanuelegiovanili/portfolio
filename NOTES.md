@@ -1606,6 +1606,21 @@ Ora ognuna gira dentro a un `safely(nome, esegui, ripristina)`: un errore costa
 l'animazione, non il contenuto, e finisce in console invece di somigliare a un
 difetto di disegno.
 
+### D100. A base i social chiudono il menu
+
+Su richiesta del committente, e solo per il menu mobile: i due social tornano
+alti due celle e scendono **sotto** al "Let's work together", che sale di una
+riga a prendere il loro posto. La sequenza a base diventa Work, About, CTA,
+social, e il pannello finisce con loro invece che con il bottone viola.
+
+A md e lg non cambia niente: li' il CTA sta nella riga di testa e i social sono
+gia' l'ultima cosa del pannello.
+
+Il pannello passa da 12 a 13 righe. **Il nero sotto resta** (B22): a 390 tredici
+righe da 39px fanno 507 pixel su una finestra da 844, e le righe non si possono
+allungare perche' la cella e' un quadrato legato alla larghezza. L'unica leva e'
+avere piu' contenuto, non righe piu' alte.
+
 ---
 
 ## 5. Blocchi aperti

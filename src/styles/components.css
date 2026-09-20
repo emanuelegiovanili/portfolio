@@ -624,11 +624,13 @@
 }
 
 /* A base la voce social sta in quattro celle da 39: "Instagram" piu' la freccia
-   chiedono 132px e con 20px per lato non ci starebbero. Il padding va a zero,
-   esattamente come fa la voce social del footer sotto lg. */
+   chiedono 132px e con 20px per lato non ci starebbero. Va a zero il padding
+   **orizzontale**, che e' quello che stringe — come fa la voce social del footer
+   sotto lg. Quello verticale resta: da quando il blocco e' alto due celle c'e'
+   spazio, e comunque il contenuto e' centrato. */
 @media (width < 720px) {
   .menu-social {
-    padding: 0;
+    padding-inline: 0;
   }
 }
 

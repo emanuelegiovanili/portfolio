@@ -108,26 +108,37 @@ export const FOOTER_LINKS = [
  *
  *   base       md          lg
  *   10 colonne 10 colonne  12 colonne
- *   12 righe   9 righe     6 righe
+ *   13 righe   9 righe     6 righe
  */
 export const megamenuMap = {
   // Riga 1: da bordo a bordo, come nel frame.
   menuLogo: { base: [1, 1, 5, 2], md: [1, 1, 6, 1], lg: [1, 1, 4, 1] },
   menuClose: { base: [9, 1, 2, 2], md: [10, 1, 1, 1], lg: [12, 1, 1, 1] },
-  menuCta: { base: [2, 11, 8, 2], md: [7, 1, 3, 1], lg: [8, 1, 4, 1] },
+  menuCta: { base: [2, 10, 8, 2], md: [7, 1, 3, 1], lg: [8, 1, 4, 1] },
 
   // Il resto rientra di una colonna per lato.
   menuWork: { base: [2, 4, 8, 3], md: [2, 3, 8, 3], lg: [2, 2, 10, 2] },
   menuAbout: { base: [2, 7, 8, 3], md: [2, 6, 8, 3], lg: [2, 4, 10, 2] },
 
-  // Attaccati sotto ad About, alti **una** cella.
-  //
-  // Erano due, come le voci, perche' cosi' il menu riempiva il frame senza
-  // lasciarne fuori un ottavo. Il committente li ha visti troppo alti e ha
-  // chiesto di dimezzarli: restano attaccati ad About, e l'altezza del pannello
-  // scende di una riga da se' (`deriveRows` conta l'ultima riga occupata).
-  menuLinkedin: { base: [2, 10, 4, 1], md: [4, 9, 3, 1], lg: [8, 6, 2, 1] },
-  menuInstagram: { base: [6, 10, 4, 1], md: [7, 9, 3, 1], lg: [10, 6, 2, 1] },
+  /*
+   * Alti una cella, attaccati sotto ad About. A base no: due celle, in fondo.
+   *
+   * Erano due ovunque, come le voci, perche' cosi' il menu riempiva il frame.
+   * Il committente li ha visti troppo alti e ha chiesto di dimezzarli, e
+   * l'altezza del pannello e' scesa di una riga da se' (`deriveRows` conta
+   * l'ultima riga occupata).
+   *
+   * Poi, per il solo menu mobile, ha chiesto di rialzarli di una cella e di
+   * spostarli in basso: a base scendono **sotto** al "Let's work together",
+   * che sale di una riga a prendere il loro posto. Non sono piu' attaccati ad
+   * About — a base la sequenza diventa Work, About, CTA, social — e questo
+   * chiude la composizione invece di lasciarla finire con il bottone viola.
+   *
+   * A md e lg niente cambia: li' il CTA sta nella riga di testa, e i social
+   * sono gia' l'ultima cosa del pannello.
+   */
+  menuLinkedin: { base: [2, 12, 4, 2], md: [4, 9, 3, 1], lg: [8, 6, 2, 1] },
+  menuInstagram: { base: [6, 12, 4, 2], md: [7, 9, 3, 1], lg: [10, 6, 2, 1] },
 } as const satisfies LayoutMap;
 
 /**
