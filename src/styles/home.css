@@ -686,9 +686,16 @@
   padding-inline: calc(var(--u) * 12);
 }
 
+/*
+ * Le misure della citazione e del nome le ha fissate il committente: 20 a
+ * desktop, 14 sotto. Nel Figma erano 24 e 16.
+ *
+ * Sono pixel di disegno, non pixel a schermo: `--u` li scala con la cella, come
+ * tutto il resto delle spaziature e dei display.
+ */
 .testimonial-quote {
   margin: 0;
-  font-size: calc(var(--u) * 16);
+  font-size: calc(var(--u) * 14);
   line-height: 1.75;
 }
 
@@ -701,7 +708,7 @@
 
 .testimonial-author__name {
   font-weight: 700;
-  font-size: calc(var(--u) * 16);
+  font-size: calc(var(--u) * 14);
   line-height: 1.5;
 }
 
@@ -716,9 +723,11 @@
     padding-inline: var(--pad);
   }
 
-  .testimonial-author__role {
-    font-size: calc(var(--u) * 14);
-  }
+  /*
+   * Il ruolo a md restava 14, che e' la misura a cui e' sceso il nome: due
+   * righe della stessa grandezza, e la gerarchia fra chi parla e cosa fa
+   * sparisce. Torna quello di base, 12, che e' due punti sotto come a lg.
+   */
 }
 
 @media (min-width: 1200px) {
@@ -727,15 +736,23 @@
   }
 
   .testimonial-quote {
-    font-size: calc(var(--u) * 24);
+    font-size: calc(var(--u) * 20);
   }
 
   .testimonial-author__name {
-    font-size: calc(var(--u) * 24);
+    font-size: calc(var(--u) * 20);
   }
 
+  /*
+   * Il ruolo scende con il nome, da 20 a 16.
+   *
+   * Non e' stato chiesto, ed e' una conseguenza: il nome passava da 24 a 20 e
+   * il ruolo era gia' 20. Lasciandolo li', nome e ruolo sarebbero finiti alla
+   * stessa misura e la gerarchia fra i due sarebbe sparita. Il rapporto e'
+   * quello del Figma, 24/20, riportato su 20/16.
+   */
   .testimonial-author__role {
-    font-size: calc(var(--u) * 20);
+    font-size: calc(var(--u) * 16);
   }
 }
 

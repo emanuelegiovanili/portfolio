@@ -34,9 +34,8 @@ export const TESTIMONIALS: Testimonial[] = [
     client: 'TAMA caffè',
     quote:
       'We entrusted Emanuele with the redesign of our e-commerce site and the transition to a reliable solution like Shopify. What we appreciated most was that he understood our company culture and designed the purchasing process accordingly, highlighting our products and their value. He also oversaw a series of related marketing activities, such as newsletters and packaging. The new site is efficient and accessible, and in the first year alone, online sales increased by approximately 200%.',
-    // Manca chi l'ha scritta: il committente ha passato il testo, non la firma.
-    author: '',
-    role: '',
+    author: 'Michael Angelini',
+    role: 'CEO',
   },
   { client: 'Aggrego', quote: '', author: '', role: '' },
 ];

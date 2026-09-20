@@ -1779,6 +1779,32 @@ Testo fornito dal committente, riprodotto come sta. **Manca la firma**: chi
 l'ha scritta e con che ruolo. Finche' non arriva, quella scheda mostra la
 citazione senza attribuzione. B13 scende da tre schede vuote a due.
 
+### D109. Le misure dei testimonial, e la riga che ne e' seguita
+
+Il committente ha fissato la citazione e il nome a **20 a desktop e 14 sotto**
+(nel Figma erano 24 e 16).
+
+**Due conseguenze che non aveva chiesto, e che ho corretto.** Il ruolo era 20 a
+lg e 14 a md: con il nome sceso a quelle stesse misure, nome e ruolo finivano
+identici e la gerarchia fra chi parla e cosa fa spariva. Il ruolo scende con
+lui, 16 a lg e 12 a md, che e' lo stesso scarto del Figma.
+
+**E la citazione di TAMA non ci stava piu'.** E' piu' lunga del quaranta per
+cento di quella di Seezy, e il contenitore era dimensionato sulla prima: a 390
+sforava di 26px, che il blocco tagliava via. A 390 si sommano due penalita',
+la colonna piu' stretta — quindi piu' righe — e il blocco piu' corto.
+
+Il contenitore a base passa da dieci righe a undici, e tutto quello che sta
+sotto scende di una. Misurato scheda per scheda a cinque larghezze: l'avanzo
+piu' magro e' 10px a 320.
+
+**Il contenitore e' ora dimensionato sulla citazione piu' lunga, non sulla
+prima.** Se ne arriva una piu' lunga ancora, il conto va rifatto: nessuna sonda
+lo fa da sola, perche' il pannello carica il testo solo quando si clicca la
+scheda.
+
+Con la firma di Michael Angelini, CEO, B13 scende a due schede vuote su quattro.
+
 ---
 
 ## 5. Blocchi aperti
@@ -1794,7 +1820,7 @@ citazione senza attribuzione. B13 scende da tre schede vuote a due.
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |
 | B14 | **`/about` si stringe fra 1200 e 1365** | Quattro blocchi di testo tengono a 1440 e chiedono fino a 17px in piu' a 1200. Dichiarati con `data-known-overflow`. Si risolve allargando qualche span o alzando il confine lg: e' una decisione di disegno |
-| B13 | **Due testimonial su quattro non hanno un testo, e uno non ha la firma** | TAMA caffe' ha la citazione ma non il nome di chi l'ha scritta (D108). | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
+| B13 | **Due testimonial su quattro non hanno un testo** | Noranutrizione e Aggrego: le schede girano nel carosello ma il pannello resta vuoto. Seezy e TAMA caffe' sono complete | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Le schede senza testo ci sono ma non sono selezionabili: non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |
 | B15 | **Megamenu a base e md: proposta in attesa di conferma** | Composizione derivata dalle regole del file, non disegnata (D66). Se il committente la conferma, B15 si chiude; se preferisce altro, cambia una tabella in `chrome.ts` |
 | B16 | **Nessuna pagina 404** | Non e' disegnata e non l'ho inventata. Oggi risponde quella essenziale di Workers. `not_found_handling: "404-page"` e' gia' pronto: il giorno che il disegno c'e', basta una route `404.astro` |
