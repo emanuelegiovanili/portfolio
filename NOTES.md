@@ -1898,6 +1898,59 @@ quando il modulo parte, quindi per un fotogramma si vedono tutte le card. Senza
 JavaScript si vedono tutte e basta, che e' il comportamento gia' scelto per i
 filtri.
 
+### D114. La playlist si legge in build, non nel browser
+
+Il committente ha dato l'indirizzo della playlist e creera' l'app su Spotify.
+
+**"Now playing" e' il titolo della sezione, non il brano in ascolto.** E' la
+distinzione che decide tutto il resto: leggere il nome e il conteggio di una
+playlist pubblica e' una chiamata senza utente (`client_credentials`), sapere
+cosa sto ascoltando adesso vuole un token utente, un refresh token da custodire,
+e quindi una rotta Worker. La seconda strada fa smettere il sito di essere un
+sito di soli file, e per la maggior parte del tempo mostrerebbe un vuoto, perche'
+per la maggior parte del tempo non sto ascoltando niente.
+
+Quindi: **una lettura sola, mentre la pagina si costruisce.** Il dato e' fermo fra
+un deploy e l'altro, ed e' il compromesso giusto — "32 songs" scritto a mano era
+sbagliato dal giorno dopo, letto in build e' sbagliato al massimo fino al
+prossimo deploy.
+
+**Non fallisce mai.** Senza credenziali — cioe' in locale, sempre — e a ogni
+errore di rete si torna ai valori del Figma. Nessuna pubblicazione si ferma per
+una playlist: il peggio che possa capitare e' la pagina di ieri. Il log della
+build dice sempre quale delle due strade ha preso, cosi' un ripiego silenzioso
+non esiste.
+
+**E "Play now on Spotify" adesso ci porta davvero.** Era `href: '#'`: un invito
+che non faceva niente, in un blocco che prometteva un'azione.
+
+Dall'indirizzo e' stato tolto il parametro `si`: e' il codice di condivisione
+legato all'account di chi copia il link, e questo repository e' pubblico.
+
+**Non e' mai stato provato contro Spotify da qui.** La policy di uscita risponde
+403 al CONNECT verso `accounts.spotify.com`, come verso Cloudflare (B1). La prima
+esecuzione vera e' quella in GitHub Actions. [Ipotesi] I termini delle API sono
+cambiati a fine 2024 e alcuni endpoint sono stati chiusi alle app nuove: una
+playlist pubblica creata da un utente dovrebbe restare leggibile, ma finche' non
+gira in Actions resta da verificare. Se non funzionasse, il ripiego e' gia' la
+pagina che si vede oggi.
+
+### D115. Un `}` di troppo, e le sei sonde che non potevano vederlo
+
+Cercando altro e' saltato fuori un `}` in piu' in `pages.css`, entrato con il
+commit del disco e rimasto per due commit. I browser lo ignorano, quindi a
+schermo non si vedeva niente; esbuild scriveva una riga di avviso, e quella riga
+finiva nello stdout che `verify:build` buttava via.
+
+Nessuna delle sei sonde poteva trovarlo: misurano pixel e posizioni, e un `}`
+orfano in quel punto non ne spostava nessuno. E' la stessa forma di tutti i
+difetti di questo progetto — non e' che la misura fosse sbagliata, e' che
+nessuna misura guardava li'.
+
+Ora `verify:build` legge lo stdout della build e si ferma su qualunque
+`css-syntax-error`. Provato all'incontrario: rimesso il `}`, la pubblicazione si
+blocca prima delle sonde.
+
 ---
 
 ## 5. Blocchi aperti
@@ -1907,7 +1960,7 @@ filtri.
 | B1 | **Accesso di rete a `figma.com`** da questa sessione | La policy di egress risponde 403 al CONNECT: nessun asset immagine scaricabile (vedi `README.md`). Dalla Fase 5 il server MCP di Figma legge il file — nodi, misure, variabili, anteprime — quindi le misure si verificano alla fonte; restano fuori portata solo gli URL degli asset |
 | B2 | Frame mobile e md per `/about`, `/works`, `/works/[slug]`, `/contact` e megamenu | Sotto 1200px quelle quattro route non hanno disegno |
 | B3 | Backend del form, stati di errore / invio / conferma, privacy policy | Il form non è inviabile |
-| B4 | Blocco Spotify: "32 songs" e "Now playing" sono dati vivi o uno snapshot | Scritto a mano sarà sbagliato entro un mese |
+| B4 | Blocco Spotify: **manca solo la prova sul campo** | Risolto in D114: nome, conteggio e indirizzo li legge la build da Spotify, con ripiego sui valori del Figma. Restano da fare due cose che non posso fare io: creare l'app su developer.spotify.com e mettere `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET` nei secret. Finche' non girano in Actions, che la chiamata passi resta un'ipotesi |
 | B5 | Stati hover e focus per **tutto il resto** | I due bottoni ora sono disegnati (D63). Restano senza hover le voci del footer, quelle del megamenu, le card progetto e i filtri. Il focus da tastiera e' visibile solo dentro il megamenu |
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |

@@ -51,9 +51,32 @@ const fallito = (msg) => {
 
 if (!args.includes('--skip-build')) {
   console.log('Costruisco…');
-  const build = spawnSync('npm', ['run', 'build'], { stdio: ['ignore', 'ignore', 'inherit'] });
+  const build = spawnSync('npm', ['run', 'build'], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    encoding: 'utf8',
+  });
+  const log = `${build.stdout ?? ''}${build.stderr ?? ''}`;
   if (build.status !== 0) {
-    console.error("la build non passa");
+    console.error(log);
+    console.error('la build non passa');
+    process.exit(1);
+  }
+
+  /*
+   * Un avviso del minificatore CSS conta come errore.
+   *
+   * Un `}` di troppo in un foglio di stile non ferma niente: i browser lo
+   * ignorano e tirano dritto, esbuild scrive una riga di avviso, e quella riga
+   * finiva in uno stdout che questo script buttava via. Ne e' rimasto uno in
+   * pages.css per due commit, e nessuna delle sei sonde poteva vederlo: misurano
+   * pixel e posizioni, e il CSS rotto in quel punto non ne spostava nessuno.
+   *
+   * La prossima volta la pubblicazione si ferma qui.
+   */
+  const sintassi = log.split('\n').filter((r) => r.includes('css-syntax-error'));
+  if (sintassi.length > 0) {
+    console.error(log);
+    console.error(`\nCSS che il minificatore non sa leggere: ${sintassi.length} avvisi.`);
     process.exit(1);
   }
 }

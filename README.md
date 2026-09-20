@@ -69,6 +69,17 @@ Perche' funzioni servono due cose, da fare una volta sola:
 2. un ramo `main`. Oggi il repository ne ha uno solo, di lavorazione, e il
    workflow parte su `main`: finche' non c'e', non pubblica niente.
 
+### La playlist di /about
+
+Due secret **facoltativi**, `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET`, presi
+da un'app creata su [developer.spotify.com](https://developer.spotify.com/dashboard).
+Con quelli la build legge nome e numero di brani dalla playlist vera; senza,
+usa i valori scritti in `src/data/about.ts` e tira dritto. Il log della build
+dice sempre quale delle due strade ha preso.
+
+L'app non ha bisogno di redirect URI ne' di permessi utente: il flusso e'
+`client_credentials`, che legge una playlist pubblica e nient'altro.
+
 ## L'invariante del progetto
 
 **I bordi dei blocchi cadono sulle linee della griglia, a ogni larghezza di finestra, in ogni fotogramma di ogni animazione.**

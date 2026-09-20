@@ -27,9 +27,23 @@ import desk from '../assets/about/desk.jpg';
  * stare dietro a un indirizzo.
  */
 import spotifyCover from '../assets/about/spotify-cover.svg?raw';
+import { playlist } from '../lib/spotify';
 import '../styles/pages.css';
 
 const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
+
+/*
+ * La playlist si legge qui, una volta, mentre la pagina si costruisce.
+ *
+ * Senza credenziali torna indietro quello che c'e' scritto in `about.ts`, quindi
+ * in locale la pagina e' quella di sempre e nessuno deve avere un token per
+ * lavorare. Vedi `src/lib/spotify.ts` per il perche' di tutto il resto.
+ */
+const mix = await playlist(SPOTIFY.id, {
+  name: SPOTIFY.playlist,
+  count: SPOTIFY.count,
+  href: SPOTIFY.href,
+});
 ---
 
 <Base title="About — Emanuele Giovanili" description="Chi sono, come lavoro e cosa ascolto mentre lo faccio.">
@@ -164,15 +178,21 @@ const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
       <Icon name="disc-3" />
     </Block>
 
+    {/* "Play now on Spotify" adesso ci porta davvero: il blocco intero e' il
+        link, perche' e' quello che l'etichetta ha sempre promesso. */}
     <Block
       at={aboutBlocks.spotifyPlaylist}
+      as="a"
+      href={mix.href}
+      target="_blank"
+      rel="noopener noreferrer"
       class="playlist is-opaque"
       clip
       data-known-overflow="300:440 — tiene a 1440, chiede 3px in piu' a 1200"
     >
       <p class="playlist__row">
-        <span class="t-title">{SPOTIFY.playlist}</span>
-        <span class="t-body playlist__count">{SPOTIFY.count}</span>
+        <span class="t-title">{mix.name}</span>
+        <span class="t-body playlist__count">{mix.count}</span>
       </p>
       <p class="playlist__row playlist__row--action">
         <Icon name="audio-lines" />

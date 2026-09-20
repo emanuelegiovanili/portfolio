@@ -12,6 +12,12 @@
 # Serve che nei secret del repository ci siano:
 #   CLOUDFLARE_API_TOKEN    permesso "Workers Scripts: Edit"
 #   CLOUDFLARE_ACCOUNT_ID   l'id dell'account
+#
+# Due secret sono **facoltativi**, e servono solo alla playlist di /about:
+#   SPOTIFY_CLIENT_ID       dall'app creata su developer.spotify.com
+#   SPOTIFY_CLIENT_SECRET   della stessa app
+# Senza, la build non si ferma: la playlist resta quella scritta in
+# `src/data/about.ts`, e il log dice quale delle due strade ha preso.
 
 name: deploy
 
@@ -73,7 +79,14 @@ jobs:
         run: npm run check
 
       # Costruisce e poi misura la build servita da `wrangler dev`.
+      #
+      # Le credenziali Spotify arrivano qui e non al passo di pubblicazione: e'
+      # la build a leggere la playlist, ed e' questo stesso `dist/` che viene
+      # poi verificato e messo online.
       - name: Verifica la build
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: npm run verify:build
 
       - name: Pubblica
