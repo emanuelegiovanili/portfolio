@@ -1951,6 +1951,18 @@ Ora `verify:build` legge lo stdout della build e si ferma su qualunque
 `css-syntax-error`. Provato all'incontrario: rimesso il `}`, la pubblicazione si
 blocca prima delle sonde.
 
+**E catturare quello stdout aveva un effetto che non avevo previsto: lo rendeva
+invisibile.** In Actions l'unico passo che costruisce e' `verify:build`, quindi
+da quel momento nessuno avrebbe piu' letto `[spotify] letta` o `[spotify]
+nessuna credenziale` — l'unica riga che dice se la playlist in pagina viene da
+Spotify o dal ripiego. Trovato leggendo il log del primo deploy, dove quella
+riga non c'era piu'. Adesso le righe che vanno dette (`[spotify]`, `[WARN]`,
+`WARNING`) si ristampano anche quando la build passa; il resto del log, che e'
+l'elenco dei file scritti, resta fuori.
+
+Lo stesso errore di forma del `}`: un avviso che nessuno vede e' un avviso che
+non esiste.
+
 ---
 
 ## 5. Blocchi aperti

@@ -79,6 +79,22 @@ if (!args.includes('--skip-build')) {
     console.error(`\nCSS che il minificatore non sa leggere: ${sintassi.length} avvisi.`);
     process.exit(1);
   }
+
+  /*
+   * Quel che la build ha da dire, anche quando e' andata bene.
+   *
+   * Catturare lo stdout per leggerlo aveva un effetto che non avevo previsto: lo
+   * rendeva invisibile. In Actions l'unico passo che costruisce e' questo, quindi
+   * da qui in poi nessuno avrebbe piu' letto "[spotify] letta" o "[spotify]
+   * nessuna credenziale" — cioe' l'unica riga che dice se la playlist in pagina
+   * viene da Spotify o dal ripiego. Un avviso che nessuno vede e' un avviso che
+   * non esiste: e' esattamente il difetto che il controllo qui sopra chiude.
+   *
+   * Si ristampano le righe che vanno dette, non tutto il log: il resto e' la
+   * lista dei file scritti, che in una verifica non serve a niente.
+   */
+  const daDire = log.split('\n').filter((r) => /\[spotify\]|\[WARN\]|WARNING/.test(r));
+  if (daDire.length > 0) console.log(daDire.join('\n'));
 }
 
 const port = await freePort();
