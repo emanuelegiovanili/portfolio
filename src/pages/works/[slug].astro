@@ -7,8 +7,10 @@
  * cucita addosso a Seezy; cosi' la pagina regge un numero qualsiasi di
  * immagini, che e' quanto chiede pagine-interne §7.7.
  *
- * Solo Seezy ha un case study: gli altri due progetti non hanno una pagina di
- * dettaglio disegnata e mostrano copertina, tag e titolo.
+ * Tutti e tre i progetti hanno un testo; solo Seezy ha la galleria, perche' e'
+ * l'unico di cui il file disegni la sequenza di immagini. Gli altri due hanno
+ * in compenso un sito online, quindi la loro copertina porta il pulsante
+ * "Visit" — che compare **solo** dove c'e' un indirizzo.
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { Picture } from 'astro:assets';
@@ -19,6 +21,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Icon from '../../components/Icon.astro';
 import WorkCard from '../../components/WorkCard.astro';
+import VisitButton from '../../components/VisitButton.astro';
 import PrimaryButton from '../../components/PrimaryButton.astro';
 import { headerMap } from '../../lib/blocks/chrome';
 import { galleryAt, workBlocks, workFooter, workTagAt } from '../../lib/blocks/pages';
@@ -73,6 +76,12 @@ const map = {
       />
     </Block>
 
+    {/* Solo dove il progetto ha un sito online. Seezy non ce l'ha, e la sua
+        copertina resta quella del frame. */}
+    {work.data.liveUrl && (
+      <VisitButton at={workBlocks.workVisit} href={work.data.liveUrl} label={work.data.title} />
+    )}
+
     {work.data.tags.map((tag) => (
       <Block at={tagAt[tag]} class="work-tag" clip>
         {tag}
@@ -86,7 +95,9 @@ const map = {
     {
       work.data.caseStudy && (
         <Block at={workBlocks.workBody} class="work-body" clip>
-          <p class="t-body">{work.data.caseStudy.body}</p>
+          {work.data.caseStudy.body.map((paragrafo) => (
+            <p class="t-body">{paragrafo}</p>
+          ))}
         </Block>
       )
     }

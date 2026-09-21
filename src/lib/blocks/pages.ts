@@ -139,8 +139,25 @@ export const WORK_FOOTER_ROWS = { lg: 45 };
 
 export const workBlocks = {
   workCover: { lg: [2, 3, 10, 6] },
+  // Nell'angolo in basso a destra della copertina: le sue ultime due colonne,
+  // la sua ultima riga. Compare solo dove il progetto ha un `liveUrl`.
+  workVisit: { lg: [10, 8, 2, 1] },
   workTitle: { lg: [2, 10, 5, 1] },
-  workBody: { lg: [8, 10, 4, 5] },
+  /*
+   * Sei righe, non cinque.
+   *
+   * Nel frame il testo e' un nodo solo alto cinque celle (310:1795), scritto
+   * su una versione piu' corta. Il testo che il committente ha fornito e' piu'
+   * lungo **ed e' diviso in paragrafi**, e i tre stacchi di Seezy si mangiavano
+   * tutto lo spazio: misurato, avanzavano **2px**. Non e' "ci sta", e' "ci sta
+   * su questa macchina" — in CI le metriche dei font sono diverse, e nei log si
+   * vede (lo stesso blocco misura +384h qui e +405h la').
+   *
+   * La riga in piu' non sposta niente: sotto, nelle colonne 8-11, le righe 15 e
+   * 16 sono libere, perche' la galleria sta nelle colonne 2-6. E' la stessa
+   * decisione presa per la citazione di TAMA in D109, che qui costa anche meno.
+   */
+  workBody: { lg: [8, 10, 4, 6] },
   workRelatedTitle: { lg: [2, 37, 5, 2] },
   workRelatedFlame: { lg: [6, 37, 1, 1] },
   workRelatedOne: { lg: [7, 37, 5, 4] },

@@ -26,19 +26,37 @@ const works = defineCollection({
       /** Una riga sotto il titolo nella card. */
       excerpt: z.string(),
       /**
-       * Il case study. Presente solo dove un disegno esiste: oggi Seezy.
-       * `blocks` alterna le due sole forme che la pagina sa comporre.
+       * Il sito vero, dove esiste.
+       *
+       * Da qui discende il pulsante "Visit" sulla copertina: **solo** se c'e'
+       * un indirizzo. Un progetto senza sito online non deve mostrare un
+       * comando che non porta da nessuna parte — e' lo stesso errore che
+       * "Play now on Spotify" faceva con `href: '#'` prima di D114.
+       */
+      liveUrl: z.string().url().optional(),
+      /**
+       * Il case study: il testo del progetto, e la galleria dove c'e'.
+       *
+       * `body` e' un **elenco di paragrafi**, non una stringa sola. Il testo
+       * fornito dal committente ne ha tre o quattro a progetto, e un `<p>` con
+       * dentro tutto perderebbe gli stacchi che l'autore ha scritto.
+       *
+       * `blocks` ha un valore predefinito vuoto: due progetti su tre hanno il
+       * testo e non la galleria, e prima di questo erano costretti a non avere
+       * nemmeno il testo.
        */
       caseStudy: z
         .object({
-          body: z.string(),
-          blocks: z.array(
-            z.object({
-              src: image(),
-              alt: z.string(),
-              shape: z.enum(['wide', 'half']),
-            }),
-          ),
+          body: z.array(z.string()).min(1),
+          blocks: z
+            .array(
+              z.object({
+                src: image(),
+                alt: z.string(),
+                shape: z.enum(['wide', 'half']),
+              }),
+            )
+            .default([]),
         })
         .optional(),
     }),

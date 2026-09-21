@@ -1,8 +1,19 @@
 {
   "title": "Noranutrizione",
   "order": 3,
-  "tags": ["Web Design", "Branding"],
+  "tags": [
+    "Web Design",
+    "Branding"
+  ],
   "cover": "../../assets/works/noranutrizione/cover.jpg",
   "coverAlt": "La home di Noranutrizione su un portatile, con il logotipo in giallo acido",
-  "excerpt": "Identita' e sito per una nutrizionista che lavora sui dati."
+  "excerpt": "Identita' e sito per una nutrizionista che lavora sui dati.",
+  "liveUrl": "https://noranutrizione.it",
+  "caseStudy": {
+    "body": [
+      "Nora is a nutritionist and personal trainer who works with a wide range of clients, treating nutrition and exercise as one journey rather than two. Her business grew through word of mouth and Instagram, but she had no identity of her own and nowhere for people looking for her to land.",
+      "The site was built as that first point of contact, and it follows the journey people actually take: working out who Nora is, recognising themselves in what she offers, then getting in touch without friction.",
+      "The interface was designed in Figma and built responsive on WordPress, on a library of consistent components she can update on her own as the practice grows."
+    ]
+  }
 }

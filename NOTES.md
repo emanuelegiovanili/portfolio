@@ -2270,6 +2270,86 @@ cui un difetto si sposta invece di chiudersi. Il controllo dei suoi fili se lo
 prende ora `verify:sticky`, sui **pixel dipinti** invece che sulle variabili:
 quel che conta e' che il bordo si veda, non come e' scritto.
 
+## 21. Fase 13 — le descrizioni dei progetti, e il pulsante che porta al sito
+
+### D126. Il testo dei progetti, preso dal documento e non ricopiato
+
+Il committente ha fornito un `.md` con le descrizioni dei tre progetti e, per
+due di loro, l'indirizzo del sito online.
+
+I paragrafi sono stati **estratti dal file**, non ritrascritti. La regola del
+progetto e' riprodurre il testo del committente, e una copia fatta a mano e'
+esattamente il punto in cui una parola cambia senza che nessuno se ne accorga.
+
+**`body` diventa un elenco di paragrafi.** Era una stringa sola, perche' nel
+Figma il testo e' un nodo unico (310:1795). Il testo fornito ne ha tre o quattro
+a progetto: un `<p>` con dentro tutto avrebbe perso gli stacchi che l'autore ha
+scritto. Lo stacco fra paragrafi il file non lo dichiara — non ne ha — quindi e'
+`var(--pad)`, lo stesso della prosa di /about: un numero gia' in uso, non uno
+nuovo.
+
+**E `blocks` ora ha un valore predefinito vuoto.** Due progetti su tre hanno il
+testo e non la galleria, e prima di questo lo schema li costringeva a non avere
+nemmeno il testo: `caseStudy` richiedeva entrambi.
+
+### D127. Il blocco del testo passa da cinque righe a sei
+
+Con i paragrafi separati, il testo di Seezy avanzava **2px**.
+
+Non e' "ci sta": e' "ci sta su questa macchina". In CI le metriche dei font sono
+diverse, e si vede nei log — lo stesso blocco `prose` di /about misura `+384h`
+qui e `+405h` in Actions, venti pixel di scarto su un blocco solo. Due pixel di
+margine sono un difetto che aspetta la prima build.
+
+La riga in piu' non sposta niente: sotto, nelle colonne 8-11, le righe 15 e 16
+sono libere, perche' la galleria sta nelle colonne 2-6. E' la stessa decisione
+di D109 per la citazione di TAMA, e qui costa anche meno.
+
+Misurato dopo: avanzano 122px su Seezy, 214 su TAMA, 262 su Nora.
+
+**La misura giusta non era la prima che ho scritto.** Avevo confrontato
+`scrollHeight` con `clientHeight`, e su un blocco ritagliato quei due pareggiano
+sempre: diceva "600 su 600" e passava. Il fondo dell'ultimo paragrafo contro il
+fondo utile del blocco e' la domanda vera.
+
+### D128. "Visit" sulla copertina, solo dove c'e' un sito
+
+Dal frame aggiornato (dentro 310:1735): angolo in basso a destra della
+copertina, due colonne per una riga, etichetta e freccia centrate insieme su
+fondo pieno.
+
+Il fondo e' pieno e non al 50% per la stessa ragione di D112 e D120: sotto c'e'
+una fotografia, e li' il mezzo off-white del sito si vede tutto. Stessa classe,
+`is-opaque`.
+
+**Solo dove c'e' un indirizzo.** Seezy non ha un sito pubblico e non ha il
+pulsante. Un comando che non porta da nessuna parte e' l'errore gia' fatto con
+"Play now on Spotify" e il suo `href: '#'`, rimasto in pagina per settimane
+(D114).
+
+Che compaia solo con un `liveUrl` **non ha una sonda**, ed e' voluto: il
+componente e' montato dentro `work.data.liveUrl &&`, quindi senza indirizzo non
+esiste proprio. Misurarlo proverebbe il linguaggio, non il sito.
+
+Quello che una sonda serviva invece a coprire e' l'errore di Spotify: da oggi
+`verify:build` fallisce su qualunque link esterno con `href` vuoto o `#`, e su
+qualunque `target="_blank"` senza `rel` che protegga la scheda che apre.
+Provato all'incontrario su tutti e due i casi.
+
+**Il metadata di Figma non lo vedeva.** `get_metadata` su 310:1735 restituisce
+un frame senza figli; il pulsante c'e' solo nel render. Confermato che e' suo e
+non un nodo che gli galleggia sopra chiedendo lo scatto con `contentsOnly`. Le
+misure vengono quindi dal render e non dal file — cadono sulle linee al pixel,
+il che e' anche l'unico modo in cui potevano essere giuste.
+
+**Il campo "Campi" del documento resta fuori, per decisione del committente.**
+Il `.md` elenca tre o quattro discipline per progetto (`UX / Product Design /
+Mobile App / MVP`); il Figma disegna due sole celle di tag 1x1 alle colonne 8 e
+9, che sono i tag del filtro gia' nel JSON. Quattro voci in due celle non ci
+stanno, e un disegno per una lista piu' lunga non esiste: non l'ho inventato, e
+alla domanda la risposta e' stata di tenere i campi definiti finora. Quella
+parte del documento e' contesto, non contenuto di pagina.
+
 ---
 
 ## 5. Blocchi aperti

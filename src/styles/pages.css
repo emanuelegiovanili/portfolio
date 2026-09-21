@@ -324,15 +324,49 @@
   text-align: center;
 }
 
+/*
+ * Il corpo del case study, ora a piu' paragrafi.
+ *
+ * Nel Figma e' un unico nodo di testo (310:1796), quindi lo stacco fra
+ * paragrafi il file non lo dichiara: nasce dall'averli separati, come li ha
+ * scritti il committente. `var(--pad)` e' lo stesso stacco della prosa di
+ * /about, cosi' non e' un numero nuovo ma quello che il sito usa gia' per due
+ * paragrafi in colonna.
+ */
 .work-body {
   display: flex;
   flex-direction: column;
+  gap: var(--pad);
   justify-content: flex-start;
   padding: var(--pad-lg) var(--pad);
 }
 
 .work-body p {
   margin: 0;
+}
+
+/*
+ * "Visit", nell'angolo in basso a destra della copertina.
+ *
+ * Etichetta e freccia affiancate e centrate insieme, come le voci esterne del
+ * footer a lg, con la freccia dopo invece che prima. Il fondo e' pieno
+ * (`is-opaque` sul blocco): sotto c'e' una fotografia, e li' il mezzo
+ * off-white del sito si vedrebbe tutto.
+ */
+.visit-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pad);
+  padding: var(--pad);
+  text-align: center;
+}
+
+.visit-button__label {
+  font-weight: 700;
+  font-size: calc(var(--u) * 16);
+  line-height: 1.5;
 }
 
 /* Il titolo di sezione con l'icona dentro lo stesso blocco: su work-page

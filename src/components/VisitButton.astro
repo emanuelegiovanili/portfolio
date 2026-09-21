@@ -1,0 +1,54 @@
+---
+/**
+ * "Visit" sulla copertina del progetto (dentro 310:1735).
+ *
+ * Sta nell'angolo in basso a destra della copertina e occupa le sue ultime due
+ * colonne per l'ultima riga: nel frame la copertina e' `[2, 3, 10, 6]` e il
+ * pulsante `[10, 8, 2, 1]`, cioe' cade sulle linee come ogni altro blocco.
+ *
+ * **Compare solo dove c'e' un sito da visitare.** E' la ragione per cui la
+ * pagina lo monta dietro a un `liveUrl` invece di mostrarlo sempre: Seezy non
+ * ha un indirizzo pubblico, e un comando che non porta da nessuna parte e' lo
+ * stesso errore di "Play now on Spotify" con `href: '#'` (D114).
+ *
+ * Fondo pieno, non al 50%: sotto c'e' una fotografia, e li' il mezzo off-white
+ * del sito si vede tutto. E' lo stesso motivo — e la stessa classe — di
+ * "In the kitchen" e della riga della playlist in /about (D112, D120).
+ *
+ * L'impianto e' quello delle voci esterne del footer, etichetta e freccia
+ * affiancate e centrate insieme, con la freccia **dopo** invece che prima:
+ * misurato sul render del nodo, perche' figma.com non e' raggiungibile da
+ * questa sessione e gli asset non si scaricano (B1).
+ */
+import Block from './Block.astro';
+import Icon from './Icon.astro';
+import type { BlockPlacements } from '../lib/layout';
+
+interface Props {
+  at: BlockPlacements;
+  /** L'indirizzo del sito. Il chiamante monta il componente solo se c'e'. */
+  href: string;
+  /** Per dire a voce dove si va: "Visit" da solo non lo direbbe. */
+  label: string;
+}
+
+const { at, href, label } = Astro.props;
+---
+
+<Block
+  at={at}
+  as="a"
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer"
+  class="visit-button is-opaque"
+  aria-label={`Visita ${label}, si apre in una nuova scheda`}
+  clip
+>
+  <span class="visit-button__label">Visit</span>
+  <Icon name="arrow-up-right" />
+  <span class="hover-fill" aria-hidden="true">
+    <span class="visit-button__label">Visit</span>
+    <Icon name="arrow-up-right" />
+  </span>
+</Block>

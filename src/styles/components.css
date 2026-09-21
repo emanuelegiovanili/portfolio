@@ -454,7 +454,8 @@
 .work-filter,
 .skill-card,
 .footer-brand,
-.footer-link {
+.footer-link,
+.visit-button {
   --hover: 100%;
   --hover-bg: var(--purple);
   --hover-fg: var(--off-white);
@@ -528,7 +529,8 @@
  */
 .skill-card > .hover-fill,
 .footer-brand > .hover-fill,
-.footer-link > .hover-fill {
+.footer-link > .hover-fill,
+.visit-button > .hover-fill {
   flex-direction: inherit;
   align-items: inherit;
   justify-content: inherit;
@@ -606,7 +608,8 @@
     .work-filter,
     .skill-card,
     .footer-brand,
-    .footer-link
+    .footer-link,
+    .visit-button
   ):hover:not(:disabled):not([aria-disabled='true']) {
     --hover: 0%;
   }

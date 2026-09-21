@@ -172,6 +172,34 @@ try {
 
         await page.goto(base + route, { waitUntil: 'networkidle' });
         await page.evaluate(() => document.fonts.ready);
+
+        /*
+         * Nessun comando che promette e non porta.
+         *
+         * E' l'errore gia' fatto una volta: "Play now on Spotify" e' stato in
+         * pagina per settimane con `href: '#'`, cioe' un invito che non faceva
+         * niente (D114). Un link esterno vuoto, `#`, o senza `rel` che protegga
+         * la scheda che apre, vale come rotto.
+         *
+         * Che il "Visit" compaia **solo** dove c'e' un indirizzo non si
+         * controlla qui: il componente e' montato dentro `work.data.liveUrl &&`,
+         * quindi senza indirizzo non esiste proprio. Una sonda su quello
+         * proverebbe il linguaggio, non il sito.
+         */
+        const linkRotti = await page.evaluate(() =>
+          [...document.querySelectorAll('a[target="_blank"], .visit-button')]
+            .map((a) => {
+              const href = a.getAttribute('href') ?? '';
+              if (href === '' || href === '#') return `${a.className}: href "${href}"`;
+              if (a.getAttribute('target') === '_blank' && !(a.getAttribute('rel') ?? '').includes('noopener')) {
+                return `${a.className}: target _blank senza rel noopener`;
+              }
+              return null;
+            })
+            .filter(Boolean),
+        );
+        for (const rotto of linkRotti) problemi.push(`link: ${rotto}`);
+
         await page.close();
 
         console.log(`  ${String(width + 'px').padEnd(8)}${route.padEnd(26)}${problemi.length === 0 ? 'pulita' : ''}`);
