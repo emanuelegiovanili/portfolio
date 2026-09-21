@@ -2242,6 +2242,34 @@ sbagliare.
 piu' il comportamento del bottone doppio. Gira anche dentro `verify:build`,
 quindi la misura vale sulla build pubblicata e non solo sul sorgente.
 
+### D125. "Tutte tranne quella" ha retto finche' le griglie erano due
+
+Aggiunta la barra, `verify:rules` ha detto che **quindici pagine mostrano un
+blocco fermo senza i suoi fili**, e `verify:motion` che il lato piu' corto era
+al `NaN%`. Sul sito, il difetto peggiore che esista: un blocco senza bordo.
+
+Non c'era. Le due sonde dicevano "la griglia di pagina" con
+`.grid:not(.megamenu__grid)`, cioe' **per esclusione**: ha funzionato finche' le
+griglie erano due, e si e' rotto appena ne e' arrivata una terza. Il selettore
+ne prendeva due, e sui blocchi della barra le quattro variabili dei fili sono
+vuote — nessuno gliele scrive, e senza variabile vale il `var(..., 100%)` del
+CSS. La sonda leggeva stringa vuota e la contava zero.
+
+Misurato sui pixel prima di toccare qualunque cosa: i quattro lati del bottone
+della barra sono dipinti a `80,77,92`, che e' esattamente il grigio del filo. Il
+sito era giusto, le sonde no. **Il `NaN%` e' stato l'indizio**: uno zero vero e
+uno zero che viene da una stringa vuota si somigliano, un NaN no.
+
+Ora la griglia di pagina e' definita per dov'e' — `#smooth-content .grid` — e
+non per dove non e'. Vale anche quando le griglie saranno quattro. Lo stesso
+selettore per esclusione stava anche in `revealRules`, dove funzionava per
+ordine nel documento, cioe' per fortuna: corretto anche li'.
+
+**E correggendolo la barra e' uscita da tutt'e due le sonde**, che e' il modo in
+cui un difetto si sposta invece di chiudersi. Il controllo dei suoi fili se lo
+prende ora `verify:sticky`, sui **pixel dipinti** invece che sulle variabili:
+quel che conta e' che il bordo si veda, non come e' scritto.
+
 ---
 
 ## 5. Blocchi aperti

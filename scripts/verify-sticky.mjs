@@ -19,6 +19,7 @@
  * Uso: node scripts/verify-sticky.mjs [--url http://...]
  */
 import { chromium } from 'playwright';
+import sharp from 'sharp';
 import { startDevServer, CHROMIUM } from './dev-server.mjs';
 
 const args = process.argv.slice(2);
@@ -28,6 +29,10 @@ const explicitUrl = urlIndex >= 0 ? args[urlIndex + 1] : null;
 const WIDTHS = [390, 768, 1200, 1440, 1920];
 /** Quanto si puo' discostare una copia dal suo originale: niente. */
 const TOLLERANZA = 0.02;
+/** Il grigio del filo, come in verify-edges. */
+const RULE = [0x50, 0x4d, 0x5c];
+/** Quanto puo' sbagliare un canale prima di non essere piu' quel colore. */
+const TINTA = 6;
 
 const server = explicitUrl ? { base: explicitUrl, stop: () => {} } : await startDevServer({ probePath: '/' });
 const browser = await chromium.launch({ executablePath: CHROMIUM });
@@ -83,6 +88,60 @@ try {
         `${copia.x.toFixed(2)} invece di ${vero.x.toFixed(2)}`);
       check(`${width}: ${nome} — stessa misura dell'originale`, stessaMisura,
         `${copia.w.toFixed(2)}x${copia.h.toFixed(2)} invece di ${vero.w.toFixed(2)}x${vero.h.toFixed(2)}`);
+    }
+
+    await context.close();
+  }
+
+  /*
+   * E i suoi blocchi bordati hanno davvero i quattro fili.
+   *
+   * Questa e' la parte che la barra ha gia' fatto sbagliare una volta, in
+   * direzione opposta. `verify:rules` e `verify:motion` la prendevano dentro
+   * con un selettore scritto per esclusione, leggevano le quattro variabili dei
+   * fili — vuote, perche' nessuno gliele scrive — e riportavano `0%` e `NaN%`,
+   * cioe' un difetto che non c'era: senza variabile vale il fallback `100%` del
+   * CSS, e i fili sono interi.
+   *
+   * Corretto quel selettore, la barra e' uscita da tutt'e due. Quindi il
+   * controllo se lo prende qui, e si fa sui **pixel dipinti** invece che sulle
+   * variabili: quello che conta e' che il bordo si veda, non come e' scritto.
+   */
+  console.log('\nE i blocchi bordati della barra hanno i loro quattro fili?\n');
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+    const page = await context.newPage();
+    await page.goto(server.base + '/', { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(() => window.scrollTo(0, 1600));
+    await page.waitForTimeout(2200);
+
+    const bordati = await page.evaluate(() =>
+      [...document.querySelectorAll('#sticky-header .block[data-surface="line"]')].map((el, i) => {
+        const b = el.getBoundingClientRect();
+        el.setAttribute('data-sonda', String(i));
+        return { i, l: Math.round(b.left), t: Math.round(b.top), r: Math.round(b.right), b: Math.round(b.bottom) };
+      }),
+    );
+    check('la barra ha almeno un blocco bordato da controllare', bordati.length > 0, `ne ho trovati ${bordati.length}`);
+
+    const pixel = async (x, y) => {
+      const buf = await page.screenshot({ clip: { x, y, width: 1, height: 1 } });
+      const { data } = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
+      return [data[0], data[1], data[2]];
+    };
+    const eFilo = (px) => px.every((c, k) => Math.abs(c - RULE[k]) <= TINTA);
+
+    for (const box of bordati) {
+      for (const [lato, x, y] of [
+        ['alto', box.l + 20, box.t],
+        ['sinistro', box.l, box.t + 20],
+        ['destro', box.r - 1, box.t + 20],
+        ['basso', box.l + 20, box.b - 1],
+      ]) {
+        const px = await pixel(x, y);
+        check(`blocco ${box.i} · filo ${lato}`, eFilo(px), px.join(','));
+      }
     }
 
     await context.close();

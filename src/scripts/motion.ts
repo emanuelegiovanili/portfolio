@@ -273,9 +273,16 @@ function safely(nome: string, run: () => void, restore: () => void): void {
  * dov'e' partito. Vedi `src/motion/trace.ts`.
  */
 function revealRules(): void {
-  // Il megamenu ha la sua timeline, legata all'apertura e non allo scroll: la
-  // pagina qui e' la prima griglia che non sia la sua.
-  const grid = document.querySelector('.grid:not(.megamenu__grid)');
+  /*
+   * La griglia di pagina e' quella che scorre col contenuto.
+   *
+   * Qui c'era `.grid:not(.megamenu__grid)` con `querySelector`: prendeva la
+   * prima griglia che non fosse quella del menu, e funzionava per ordine nel
+   * documento, cioe' per fortuna. Da quando c'e' anche la barra fissa le
+   * griglie sono tre, e dire dove sta la pagina e' piu' solido che elencare
+   * dove non sta. Il megamenu e la barra hanno le loro animazioni, non questa.
+   */
+  const grid = document.querySelector('#smooth-content .grid');
   if (!(grid instanceof HTMLElement)) return;
 
   const horizontals = gsap.utils.toArray<HTMLElement>('.grid-line--h', grid).filter(isVisible);

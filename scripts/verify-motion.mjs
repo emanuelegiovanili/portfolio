@@ -15,8 +15,21 @@
  * costruzione, ed e' giusto cosi'.
  */
 
-/** La griglia di pagina, che non e' quella del megamenu. */
-const PAGE_GRID = '.grid:not(.megamenu__grid)';
+/**
+ * La griglia di pagina: quella che scorre col contenuto.
+ *
+ * Era `.grid:not(.megamenu__grid)`, cioe' "tutte tranne quella". Ha retto
+ * finche' le griglie erano due, e si e' rotta appena ne e' arrivata una terza —
+ * la barra fissa (NOTES.md D123): il selettore ne prendeva due, e sui blocchi
+ * della barra le quattro variabili dei fili sono **vuote**, perche' nessuno
+ * gliele scrive e vale il fallback `100%` del CSS. La sonda leggeva stringa
+ * vuota e riportava `NaN%`, cioe' un difetto che non c'era.
+ *
+ * Definirla per dov'e' invece che per dove non e' toglie il problema alla
+ * radice: la griglia di pagina e' quella dentro `#smooth-content`, e restera'
+ * quella anche quando le griglie saranno quattro.
+ */
+const PAGE_GRID = '#smooth-content .grid';
 
 import { chromium } from 'playwright';
 import { startDevServer, CHROMIUM } from './dev-server.mjs';

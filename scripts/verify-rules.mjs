@@ -83,7 +83,11 @@ try {
 
         const bad = await page.evaluate((soglia) => {
           const out = [];
-          for (const b of document.querySelectorAll('.grid:not(.megamenu__grid) .block[data-surface="line"]')) {
+          // Dentro `#smooth-content`, non "tutte tranne il megamenu": le
+          // griglie sono tre da quando c'e' la barra fissa, e i suoi blocchi
+          // hanno i fili interi per fallback, senza variabile scritta. Vedi
+          // NOTES.md D124.
+          for (const b of document.querySelectorAll('#smooth-content .grid .block[data-surface="line"]')) {
             if (!(b.offsetWidth || b.offsetHeight)) continue;
             const r = b.getBoundingClientRect();
             // Fuori dalla promessa: sopra il bordo alto non c'e' niente da
