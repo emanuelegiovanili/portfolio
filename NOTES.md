@@ -2021,6 +2021,104 @@ l'elenco dei file scritti, resta fuori.
 Lo stesso errore di forma del `}`: un avviso che nessuno vede e' un avviso che
 non esiste.
 
+## 20. Fase 12 — hover che mancavano, e un vincolo mai misurato
+
+### D118. Il segnaposto usciva dal riquadro, e l'SVG lo tagliava
+
+Segnalato dal committente: all'hover l'icona della location si taglia.
+
+`icons.ts` dichiarava in testa, come vincolo numero tre, che «l'animazione resta
+dentro il riquadro 24x24 e non tocca mai il blocco che la contiene». La seconda
+meta' e' vera e conta — protegge la griglia. La prima **non era mai stata
+misurata**, ed era falsa: il segnaposto ruota attorno alla base del viewBox e
+ne esce di **7,08 unita' a sinistra, 1,45 a destra e 0,48 sotto**.
+
+Due strade: ridurre il gesto, o smettere di tagliarlo. La seconda, perche' il
+gesto e' un porting con valori letti dal sorgente e ridurlo vuol dire
+riprogettarlo a occhio. `overflow: visible` cambia cosa viene dipinto, non la
+scatola: l'icona resta 24x24 per il layout, e sette pixel cadono dentro una
+cella da 120 con il segno al centro.
+
+**Per icona, mai globale.** `send` vola fuori dal riquadro e rientra dall'altro
+lato: e' il viewBox a fargli da quinta, e senza ritaglio quel gesto non avrebbe
+piu' senso. Il vincolo in testa al file ora dice cosa e' vero davvero.
+
+### D119. La settima icona, e la guardia che valeva per una sola
+
+Richiesta del committente, con in mano `<AudioLines animateOnHover />` di Animate
+UI: stessa libreria delle altre sei, stesso trattamento — si porta il gesto in
+GSAP, non si installa React per sei barre da 24 pixel.
+
+**Si scala solo verso il basso.** La barra centrale e' `M10 3v18`, cioe' da 3 a
+21 dentro un viewBox alto 24: ingrandirla la spinge fuori. Il ciclo va da 1 a
+0,45 e torna, e l'icona resta dentro il proprio riquadro senza deroghe — al
+contrario del segnaposto qui sopra.
+
+Lo sfasamento e' **negativo**: ogni barra parte gia' a meta' del proprio giro.
+Con ritardi positivi l'ultima resterebbe ferma mezzo secondo dopo l'arrivo del
+puntatore, e un'onda che parte da sinistra si legge come un caricamento.
+
+**E scrivendola e' saltato fuori che `prefers-reduced-motion` non valeva per le
+animazioni di hover.** La guardia c'era solo per il morph della hamburger: le
+sei icone si muovevano comunque. Non l'avrei vista se non avessi dovuto
+chiedermi cosa succede a un ciclo infinito sotto quella preferenza — il caso
+peggiore delle sette, che e' il motivo per cui la domanda e' venuta.
+
+Ora si legge a ogni `mouseenter` e non una volta all'avvio: la preferenza si
+cambia a pagina aperta.
+
+### D120. Una dichiarazione che perdeva in silenzio
+
+Il committente ha chiesto il fondo pieno per la cover della playlist. Il CSS ce
+l'aveva gia': `.spotify-cover { background: var(--off-white) }`.
+
+Non ha mai dipinto niente. `.block[data-surface='line']` dichiara
+`background-color: var(--block-bg)` con **una classe piu' un attributo**, cioe'
+piu' specificita' di una classe sola: vinceva lui, e la cover restava al 50%
+come tutti gli altri blocchi. Misurato prima di toccare qualunque cosa:
+`rgba(247, 246, 249, 0.5)`.
+
+Il fondo ora lo da' `is-opaque` (D112), che agisce su `--block-bg` invece di
+provare a scavalcare quella regola. **Una dichiarazione che perde in silenzio e'
+peggio di una che manca**: leggendo il file sembra fatta, e nessuno la cerca.
+
+### D121. Due hover mancanti, e la sonda che guardava solo la prima schermata
+
+Le tre card del mix erano diventate link (D113) senza nessuna risposta al
+puntatore, e le voci del footer non ne avevano mai avuta una. Prendono il
+riempimento viola del sito, lo stesso dei bottoni.
+
+**Lo strato eredita la scatola invece di ripeterla.** Questi tre cambiano forma
+per tier: la card ha due padding, la voce di footer passa da colonna a riga a
+1200 e cambia corpo due volte, il nome ha tre misure. `flex-direction: inherit`
+e compagnia prendono il valore calcolato del genitore, qualunque media query
+l'abbia deciso — invece di una seconda serie di regole da tenere allineata per
+sempre. `.work-filter` conserva le proprie: ha anche uno spaziatore `::before`,
+quindi non e' una copia pura, e nessuna sonda lo guarda. Si potra' unire, ma non
+in un passaggio in cui non lo si misura.
+
+**E la sonda a pixel caricava una rotta sola e non scorreva mai.** Le sei
+superfici coperte finora stanno tutte nella prima schermata: non era mai
+emerso. E' morta appena le ho chiesto una voce di footer, leggendo un pixel
+fuori dalla finestra.
+
+Il primo fallimento dopo averla sistemata e' stato istruttivo due volte. Diceva
+che il filo destro del nome a fondo pagina era viola invece che grigio, e le due
+spiegazioni erano entrambe sbagliate finche' non le ho misurate:
+
+1. **Misurava a meta' animazione.** Centrando il blocco nella finestra lo si
+   lascia al 50%, ma la finestra d'ingresso si chiude quando il bordo alto
+   arriva al 25%: il filo era ancora corto. Ora la sonda porta il blocco a un
+   settimo dall'alto **e verifica di averlo aspettato**, invece di fidarsi di un
+   numero di millisecondi.
+2. **E anche dopo, quel pixel era viola.** Non per un difetto: a destra del nome
+   c'e' il bottone viola del footer, che parte esattamente li' e copre la linea
+   come fa ogni blocco accent (D2). Misurato: e' viola **anche a riposo**, con
+   il riempimento ancora arrotolato. Il caso di prova era scelto male, e ora lo
+   dichiara.
+
+Le prove a pixel passano da 152 a 164.
+
 ---
 
 ## 5. Blocchi aperti

@@ -121,6 +121,14 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
         >
           <Icon name={skill.icon} />
           <p class="skill-card__label">{skill.label}</p>
+          {/* La copia nel colore d'arrivo, come sui bottoni: adesso che la card
+              e' un link, deve anche rispondere al puntatore. `span` e non `p`
+              perche' un paragrafo dentro uno span non e' markup valido; dentro
+              un contenitore flex si comporta allo stesso modo. */}
+          <span class="hover-fill" aria-hidden="true">
+            <Icon name={skill.icon} />
+            <span class="skill-card__label">{skill.label}</span>
+          </span>
         </Block>
       ))
     }

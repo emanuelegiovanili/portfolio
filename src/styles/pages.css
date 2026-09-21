@@ -136,12 +136,23 @@
 /* 301:522 — la copertina gira su se stessa al passaggio del mouse. Qui e'
    ferma: il movimento arriva in Fase 5, con i valori reali letti dal file
    (2,515s, senso antiorario). */
-/* Come `.media-block`: nessun ritaglio proprio, o si mangia i fili. */
+/*
+ * Come `.media-block`: nessun ritaglio proprio, o si mangia i fili.
+ *
+ * Qui c'era `background: var(--off-white)`, e non ha mai dipinto niente.
+ * `.block[data-surface='line']` dichiara `background-color: var(--block-bg)`
+ * con una classe **piu' un attributo**, cioe' piu' specificita' di una classe
+ * sola: vinceva lui, e la cover restava al 50% come tutti gli altri blocchi.
+ * Misurato: `rgba(247, 246, 249, 0.5)`.
+ *
+ * Il fondo pieno ora lo da' `is-opaque` sul blocco, che agisce su `--block-bg`
+ * invece di provare a scavalcare quella regola. Una dichiarazione che perde in
+ * silenzio e' peggio di una che manca: sembra fatta.
+ */
 .spotify-cover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--off-white);
 }
 
 .spotify-cover svg {

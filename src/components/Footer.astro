@@ -43,6 +43,9 @@ const WORK_TOGETHER = "Let’s work together";
     cieco: e' la stessa scelta gia' presa per il logo in testa (NOTES.md D48). */}
 <Block at={at.footerBrand!} as="a" href="/" class="footer-brand" data-flow={flowAttr} clip>
   <span class="t-display footer-brand__text">{SITE_NAME}</span>
+  <span class="hover-fill" aria-hidden="true">
+    <span class="t-display footer-brand__text">{SITE_NAME}</span>
+  </span>
 </Block>
 
 {at.footerWorkTogether && <PrimaryButton at={at.footerWorkTogether} label={WORK_TOGETHER} href="/contact" data-flow={flowAttr} />}
@@ -68,6 +71,14 @@ const WORK_TOGETHER = "Let’s work together";
         {link.external && <Icon name="arrow-up-right" class="footer-link__arrow" />}
         <span class="footer-link__label">{link.label}</span>
         {isCurrent && <span class="footer-link__indicator" aria-hidden="true" />}
+        {/* Lo strato copre anche la barra della pagina corrente, ed e' giusto:
+            mentre punti una voce, quello che stai per fare conta piu' di dove
+            sei. I social segnaposto non si accendono, perche' la regola
+            dell'hover esclude `aria-disabled`. */}
+        <span class="hover-fill" aria-hidden="true">
+          {link.external && <Icon name="arrow-up-right" class="footer-link__arrow" />}
+          <span class="footer-link__label">{link.label}</span>
+        </span>
       </Block>
     );
   })

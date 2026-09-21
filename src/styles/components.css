@@ -16,6 +16,25 @@
   color: inherit;
 }
 
+/*
+ * Il segnaposto esce dal proprio riquadro, ed e' giusto che si veda.
+ *
+ * La sua animazione di hover lo solleva e lo fa oscillare attorno alla base del
+ * viewBox: misurato, ne esce di 7,08 unita' a sinistra, 1,45 a destra e 0,48
+ * sotto, e l'SVG lo tagliava a meta' del gesto (NOTES.md D118).
+ *
+ * `overflow: visible` cambia solo cosa viene dipinto, non la scatola: l'icona
+ * resta 24x24 per il layout, e i 7 pixel che sbordano cadono dentro una cella
+ * da 120 con il segno al centro. Il blocco la ritaglia comunque a un pixel
+ * oltre il proprio bordo, quindi la griglia non se ne accorge.
+ *
+ * Per icona e mai globale: `send` vola fuori dal riquadro e rientra dall'altro
+ * lato, e senza ritaglio quel gesto si vedrebbe tutto e non avrebbe piu' senso.
+ */
+.icon[data-icon='map-pin'] {
+  overflow: visible;
+}
+
 /* ---------- Header ---------- */
 
 .logo {
@@ -432,7 +451,10 @@
 .primary-button,
 .menu-voice,
 .menu-social,
-.work-filter {
+.work-filter,
+.skill-card,
+.footer-brand,
+.footer-link {
   --hover: 100%;
   --hover-bg: var(--purple);
   --hover-fg: var(--off-white);
@@ -490,6 +512,30 @@
   padding: var(--pad);
 }
 
+/*
+ * Lo strato che eredita la scatola dell'originale.
+ *
+ * Questi tre cambiano forma per tier: la card del mix ha due padding, la voce
+ * del footer passa da colonna a riga a 1200 e cambia corpo due volte, il nome
+ * a fondo pagina ha tre misure. Lo strato dell'hover e' una copia di quello che
+ * c'e' sotto, quindi deve avere la stessa scatola — e riscriverne le regole qui
+ * vuol dire tenerne allineate due serie per sempre. `inherit` prende il valore
+ * calcolato del genitore, qualunque media query l'abbia deciso.
+ *
+ * `.work-filter` ha ancora le sue: ha anche uno spaziatore `::before` da
+ * replicare, quindi non e' una copia pura, e le sonde a pixel non lo guardano.
+ * Si potra' unire, ma non in un passaggio in cui non lo si misura.
+ */
+.skill-card > .hover-fill,
+.footer-brand > .hover-fill,
+.footer-link > .hover-fill {
+  flex-direction: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  gap: inherit;
+  padding: inherit;
+}
+
 /* Il ritratto della variante `profile`: il riempimento e' un'immagine. */
 .hover-fill :is(img, picture) {
   width: 100%;
@@ -542,9 +588,16 @@
  * riempito finche' non se ne tocca un altro.
  */
 @media (hover: hover) {
-  :is(.square-button, .primary-button, .menu-voice, .menu-social, .work-filter):hover:not(
-      :disabled
-    ):not([aria-disabled='true']) {
+  :is(
+    .square-button,
+    .primary-button,
+    .menu-voice,
+    .menu-social,
+    .work-filter,
+    .skill-card,
+    .footer-brand,
+    .footer-link
+  ):hover:not(:disabled):not([aria-disabled='true']) {
     --hover: 0%;
   }
 

@@ -31,6 +31,11 @@ import { chromium } from 'playwright';
 import sharp from 'sharp';
 import { startDevServer, CHROMIUM } from './dev-server.mjs';
 
+/* Il viola dei blocchi accent, che la linea la copre invece di lasciarla
+   vedere: e' la regola D2, non un'eccezione di questa sonda. Sta qui e non
+   accanto a RULE perche' HOVER lo usa, e HOVER si costruisce prima. */
+const VIOLA = [0x60, 0x3c, 0xff];
+
 /**
  * I bottoni di cui si controlla lo strato di hover.
  *
@@ -55,7 +60,88 @@ const HOVER = [
   { route: '/', selector: '.menu-voice', nome: 'voce (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
   { route: '/', selector: '.menu-social', nome: 'social (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
   { route: '/', selector: '.menu-close', nome: 'chiudi (megamenu)', apri: true, filo: [0xf7, 0xf6, 0xf9] },
+  /*
+   * Le tre superfici entrate dopo, e che senza queste righe sarebbero le uniche
+   * senza prova.
+   *
+   * Il loro strato non ripete le regole di scatola dell'originale, le eredita
+   * (`flex-direction: inherit` e compagnia in components.css): e' piu' breve,
+   * ma vuol dire che a cambiare padding a `.footer-link` cambia anche il
+   * riempimento, e nessuno se ne accorgerebbe leggendo il CSS. E' proprio il
+   * caso in cui la misura vale piu' della rilettura.
+   *
+   * La voce di footer si guarda su /about e non su /: in home la prima
+   * `.footer-link` e' "Home", che e' la voce corrente e porta la barra viola
+   * sotto: il riempimento la copre, ma un pixel viola sotto a un riempimento
+   * viola non prova niente.
+   */
+  { route: '/', selector: '.skill-card', nome: 'card del mix', scorri: true },
+  /*
+   * Il nome a fondo pagina confina a destra con il bottone viola del footer,
+   * che parte esattamente sul pixel della linea e la copre, come fa ogni blocco
+   * accent (NOTES.md D2). Li' il filo non deve esserci, e pretenderlo era un
+   * errore della sonda, non del sito: misurato, quel pixel e' viola **anche a
+   * riposo**, con il riempimento ancora arrotolato.
+   *
+   * Si dichiara invece di saltarlo. Il lato destro cosi' non prova granche' —
+   * viola su viola — ma gli altri tre provano quello che conta, e una riga che
+   * dice perche' vale piu' di un caso tolto in silenzio.
+   */
+  { route: '/about', selector: '.footer-brand', nome: 'nome a fondo pagina', scorri: true, filo: { destro: VIOLA } },
+  { route: '/about', selector: '.footer-link', nome: 'voce di footer', scorri: true },
 ];
+
+/**
+ * Porta il blocco sotto gli occhi, e aspetta che smetta di muoversi.
+ *
+ * Serve solo ai casi marcati `scorri`. I sei di prima stanno tutti nella prima
+ * schermata, e infatti questa sezione non aveva mai navigato ne' scrollato: e'
+ * bastato aggiungere una voce di footer perche' lo scatto finisse fuori dalla
+ * finestra e la sonda morisse leggendo un pixel che non c'era.
+ *
+ * L'attesa e' lunga perche' sono due cose in fila: l'inerzia di ScrollSmoother,
+ * e il giro dei fili, che si disegnano sullo scroll. Misurare un blocco appena
+ * entrato vuol dire misurare un filo a meta'.
+ */
+async function porta(page, selector) {
+  /*
+   * Non al centro: a un settimo dall'alto.
+   *
+   * La finestra d'ingresso di un blocco si chiude quando il suo bordo alto
+   * arriva al 25% della schermata (`src/scripts/motion.ts`). Centrandolo lo si
+   * lascia al 50%, cioe' **a meta' del giro dei fili**, e la sonda misurava un
+   * lato ancora corto scambiandolo per un lato coperto. Sopra il 25% il giro e'
+   * finito e il blocco e' fermo.
+   */
+  await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (el) window.scrollTo(0, window.scrollY + el.getBoundingClientRect().top - window.innerHeight * 0.15);
+  }, selector);
+  await page.waitForTimeout(2600);
+
+  // E si controlla di averlo davvero aspettato, invece di fidarsi del numero.
+  const fili = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    const cs = getComputedStyle(el);
+    return ['--rule-t', '--rule-r', '--rule-b', '--rule-l'].map((n) => {
+      const v = cs.getPropertyValue(n).trim();
+      return v === '' ? 100 : Number.parseFloat(v);
+    });
+  }, selector);
+  if (fili && Math.min(...fili) < 99) {
+    throw new Error(
+      `${selector}: misurato a giro non finito, fili al ${fili.map((f) => f.toFixed(0)).join('/')}%. ` +
+        `La sonda deve aspettare di piu', non il sito disegnare di meno.`,
+    );
+  }
+}
+
+/** Torna in cima: il megamenu si apre da li', e le prove dopo lo danno per fermo. */
+async function inCima(page) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(2600);
+}
 
 const menuAperto = (page) =>
   page.evaluate(() => document.getElementById('megamenu')?.hasAttribute('data-open') ?? false);
@@ -355,7 +441,15 @@ try {
     if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
     await page.evaluate(() => document.fonts.ready);
 
-    for (const { selector, nome, apri } of HOVER) {
+    let rotta = HOVER[0].route;
+    for (const { selector, nome, apri, route, scorri } of HOVER) {
+      if (route !== rotta) {
+        await page.goto(server.base + route, { waitUntil: 'networkidle' });
+        if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
+        await page.evaluate(() => document.fonts.ready);
+        rotta = route;
+      }
+      if (scorri) await porta(page, selector);
       if (apri) await apriMenu(page);
       const scarti = await page.evaluate((sel) => {
         const el = document.querySelector(sel);
@@ -405,9 +499,22 @@ try {
     // Si riparte dalla pagina, non dal pannello aperto del giro precedente.
     await chiudiMenu(page);
 
-    for (const { selector, nome, apri, filo } of HOVER) {
+    rotta = HOVER[0].route;
+    await page.goto(server.base + rotta, { waitUntil: 'networkidle' });
+    if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
+    await page.evaluate(() => document.fonts.ready);
+
+    for (const { selector, nome, apri, filo, route, scorri } of HOVER) {
+      if (route !== rotta) {
+        await page.goto(server.base + route, { waitUntil: 'networkidle' });
+        if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
+        await page.evaluate(() => document.fonts.ready);
+        rotta = route;
+      }
       if (apri) await apriMenu(page);
       else await chiudiMenu(page);
+      if (scorri) await porta(page, selector);
+      else await inCima(page);
       const box = await page.evaluate(new Function('return ' + BOX_OF)(), selector);
 
       await page.hover(selector);
@@ -428,7 +535,10 @@ try {
         ['alto', rows[padT]],
         ['basso', rows[padT + h - (box.edgeY ? 1 : 0)]],
       ]) {
-        const ok = near(px, filo ?? RULE);
+        // `filo` e' o un colore per tutti e quattro i lati, o una mappa lato per
+        // lato per i blocchi che hanno un vicino con idee proprie.
+        const atteso = Array.isArray(filo) ? filo : (filo?.[lato] ?? RULE);
+        const ok = near(px, atteso);
         if (!ok) failures += 1;
         console.log(`  ${ok ? 'ok     ' : 'FALLITO'} ${nome} in hover · lato ${lato}` + (ok ? '' : ` — ${px.join(',')} invece del filo`));
       }

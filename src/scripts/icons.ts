@@ -14,8 +14,12 @@
  *    `viewBox` e non sul bounding box: su una linea orizzontale il bounding box
  *    e' alto zero, e "top right" e "bottom right" coinciderebbero. Qui si usa
  *    `svgOrigin`, che lavora gia' nelle coordinate del viewBox.
- * 3. L'animazione resta dentro il riquadro 24x24 e non tocca mai il blocco che
- *    la contiene.
+ * 3. L'animazione non tocca mai il blocco che la contiene. Che resti dentro il
+ *    riquadro 24x24 **non e' vero per tutte**: misurato, il segnaposto ne esce
+ *    di 7,08 unita' a sinistra, 1,45 a destra e 0,48 sotto, e l'SVG lo tagliava
+ *    (NOTES.md D118). Chi ne esce lo dichiara con `overflow: visible`; chi
+ *    invece sul ritaglio ci conta — `send` vola fuori e rientra dall'altro lato
+ *    — deve restare ritagliato, quindi la deroga e' per icona, mai globale.
  *
  * Una timeline per istanza, costruita al primo hover e tenuta in una WeakMap:
  * le stesse icone compaiono piu' volte in pagina e una timeline condivisa le
@@ -48,6 +52,7 @@ const BUILDERS: Record<string, Builder> = {
   'chevron-right': chevron(1),
   'map-pin': mapPin,
   'disc-3': disc,
+  'audio-lines': audioLines,
 };
 
 const controllers = new WeakMap<SVGElement, Controller>();
@@ -74,7 +79,19 @@ function bindHover(): void {
     if (!build) continue;
 
     const host = svg.closest('button, a, .block') ?? svg;
-    host.addEventListener('mouseenter', () => controllerFor(svg, build).enter());
+    /*
+     * `reduced` si legge qui e non una volta sola all'avvio: la preferenza si
+     * cambia mentre la pagina e' aperta, e una copia presa al caricamento
+     * continuerebbe ad animare chi nel frattempo ha chiesto di smettere.
+     *
+     * Finora la guardia valeva per il solo morph della hamburger. Le sei
+     * animazioni di hover non l'avevano, e la settima — le onde — e' un ciclo
+     * che non finisce finche' il puntatore resta li': il caso peggiore.
+     */
+    host.addEventListener('mouseenter', () => {
+      if (reduced.matches) return;
+      controllerFor(svg, build).enter();
+    });
     host.addEventListener('mouseleave', () => controllerFor(svg, build).leave());
   }
 }
@@ -169,6 +186,55 @@ function mapPin(svg: SVGElement): Controller {
     .to(g, { rotation: 0, duration: 0.334, ...pivot });
 
   return { enter: () => void tl.play(0), leave: () => {} };
+}
+
+/**
+ * AudioLines: le sei barre pulsano, sfasate, finche' il puntatore resta li'.
+ *
+ * Richiesta del committente, che ha indicato `<AudioLines animateOnHover />` di
+ * Animate UI: stessa libreria da cui vengono le altre sei, stesso trattamento —
+ * si porta il gesto in GSAP, non si installa React.
+ *
+ * **Si scala solo verso il basso, mai verso l'alto.** La barra centrale e'
+ * `M10 3v18`: va da 3 a 21 dentro un viewBox alto 24, e ingrandirla la
+ * spingerebbe fuori. Il ciclo quindi va da 1 a 0,45 e torna, e l'icona resta
+ * dentro il proprio riquadro senza bisogno di deroghe.
+ *
+ * L'origine e' `12 11,5`, il centro verticale delle barre: cinque su sei sono
+ * centrate li' esatte, la terza a 12, e con il solo `scaleY` la componente
+ * orizzontale non conta. Mezza unita' su una barra sola, cioe' mezzo pixel a
+ * icona piena: sotto la larghezza del tratto.
+ *
+ * Lo sfasamento e' **negativo**: ogni barra parte gia' a meta' del proprio
+ * giro. Con ritardi positivi l'ultima barra resterebbe ferma per mezzo secondo
+ * dopo che il puntatore e' arrivato, e un'onda che parte da sinistra si legge
+ * come un caricamento, non come un suono.
+ */
+function audioLines(svg: SVGElement): Controller {
+  const barre = [...svg.querySelectorAll<SVGPathElement>('path')];
+  const onde = gsap.to(barre, {
+    scaleY: 0.45,
+    svgOrigin: '12 11.5',
+    duration: 0.45,
+    ease: 'sine.inOut',
+    repeat: -1,
+    yoyo: true,
+    stagger: { each: -0.09, from: 'start' },
+    paused: true,
+  });
+
+  return {
+    enter: () => void onde.play(),
+    /*
+     * All'uscita non si taglia a meta': si riporta tutto a 1 in un quarto di
+     * secondo. Fermare il ciclo dov'e' lascerebbe le barre a altezze casuali,
+     * e l'icona a riposo diventerebbe un disegno diverso ogni volta.
+     */
+    leave: () => {
+      onde.pause();
+      gsap.to(barre, { scaleY: 1, svgOrigin: '12 11.5', duration: 0.25, ease: 'sine.out' });
+    },
+  };
 }
 
 /**
