@@ -1947,11 +1947,51 @@ scrive nel corpo della risposta, in `error.message`, e io leggevo solo lo stato.
 
 Ora l'errore riporta il messaggio (troncato a 300 caratteri: se non e' il JSON
 atteso e' una pagina d'errore di un proxy, e mezzo megabyte di HTML in un log di
-build non aiuta nessuno). Il prossimo deploy dice quale dei tre e'.
+build non aiuta nessuno).
 
 E' la terza volta in questa fase che il difetto non era nel meccanismo ma in
 quanto poco si vedeva di lui: il `}` invisibile, il log della build ingoiato, e
 adesso un codice di errore senza il suo motivo.
+
+### D117. Il motivo era nessuno dei tre: il Web API vuole Premium
+
+Un deploy dopo, con il messaggio in chiaro:
+
+    403 — Active premium subscription required for the owner of the app.
+    When the subscription status changes, it can take a few hours before
+    requests are allowed again.
+
+**Nessuna delle tre ipotesi.** Non l'app in sviluppo, non la playlist non
+pubblica, non l'endpoint chiuso alle app nuove: Spotify pretende che l'account
+**proprietario dell'app** abbia un abbonamento Premium attivo per usare il Web
+API. Quello del committente e' Free.
+
+Vale la pena notare quanto le tre ipotesi fossero inutili. Erano plausibili,
+ordinate per probabilita', e tutte e tre sbagliate; il messaggio d'errore le ha
+risolte in un deploy. **Un'ora di ragionamento su cosa possa essere vale meno di
+una riga che lo dice**, ed e' il motivo per cui il commit precedente e' stato
+quello e non un tentativo alla cieca.
+
+**La decisione del committente e' di non prendere Premium per questo**, quindi in
+pagina restano i valori scritti a mano e il link alla playlist, che funziona.
+Rispetto a ieri si guadagna comunque il link: `href` era `'#'`.
+
+C'era una mezza strada e l'ho sconsigliata: `open.spotify.com/oembed` e' pubblico,
+non chiede autenticazione ne' Premium, e da' il **titolo** della playlist. Non da'
+il conteggio dei brani, che e' esattamente il valore che invecchia: risolve la
+meta' che non e' il problema, e aggiunge una dipendenza di rete per un nome che
+non cambia quasi mai.
+
+**Il codice resta**, perche' e' finito e senza i due secret non fa nemmeno una
+chiamata. Non e' un'intenzione che nessuno legge, come lo era `data-spin` prima
+di D106: e' un meccanismo completo, provato fino al punto esatto in cui si ferma,
+con il motivo scritto in tre posti. Il giorno che quell'account diventa Premium
+si rimettono i secret e riparte, senza toccare una riga.
+
+**I due secret vanno tolti da GitHub.** Restando li', ogni deploy fa due chiamate
+che falliscono e scrive una riga di errore nel log: un allarme che suona sempre
+smette di essere un allarme. Senza, il log dice `nessuna credenziale`, che e' la
+verita'.
 
 ### D115. Un `}` di troppo, e le sei sonde che non potevano vederlo
 
@@ -1990,7 +2030,7 @@ non esiste.
 | B1 | **Accesso di rete a `figma.com`** da questa sessione | La policy di egress risponde 403 al CONNECT: nessun asset immagine scaricabile (vedi `README.md`). Dalla Fase 5 il server MCP di Figma legge il file — nodi, misure, variabili, anteprime — quindi le misure si verificano alla fonte; restano fuori portata solo gli URL degli asset |
 | B2 | Frame mobile e md per `/about`, `/works`, `/works/[slug]`, `/contact` e megamenu | Sotto 1200px quelle quattro route non hanno disegno |
 | B3 | Backend del form, stati di errore / invio / conferma, privacy policy | Il form non è inviabile |
-| B4 | Blocco Spotify: **la lettura risponde 403** | Il meccanismo c'e' (D114) e il ripiego regge, ma la playlist non si legge: token ottenuto, `GET /v1/playlists/{id}` rifiutato. D116 aggiunge il motivo al messaggio d'errore; il prossimo deploy dira' se e' l'app in sviluppo, la playlist non pubblica, o l'endpoint chiuso alle app nuove. Fino ad allora in pagina restano i valori del Figma |
+| B4 | Blocco Spotify: **chiuso, con il dato a mano** | Il meccanismo c'e' ed e' provato (D114, D116), ma il Web API vuole un account **Premium** come proprietario dell'app e quello del committente e' Free (D117). Decisione sua: non si prende Premium per questo. In pagina restano nome e conteggio scritti in `src/data/about.ts`, piu' il link alla playlist che ora funziona. Resta da fare una cosa sola, e non e' codice: **togliere i due secret Spotify da GitHub**, o ogni deploy continuera' a loggare un errore che sappiamo gia'. Il conteggio invecchia: quando cambia, si aggiorna li' |
 | B5 | Stati hover e focus per **tutto il resto** | I due bottoni ora sono disegnati (D63). Restano senza hover le voci del footer, quelle del megamenu, le card progetto e i filtri. Il focus da tastiera e' visibile solo dentro il megamenu |
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |

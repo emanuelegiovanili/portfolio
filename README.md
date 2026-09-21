@@ -71,6 +71,13 @@ Perche' funzioni servono due cose, da fare una volta sola:
 
 ### La playlist di /about
 
+> **Oggi e' spenta, di proposito.** Il Web API di Spotify pretende che l'account
+> proprietario dell'app abbia un abbonamento **Premium attivo**: senza, risponde
+> `403 — Active premium subscription required for the owner of the app`. Quello
+> del committente e' Free, quindi i due secret **non vanno messi** e in pagina
+> restano i valori scritti a mano. Il meccanismo resta pronto: se quell'account
+> passa a Premium, bastano i secret e riparte da solo.
+
 Due secret **facoltativi**, `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET`, presi
 da un'app creata su [developer.spotify.com](https://developer.spotify.com/dashboard).
 Con quelli la build legge nome e numero di brani dalla playlist vera; senza,

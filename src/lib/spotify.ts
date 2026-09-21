@@ -25,10 +25,22 @@
  * nient'altro. Non puo' sapere cosa sto ascoltando adesso, e va bene cosi' —
  * "Now playing" nel Figma e' il titolo della sezione, non il brano in corso.
  *
- * NON E' MAI STATO PROVATO CONTRO SPOTIFY DA QUI: la policy di uscita di questa
- * sessione risponde 403 al CONNECT verso `accounts.spotify.com`, come verso
- * Cloudflare. La prima esecuzione vera e' quella in Actions, e il log dice
- * sempre quale delle due strade ha preso.
+ * ---------------------------------------------------------------------------
+ * OGGI QUESTO CODICE NON GIRA, E NON E' UN DIFETTO
+ *
+ * Provato in Actions con le credenziali vere, Spotify ha risposto:
+ *
+ *   403 — Active premium subscription required for the owner of the app.
+ *
+ * Il Web API vuole che l'account **proprietario dell'app** abbia un abbonamento
+ * Premium attivo. Quello del committente e' Free, e la decisione e' stata di
+ * non prenderlo per questo: in pagina restano i valori scritti a mano (NOTES.md
+ * D117). Il token invece si ottiene senza problemi — l'errore dice `playlist:`,
+ * non `token:` — quindi l'app e' valida e manca solo quello.
+ *
+ * Il codice resta perche' e' finito e non costa niente: senza i due secret non
+ * fa nemmeno una chiamata. Il giorno che quell'account diventa Premium, si
+ * rimettono i secret e la playlist si legge da sola, senza toccare una riga.
  */
 
 export interface PlaylistData {
