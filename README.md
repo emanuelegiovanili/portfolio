@@ -84,7 +84,7 @@ Il **redirect URI** invece va messo lo stesso, perche' il form della dashboard l
 pretende anche quando il flusso non lo usera' mai. Va bene l'indirizzo del sito,
 e deve essere `https://` (Spotify accetta `http://` solo per `127.0.0.1`):
 
-    https://emanuelegiovanili.emanuelegiovanili.workers.dev/about
+    https://emanuelegiovanili.emanuele-giovanili-ap.workers.dev/about
 
 Non verra' mai chiamato: nessun utente fa il giro di autorizzazione.
 

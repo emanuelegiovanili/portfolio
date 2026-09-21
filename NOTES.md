@@ -1927,13 +1927,31 @@ che non faceva niente, in un blocco che prometteva un'azione.
 Dall'indirizzo e' stato tolto il parametro `si`: e' il codice di condivisione
 legato all'account di chi copia il link, e questo repository e' pubblico.
 
-**Non e' mai stato provato contro Spotify da qui.** La policy di uscita risponde
-403 al CONNECT verso `accounts.spotify.com`, come verso Cloudflare (B1). La prima
-esecuzione vera e' quella in GitHub Actions. [Ipotesi] I termini delle API sono
-cambiati a fine 2024 e alcuni endpoint sono stati chiusi alle app nuove: una
-playlist pubblica creata da un utente dovrebbe restare leggibile, ma finche' non
-gira in Actions resta da verificare. Se non funzionasse, il ripiego e' gia' la
-pagina che si vede oggi.
+**Non era mai stato provato contro Spotify da qui**, perche' la policy di uscita
+risponde 403 al CONNECT verso `accounts.spotify.com`, come verso Cloudflare (B1).
+
+### D116. Il primo giro vero: 403 sulla playlist
+
+Credenziali in Actions, primo deploy: `[spotify] lettura fallita (playlist:
+HTTP 403): resto sui valori scritti a mano.`
+
+**Il token e' stato ottenuto.** L'errore dice `playlist:`, non `token:`, quindi
+`client_credentials` ha funzionato e l'app e' valida: e' la lettura della
+playlist a essere rifiutata. Il ripiego ha retto e la pagina e' rimasta quella
+di prima, che e' esattamente il comportamento per cui era stato scritto.
+
+**E da un 403 nudo non si capisce niente.** Ci sono almeno tre modi di essere
+rifiutati — app ancora in sviluppo, playlist non pubblica, endpoint chiuso alle
+app nuove — e il numero e' lo stesso per tutti e tre. Spotify il motivo lo
+scrive nel corpo della risposta, in `error.message`, e io leggevo solo lo stato.
+
+Ora l'errore riporta il messaggio (troncato a 300 caratteri: se non e' il JSON
+atteso e' una pagina d'errore di un proxy, e mezzo megabyte di HTML in un log di
+build non aiuta nessuno). Il prossimo deploy dice quale dei tre e'.
+
+E' la terza volta in questa fase che il difetto non era nel meccanismo ma in
+quanto poco si vedeva di lui: il `}` invisibile, il log della build ingoiato, e
+adesso un codice di errore senza il suo motivo.
 
 ### D115. Un `}` di troppo, e le sei sonde che non potevano vederlo
 
@@ -1972,7 +1990,7 @@ non esiste.
 | B1 | **Accesso di rete a `figma.com`** da questa sessione | La policy di egress risponde 403 al CONNECT: nessun asset immagine scaricabile (vedi `README.md`). Dalla Fase 5 il server MCP di Figma legge il file — nodi, misure, variabili, anteprime — quindi le misure si verificano alla fonte; restano fuori portata solo gli URL degli asset |
 | B2 | Frame mobile e md per `/about`, `/works`, `/works/[slug]`, `/contact` e megamenu | Sotto 1200px quelle quattro route non hanno disegno |
 | B3 | Backend del form, stati di errore / invio / conferma, privacy policy | Il form non è inviabile |
-| B4 | Blocco Spotify: **manca solo la prova sul campo** | Risolto in D114: nome, conteggio e indirizzo li legge la build da Spotify, con ripiego sui valori del Figma. Restano da fare due cose che non posso fare io: creare l'app su developer.spotify.com e mettere `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET` nei secret. Finche' non girano in Actions, che la chiamata passi resta un'ipotesi |
+| B4 | Blocco Spotify: **la lettura risponde 403** | Il meccanismo c'e' (D114) e il ripiego regge, ma la playlist non si legge: token ottenuto, `GET /v1/playlists/{id}` rifiutato. D116 aggiunge il motivo al messaggio d'errore; il prossimo deploy dira' se e' l'app in sviluppo, la playlist non pubblica, o l'endpoint chiuso alle app nuove. Fino ad allora in pagina restano i valori del Figma |
 | B5 | Stati hover e focus per **tutto il resto** | I due bottoni ora sono disegnati (D63). Restano senza hover le voci del footer, quelle del megamenu, le card progetto e i filtri. Il focus da tastiera e' visibile solo dentro il megamenu |
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |

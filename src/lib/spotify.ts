@@ -48,6 +48,34 @@ const API_URL = 'https://api.spotify.com/v1/playlists';
 /** Una build non puo' restare appesa a un servizio esterno. */
 const TIMEOUT_MS = 8000;
 
+/**
+ * Il motivo, non solo il numero.
+ *
+ * Il primo tentativo in Actions ha risposto `playlist: HTTP 403` e basta, e da
+ * un 403 nudo non si capisce **quale** dei modi di essere rifiutati sia: app in
+ * sviluppo, playlist non pubblica, endpoint chiuso alle app nuove. Spotify il
+ * motivo lo scrive nel corpo della risposta, in `error.message`, e io lo stavo
+ * buttando via.
+ *
+ * Il corpo si tronca: se non e' il JSON che mi aspetto e' una pagina d'errore
+ * del proxy, e mezzo megabyte di HTML in un log di build non aiuta nessuno.
+ */
+async function perche(res: Response): Promise<string> {
+  try {
+    const testo = (await res.text()).slice(0, 300);
+    try {
+      const data = JSON.parse(testo) as { error?: { message?: string } | string };
+      const messaggio = typeof data.error === 'string' ? data.error : data.error?.message;
+      if (messaggio) return `HTTP ${res.status}: ${messaggio}`;
+    } catch {
+      // Non era JSON: si riporta il testo cosi' com'e'.
+    }
+    return testo ? `HTTP ${res.status}: ${testo}` : `HTTP ${res.status}`;
+  } catch {
+    return `HTTP ${res.status}`;
+  }
+}
+
 async function token(id: string, secret: string): Promise<string> {
   const res = await fetch(TOKEN_URL, {
     method: 'POST',
@@ -59,7 +87,7 @@ async function token(id: string, secret: string): Promise<string> {
     body: 'grant_type=client_credentials',
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  if (!res.ok) throw new Error(`token: HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`token: ${await perche(res)}`);
   const data = (await res.json()) as { access_token?: string };
   if (!data.access_token) throw new Error('token: risposta senza access_token');
   return data.access_token;
@@ -83,7 +111,7 @@ export async function playlist(id: string, fallback: Omit<PlaylistData, 'source'
       headers: { Authorization: `Bearer ${access}` },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    if (!res.ok) throw new Error(`playlist: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`playlist: ${await perche(res)}`);
 
     const data = (await res.json()) as {
       name?: string;
