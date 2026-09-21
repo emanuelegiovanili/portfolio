@@ -534,6 +534,16 @@
   justify-content: inherit;
   gap: inherit;
   padding: inherit;
+  /*
+   * Anche l'allineamento del testo, che la prima versione si era persa.
+   *
+   * `.hover-fill` nasce con `text-align: center` perche' i bottoni sono
+   * centrati. La card del mix no — ha `start` — e passando il puntatore le sue
+   * due righe scattavano al centro: la scatola era giusta e il contenuto
+   * dentro no. Le voci del footer sono centrate davvero, quindi `inherit` la'
+   * non cambia niente ed e' comunque la cosa giusta da scrivere.
+   */
+  text-align: inherit;
 }
 
 /* Il ritratto della variante `profile`: il riempimento e' un'immagine. */

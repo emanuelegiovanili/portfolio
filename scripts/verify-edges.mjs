@@ -75,7 +75,7 @@ const HOVER = [
    * sotto: il riempimento la copre, ma un pixel viola sotto a un riempimento
    * viola non prova niente.
    */
-  { route: '/', selector: '.skill-card', nome: 'card del mix', scorri: true },
+  { route: '/', selector: '.skill-card', nome: 'card del mix', scorri: true, eredita: true },
   /*
    * Il nome a fondo pagina confina a destra con il bottone viola del footer,
    * che parte esattamente sul pixel della linea e la copre, come fa ogni blocco
@@ -87,8 +87,8 @@ const HOVER = [
    * viola su viola — ma gli altri tre provano quello che conta, e una riga che
    * dice perche' vale piu' di un caso tolto in silenzio.
    */
-  { route: '/about', selector: '.footer-brand', nome: 'nome a fondo pagina', scorri: true, filo: { destro: VIOLA } },
-  { route: '/about', selector: '.footer-link', nome: 'voce di footer', scorri: true },
+  { route: '/about', selector: '.footer-brand', nome: 'nome a fondo pagina', scorri: true, eredita: true, filo: { destro: VIOLA } },
+  { route: '/about', selector: '.footer-link', nome: 'voce di footer', scorri: true, eredita: true },
 ];
 
 /**
@@ -442,7 +442,7 @@ try {
     await page.evaluate(() => document.fonts.ready);
 
     let rotta = HOVER[0].route;
-    for (const { selector, nome, apri, route, scorri } of HOVER) {
+    for (const { selector, nome, apri, route, scorri, eredita } of HOVER) {
       if (route !== rotta) {
         await page.goto(server.base + route, { waitUntil: 'networkidle' });
         if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
@@ -485,6 +485,37 @@ try {
         `  ${ok ? 'ok     ' : 'FALLITO'} ${nome}` +
           (ok ? '' : ` — sx ${scarti.sx} su ${scarti.su} dx ${scarti.dx} giu ${scarti.giu}, attesi 0 0 ${attesoDx} ${attesoGiu}`),
       );
+
+      /*
+       * E non basta che la scatola combaci: deve combaciare anche cio' che c'e'
+       * dentro.
+       *
+       * Lo strato di questi tre eredita la scatola dell'originale
+       * (components.css), ma la prima versione della regola si era persa
+       * `text-align`: `.hover-fill` nasce centrato perche' i bottoni lo sono, e
+       * le due righe della card del mix scattavano al centro al passaggio del
+       * puntatore. La sonda diceva ok, perche' guardava i quattro lati e non il
+       * contenuto. E' stato il committente a vederlo.
+       */
+      if (eredita) {
+        const eredita4 = await page.evaluate((sel) => {
+          const el = document.querySelector(sel);
+          const fill = el?.querySelector('.hover-fill');
+          if (!el || !fill) return null;
+          const props = ['text-align', 'flex-direction', 'justify-content', 'align-items'];
+          const a = getComputedStyle(el);
+          const b = getComputedStyle(fill);
+          return props
+            .filter((n) => a.getPropertyValue(n) !== b.getPropertyValue(n))
+            .map((n) => `${n}: ${b.getPropertyValue(n)} invece di ${a.getPropertyValue(n)}`);
+        }, selector);
+        const uguali = eredita4 !== null && eredita4.length === 0;
+        if (!uguali) failures += 1;
+        console.log(
+          `  ${uguali ? 'ok     ' : 'FALLITO'} ${nome} · lo strato eredita la disposizione` +
+            (uguali ? '' : ` — ${(eredita4 ?? ['strato assente']).join(', ')}`),
+        );
+      }
     }
 
     /*

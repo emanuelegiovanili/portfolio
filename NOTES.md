@@ -2119,6 +2119,17 @@ spiegazioni erano entrambe sbagliate finche' non le ho misurate:
 
 Le prove a pixel passano da 152 a 164.
 
+**E non bastavano.** Segnalato dal committente: all'hover, i testi delle tre
+card del mix scattavano al centro. `.hover-fill` nasce con `text-align: center`
+perche' i bottoni sono centrati, e la regola che eredita la scatola si era persa
+proprio quello: scatola giusta, contenuto no.
+
+La sonda diceva ok perche' guardava i **quattro lati**, cioe' la geometria, e
+mai cio' che ci sta dentro. Ora confronta anche `text-align`, `flex-direction`,
+`justify-content` e `align-items` fra strato e originale: e' la stessa forma
+degli altri difetti di questa fase — il meccanismo funzionava, la misura non
+guardava dalla parte giusta.
+
 ### D122. "Discover more" portava in vista la sezione senza muovere la pagina
 
 Segnalato dal committente. Il markup era **gia' giusto** da sempre:
