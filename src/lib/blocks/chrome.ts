@@ -23,6 +23,19 @@ export const headerMap = {
 } as const satisfies LayoutMap;
 
 /**
+ * I due pulsanti che restano in alto dopo che l'header e' passato.
+ *
+ * Sono **gli stessi** dell'header, e si scrivono derivandoli invece di
+ * ricopiarli: identici era la richiesta, e due liste di numeri uguali oggi sono
+ * due liste diverse fra sei mesi. Il logo non c'e': in una barra che galleggia
+ * sopra la pagina servono i due comandi, non il nome.
+ */
+export const stickyHeaderMap = {
+  headerContact: headerMap.headerContact,
+  headerMenu: headerMap.headerMenu,
+} as const satisfies LayoutMap;
+
+/**
  * Il footer occupa 10 colonne dalla 2, su due righe.
  *
  * A base la composizione e' diversa, non di poco: il brand e' alto due righe,

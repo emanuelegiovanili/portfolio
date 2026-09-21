@@ -193,6 +193,9 @@ try {
   for (const [nome, script, extra] of [
     ['griglia', 'scripts/verify-grid.mjs', ['--paths', ROUTES.join(',')]],
     ['fili', 'scripts/verify-edges.mjs', []],
+    // La barra fissa sta fuori dalle griglie di pagina, quindi la sonda della
+    // griglia non la vede: ha la sua (NOTES.md D123).
+    ['barra fissa', 'scripts/verify-sticky.mjs', []],
   ]) {
     console.log(`\nSonda: ${nome}`);
     const res = spawnSync('node', [script, '--url', base, ...extra], { stdio: 'inherit' });

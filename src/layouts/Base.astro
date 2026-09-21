@@ -4,6 +4,7 @@ import '../styles/type.css';
 import '../styles/grid.css';
 import '../styles/components.css';
 import MegaMenu from '../components/MegaMenu.astro';
+import StickyHeader from '../components/StickyHeader.astro';
 
 interface Props {
   title: string;
@@ -50,11 +51,13 @@ const { title, description, noindex = false } = Astro.props;
     </div>
 
     <MegaMenu />
+    <StickyHeader />
     <slot name="fixed" />
 
     <script>
       import '../scripts/motion';
       import '../scripts/megamenu';
+      import '../scripts/sticky-header';
       import '../scripts/icons';
     </script>
   </body>

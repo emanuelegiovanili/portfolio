@@ -622,6 +622,67 @@
   }
 }
 
+/* ---------- La barra fissa ---------- */
+
+/*
+ * I due comandi dell'header, che restano in alto dopo che l'header e' passato.
+ *
+ * Fuori da `#smooth-content` per necessita' misurata: li' dentro ne' `sticky`
+ * ne' `fixed` hanno effetto, perche' il contenuto e' trasformato e una
+ * trasformazione diventa il riferimento dei discendenti fissi. Vedi
+ * `StickyHeader.astro` e NOTES.md D123.
+ *
+ * `inset-inline: 0` e non una larghezza: la griglia dentro si misura da sola
+ * sulla stessa `--cell` della pagina — `.grid-wrap` ha lo stesso `max-width` e
+ * lo stesso centraggio — quindi i due bottoni cadono sulle colonne 11 e 12 come
+ * quelli veri, a ogni larghezza.
+ *
+ * `visibility` e non `inert` per nascondere: nascosta, la barra esce
+ * dall'albero di accessibilita' e dall'ordine di tabulazione da sola, e
+ * `inert` resta di chi lo scrive davvero, cioe' il megamenu quando si apre.
+ * Due padroni per lo stesso attributo sono un difetto che aspetta.
+ *
+ * `z-index` sotto quello del megamenu (50): il pannello deve coprirla.
+ */
+.sticky-header {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  z-index: 40;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.sticky-header[data-shown] {
+  visibility: visible;
+  opacity: 1;
+}
+
+/*
+ * Compare in dissolvenza, non scorrendo.
+ *
+ * Un blocco bordato non si muove e non si ridimensiona mai: e' la regola zero.
+ * L'opacita' non e' ne' l'una ne' l'altra cosa, e una barra che scivola giu'
+ * sarebbe due bordi in movimento sopra una griglia ferma.
+ *
+ * `visibility` sta nella transizione con la sua durata a zero e il ritardo in
+ * uscita: cosi' sparisce **dopo** che e' diventata trasparente, invece di
+ * scomparire di colpo a meta' dissolvenza.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .sticky-header {
+    transition:
+      opacity var(--hover-time) var(--hover-ease),
+      visibility 0s var(--hover-ease) var(--hover-time);
+  }
+
+  .sticky-header[data-shown] {
+    transition:
+      opacity var(--hover-time) var(--hover-ease),
+      visibility 0s;
+  }
+}
+
 /* ---------- Megamenu ---------- */
 
 /*

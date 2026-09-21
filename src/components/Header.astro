@@ -42,11 +42,15 @@ const isHome = current === '/';
 
 <SquareButton at={headerMap.headerContact} variant="mail" label="Scrivimi" href="/contact" />
 
+{/* `data-menu-toggle` e' come il megamenu trova i suoi bottoni: questo e quello
+    della barra fissa (StickyHeader.astro). L'`id` resta perche' e' la sorgente
+    di stato del morph dell'icona, e di sorgente ce n'e' una sola. */}
 <SquareButton
   at={headerMap.headerMenu}
   variant="menu"
   label="Apri il menu"
   id="menu-toggle"
+  data-menu-toggle
   aria-expanded="false"
   aria-controls="megamenu"
 />

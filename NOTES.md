@@ -2175,6 +2175,73 @@ resterebbe sul bottone e il tab ripartirebbe da sopra la sezione raggiunta.
 `verify:motion` ora guarda tutte e tre le cose, e la piu' debole — "la sezione e'
 in vista" — e' segnata come tale.
 
+### D123. La barra fissa: due comandi identici, e una deroga dichiarata
+
+Richiesta del committente, scelta fra tre strade dopo averne misurate due.
+
+**Perche' non si poteva fare sui blocchi dell'header.** `position: sticky` su
+quei blocchi non ha un millimetro di corsa: il blocco contenitore di un grid
+item e' la **sua area di griglia**, alta quanto lui. Misurato: il blocco se ne
+va con la pagina, `top = -scroll`, a ogni altezza. E `position: fixed` non
+salva, perche' quei blocchi stanno in `#smooth-content`, che ScrollSmoother
+trasforma: un antenato trasformato diventa il riferimento dei discendenti
+fissi. Misurato anche quello: identico, `top = -scroll`.
+
+Perche' restino fermi devono stare **fuori** da `#smooth-content` — dove sta
+gia' il megamenu, per la stessa ragione, e dove Base.astro aveva gia' uno slot
+che lo diceva a parole.
+
+**Il costo e' di disegno, ed e' dichiarato.** La regola zero vuole i bordi dei
+blocchi sulle linee **in ogni fotogramma**. Una barra fissa sopra una griglia
+che scorre non puo' rispettarla tutta: i lati sinistro e destro si', perche' la
+griglia non scorre di lato e la barra usa la stessa `--cell` della pagina, ma i
+bordi alto e basso attraversano le celle mentre si scorre. E' l'unico punto del
+sito che deroga, ed e' una decisione del committente presa sapendolo.
+
+La scelta di farla comparire **dopo** l'header serve a contenerla: in cima alla
+pagina non c'e' niente di nuovo, i due comandi sono quelli veri, e la barra si
+legge come uno strato che arriva dopo invece che come due blocchi fuori posto.
+
+**"Identici" e' una parola che si verifica.** La mappa della barra deriva da
+`headerMap` invece di ricopiarne i numeri: due liste uguali oggi sono due liste
+diverse fra sei mesi. Misurato a 390, 768, 1200, 1440 e 1920 — stessa colonna e
+stessa misura dei bottoni veri, scarto **0,00px**.
+
+**Compare in dissolvenza.** Un blocco bordato non si muove e non si
+ridimensiona mai: una barra che scivola giu' sarebbero due bordi in movimento
+sopra una griglia ferma.
+
+**Due hamburger che non possono discordare.** Il megamenu si aggancia a
+`[data-menu-toggle]` invece che a un `id`, tiene le due su un solo
+`aria-expanded`, e restituisce il fuoco a **quella che ha aperto**: chi preme
+quella della barra si ritroverebbe altrimenti il fuoco in cima al documento.
+Il morph dell'icona non e' stato toccato — legge lo stato del bottone di pagina
+e si applica a ogni `[data-icon="menu"]`, quindi la terza icona si trasforma da
+sola.
+
+**Due cose che sarebbero passate inosservate.**
+
+A pannello aperto la barra restava raggiungibile col tab: l'`inert` che copre la
+pagina dietro al modale si scrive su `#smooth-wrapper`, e la barra sta fuori per
+necessita'. Ora la copre esplicitamente.
+
+E da nascosta usa `visibility`, non `inert`: nascosta esce comunque dall'albero
+di accessibilita' e dall'ordine di tabulazione, e `inert` resta di chi lo scrive
+davvero. Due padroni per lo stesso attributo sono un difetto che aspetta.
+
+### D124. E la barra non la guardava nessuna sonda
+
+`verify:grid` misura le griglie **di pagina**. La barra sta fuori da
+`#smooth-content`: prima della sua sonda, 325 misure; dopo averla aggiunta al
+sito, ancora 325. Era l'unica cosa del sito senza misura, e nessuno se ne
+sarebbe accorto finche' un giorno l'header non si fosse spostato di una colonna
+e la barra no — due quadrati quasi allineati, che e' il modo peggiore di
+sbagliare.
+
+`verify:sticky` e' la settima sonda: venticinque controlli su cinque larghezze,
+piu' il comportamento del bottone doppio. Gira anche dentro `verify:build`,
+quindi la misura vale sulla build pubblicata e non solo sul sorgente.
+
 ---
 
 ## 5. Blocchi aperti

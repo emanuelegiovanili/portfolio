@@ -21,16 +21,43 @@ import { DURATION, EASE, MENU } from '../motion/tokens';
 import { clearRules, traceRules } from '../motion/trace';
 
 const menu = document.getElementById('megamenu');
-const toggle = document.getElementById('menu-toggle');
+/*
+ * I bottoni che aprono il menu sono **due**: quello dell'header e quello della
+ * barra che resta in alto (StickyHeader.astro). Fanno la stessa cosa e portano
+ * lo stesso stato, quindi si prendono insieme invece di dare al secondo un giro
+ * suo, che e' il modo in cui due comandi uguali finiscono per discordare.
+ */
+const toggles = [...document.querySelectorAll<HTMLElement>('[data-menu-toggle]')];
+const toggle = toggles[0] ?? null;
 const closeButton = document.getElementById('menu-close');
 const wrapper = document.getElementById('smooth-wrapper');
+/*
+ * La barra fissa sta **fuori** da `#smooth-wrapper` — deve, per restare
+ * ancorata alla finestra — quindi l'`inert` che copre la pagina dietro al menu
+ * non la raggiunge. Senza questa riga, a pannello aperto i suoi due bottoni
+ * resterebbero raggiungibili col tab da dietro a un dialogo modale.
+ */
+const stickyHeader = document.getElementById('sticky-header');
 
 if (menu && toggle) {
+  /** Lo stato va su tutti e due i bottoni: sono la stessa cosa, detta due volte. */
+  const espanso = (value: boolean) => {
+    for (const t of toggles) t.setAttribute('aria-expanded', String(value));
+  };
+
+  /** Chi ha aperto, per ridargli il fuoco quando si chiude. */
+  let ultimo: HTMLElement = toggle;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const timeline = reduced.matches ? fade(menu) : wipe(menu);
   let open = false;
 
-  toggle.addEventListener('click', () => (open ? close() : show()));
+  for (const t of toggles) {
+    t.addEventListener('click', () => {
+      ultimo = t;
+      if (open) close();
+      else show();
+    });
+  }
   closeButton?.addEventListener('click', close);
 
   // Esc chiude, ed e' l'unico tasto gestito: il resto della tastiera resta del
@@ -51,8 +78,9 @@ if (menu && toggle) {
     menu!.removeAttribute('inert');
     menu!.removeAttribute('aria-hidden');
     menu!.setAttribute('data-open', '');
-    toggle!.setAttribute('aria-expanded', 'true');
+    espanso(true);
     wrapper?.setAttribute('inert', '');
+    stickyHeader?.setAttribute('inert', '');
     lock(true);
 
     timeline.timeScale(1).play();
@@ -67,13 +95,17 @@ if (menu && toggle) {
     // subito: l'uscita e' un fatto grafico, non un'attesa.
     menu!.setAttribute('inert', '');
     menu!.setAttribute('aria-hidden', 'true');
-    toggle!.setAttribute('aria-expanded', 'false');
+    espanso(false);
     wrapper?.removeAttribute('inert');
+    stickyHeader?.removeAttribute('inert');
     lock(false);
 
     // Il fuoco torna dove era prima, e solo dopo che il resto della pagina ha
     // smesso di essere inerte: su un elemento inerte focus() non fa niente.
-    toggle!.focus();
+    // "Dove era prima" e' il bottone che ha aperto, non sempre quello di
+    // pagina: chi ha premuto quello della barra si ritroverebbe il fuoco in
+    // cima al documento, cioe' da un'altra parte.
+    ultimo.focus();
 
     // Si esce piu' in fretta di quanto si entri: chiudere e' un comando, e un
     // comando non si fa aspettare.

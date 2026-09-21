@@ -1,0 +1,74 @@
+---
+/**
+ * I due comandi dell'header, che restano in alto quando l'header e' passato.
+ *
+ * ---------------------------------------------------------------------------
+ * PERCHE' UNA SECONDA COPPIA, E NON QUELLA DI SOPRA CHE SI FERMA
+ *
+ * Misurato: `position: sticky` sui blocchi dell'header non ha un millimetro di
+ * corsa, perche' il blocco contenitore di una cella di griglia e' la cella
+ * stessa. E `position: fixed` non serve a niente li' dentro, perche' quei
+ * blocchi stanno in `#smooth-content`, che ScrollSmoother trasforma: un
+ * antenato trasformato diventa il riferimento dei discendenti fissi. In tutti e
+ * due i casi il blocco se ne va con la pagina, `top = -scroll`.
+ *
+ * Perche' restino fermi devono stare **fuori** da `#smooth-content`, che e'
+ * esattamente dove sta il megamenu e per la stessa ragione.
+ *
+ * ---------------------------------------------------------------------------
+ * IL COSTO, CHE E' DI DISEGNO
+ *
+ * La regola zero dice che i bordi dei blocchi cadono sulle linee della griglia
+ * in ogni fotogramma. Una barra fissa sopra una griglia che scorre non puo'
+ * rispettarla del tutto: i lati sinistro e destro si', perche' la griglia non
+ * scorre di lato e questa barra usa la stessa `--cell` della pagina, ma i bordi
+ * alto e basso attraversano le celle mentre si scorre.
+ *
+ * E' una deroga decisa dal committente, e la scelta di farla comparire **dopo**
+ * l'header serve a contenerla: in cima alla pagina non c'e' niente di nuovo, i
+ * due comandi sono quelli veri, e la barra si legge come uno strato che arriva
+ * dopo invece che come due blocchi fuori posto. Vedi NOTES.md D123.
+ *
+ * ---------------------------------------------------------------------------
+ * LA COPPIA E' DOPPIA, E NON DEVE SENTIRSI
+ *
+ * A menu chiuso e barra nascosta, `visibility: hidden` la toglie dall'albero di
+ * accessibilita' e dall'ordine di tabulazione: non e' un secondo menu che
+ * qualcuno incontra scorrendo con la tastiera. Non si usa `inert` per questo,
+ * perche' `inert` lo scrive il megamenu quando si apre, e due padroni per lo
+ * stesso attributo sono un difetto che aspetta.
+ */
+import Grid from './Grid.astro';
+import SquareButton from './SquareButton.astro';
+import { stickyHeaderMap } from '../lib/blocks/chrome';
+---
+
+<div id="sticky-header" class="sticky-header" data-sticky-header>
+  <Grid map={stickyHeaderMap} lines={false} class="sticky-header__grid">
+    <SquareButton
+      at={stickyHeaderMap.headerContact}
+      variant="mail"
+      label="Scrivimi"
+      href="/contact"
+    />
+
+    {/*
+      Non ha `id="menu-toggle"`: quello e' uno solo in pagina, e lo leggono sia
+      `megamenu.ts` sia il morph dell'icona in `icons.ts`. Qui basta il
+      `data-menu-toggle`, che e' quello su cui il megamenu si aggancia.
+
+      L'icona invece si trasforma da sola: il morph si applica a ogni
+      `[data-icon="menu"]` e lo piloti lo stato del bottone di pagina, che e'
+      l'unica sorgente. Due hamburger non possono discordare perche' non hanno
+      due stati.
+    */}
+    <SquareButton
+      at={stickyHeaderMap.headerMenu}
+      variant="menu"
+      label="Apri il menu"
+      data-menu-toggle
+      aria-expanded="false"
+      aria-controls="megamenu"
+    />
+  </Grid>
+</div>

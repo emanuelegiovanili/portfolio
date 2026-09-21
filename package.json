@@ -9,7 +9,7 @@
     "preview": "wrangler dev",
     "check": "astro check",
     "deploy": "wrangler deploy",
-    "verify": "npm run verify:grid && npm run verify:edges && npm run verify:webkit && npm run verify:rules && npm run verify:type && npm run verify:motion && npm run verify:build",
+    "verify": "npm run verify:grid && npm run verify:edges && npm run verify:webkit && npm run verify:rules && npm run verify:type && npm run verify:motion && npm run verify:sticky && npm run verify:build",
     "verify:type": "node scripts/verify-type.mjs",
     "verify:grid": "node scripts/verify-grid.mjs",
     "measure": "node scripts/measure-fit.mjs",
@@ -17,7 +17,8 @@
     "verify:edges": "node scripts/verify-edges.mjs",
     "verify:build": "node scripts/verify-build.mjs",
     "verify:rules": "node scripts/verify-rules.mjs",
-    "verify:webkit": "node scripts/verify-edges.mjs --senza-clip-margin --width 1440"
+    "verify:webkit": "node scripts/verify-edges.mjs --senza-clip-margin --width 1440",
+    "verify:sticky": "node scripts/verify-sticky.mjs"
   },
   "dependencies": {
     "astro": "^5.14.1",
