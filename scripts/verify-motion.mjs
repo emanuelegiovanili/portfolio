@@ -230,6 +230,50 @@ try {
    * e che le altre restino a zero. Se cresce, arriva in fondo, e in fondo c'e'
    * il passaggio alla scheda dopo.
    */
+  /*
+   * L'ancora interna porta dove dice, e lascia la pagina in ordine.
+   *
+   * Il difetto misurato: con lo scroll morbido attivo, il salto nativo portava
+   * la sezione in vista scrollando `#smooth-wrapper`, che e' fisso, invece
+   * della pagina. A schermo sembrava funzionare, ma `window.scrollY` restava
+   * **0**: la pagina si credeva in cima, le finestre d'ingresso dei blocchi
+   * scavalcati non si aprivano, e quei blocchi restavano senza fili.
+   *
+   * Si guardano quindi tre cose, non una. Che la sezione sia in vista e' la
+   * piu' debole delle tre, ed e' l'unica che passava anche quando era rotto.
+   */
+  console.log('\nL\'ancora interna: dove porta, e come lascia la pagina?');
+  {
+    const { context, page, errors } = await open('no-preference');
+
+    const bersaglio = await page.evaluate(() => {
+      const el = document.getElementById('about');
+      return el ? Math.round(el.getBoundingClientRect().top + window.scrollY) : null;
+    });
+
+    await page.click('a[href="#about"]');
+    await page.waitForTimeout(2500);
+
+    const stato = await page.evaluate(() => ({
+      scroll: Math.round(window.scrollY),
+      top: Math.round(document.getElementById('about').getBoundingClientRect().top),
+      wrapper: Math.round(document.getElementById('smooth-wrapper')?.scrollTop ?? 0),
+      fuoco: document.activeElement?.id ?? '',
+      hash: location.hash,
+    }));
+
+    check('la sezione arriva in cima alla finestra', Math.abs(stato.top) <= 2, `${stato.top}px dal bordo`);
+    check(
+      'a scrollare e\' stata la pagina, non il wrapper fisso',
+      Math.abs(stato.scroll - bersaglio) <= 2 && stato.wrapper === 0,
+      `scroll ${stato.scroll} invece di ${bersaglio}, wrapper ${stato.wrapper}`,
+    );
+    check('il fuoco segue, come farebbe l\'ancora nativa', stato.fuoco === 'about', `e\' su "${stato.fuoco}"`);
+    check('l\'indirizzo porta l\'ancora', stato.hash === '#about', stato.hash);
+    check('nessun errore in console', errors.length === 0, errors[0] ?? '');
+    await context.close();
+  }
+
   console.log('\nI testimonial: la barra si riempie?');
   {
     const { context, page, errors } = await open('no-preference');

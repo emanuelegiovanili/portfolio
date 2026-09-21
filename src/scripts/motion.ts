@@ -105,7 +105,134 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
   );
   const marquee = startMarquee();
 
+  /*
+   * Le ancore interne, finche' lo scroll e' dello smoother.
+   *
+   * Il markup e' sempre stato giusto — "Discover more" e' un `href="#about"`
+   * verso `id="about"` — ed era il salto nativo a essere sbagliato qui.
+   * Misurato: cliccandolo, il browser porta la sezione in vista scrollando
+   * `#smooth-wrapper`, che e' fisso, invece della pagina. Il wrapper finisce a
+   * `scrollTop: 1080` e `window.scrollY` resta **0**.
+   *
+   * A schermo sembra funzionare. Non funziona: la pagina crede di essere in
+   * cima, quindi le finestre d'ingresso dei blocchi scavalcati non si aprono e
+   * quei blocchi restano senza fili — cioe' senza bordi, che su questa griglia
+   * e' il difetto peggiore di tutti. E lo scostamento del wrapper non si
+   * riassorbe piu': da li' in poi ogni rotellata somma due posizioni diverse.
+   *
+   * `smoother.scrollTo` muove la posizione vera, quindi ScrollTrigger vede
+   * quello che vede l'occhio. Sotto reduced motion questo blocco non esiste e
+   * l'ancora nativa va benissimo: misurato, li' era gia' corretta.
+   */
+  const ancora = (href: string | null): HTMLElement | null => {
+    if (!href || !href.startsWith('#') || href.length < 2) return null;
+    return document.getElementById(decodeURIComponent(href.slice(1)));
+  };
+
+  /*
+   * La quota a cui sta il blocco dentro il contenuto, non nella finestra.
+   *
+   * Si misura contro `#smooth-content` e non contro la finestra perche' le due
+   * cose coincidono solo da fermi: mentre lo scroll morbido insegue, la
+   * posizione dipinta e quella vera sono diverse, e un click a meta' corsa
+   * calcolerebbe un bersaglio sbagliato. La differenza fra i due rettangoli e'
+   * invece sempre la stessa, qualunque sia il ritardo.
+   */
+  const quotaDi = (target: HTMLElement): number => {
+    const content = document.getElementById('smooth-content');
+    return target.getBoundingClientRect().top - (content?.getBoundingClientRect().top ?? 0);
+  };
+
+  // Un click sull'ancora mentre la corsa precedente non ha finito annulla il
+  // fuoco di quella prima, o si finirebbe con il fuoco su una sezione che non
+  // e' piu' quella dove si sta andando.
+  let focoDopo: gsap.core.Tween | null = null;
+
+  const vaiAll = (target: HTMLElement) => {
+    /*
+     * Un numero, non l'elemento.
+     *
+     * `smoother.scrollTo(elemento)` allinea a modo suo: misurato, su "Mix"
+     * porta a 870 invece di 1080, cioe' lascia la sezione 210px sotto il bordo,
+     * e passargli `'top top'` non lo sposta di un pixel. La quota giusta e'
+     * quella qui sopra — `window.scrollTo(0, 1080)` mette la sezione esatta in
+     * cima, verificato — quindi gliela si da' e basta.
+     */
+    /*
+     * Il fuoco **prima** dello scroll, e non dopo.
+     *
+     * L'ancora nativa il fuoco lo sposta, e toglierglielo senza rimetterlo
+     * lascerebbe chi naviga da tastiera fermo sul bottone, col tab che riparte
+     * da sopra la sezione appena raggiunta.
+     *
+     * Ma `preventScroll: true` qui **non viene rispettato**: dentro un wrapper
+     * fisso il browser aggiusta comunque, e misurato sposta di 210px — era lui
+     * a lasciare "Mix" sotto il bordo, non `scrollTo`. Mettendolo per primo,
+     * l'aggiustamento avviene e poi ci pensa lo scroll a coprirlo: l'ultimo che
+     * parla decide, e qui l'ultimo e' quello che sa dove si va.
+     */
+    smoother.scrollTo(quotaDi(target), true);
+
+    /*
+     * Il fuoco **dopo** essere arrivati, non prima.
+     *
+     * L'ancora nativa il fuoco lo sposta, e toglierglielo senza rimetterlo
+     * lascia chi naviga da tastiera fermo sul bottone, col tab che riparte da
+     * sopra la sezione appena raggiunta.
+     *
+     * Il problema e' che `preventScroll: true` qui **non viene rispettato**:
+     * dentro un wrapper fisso il browser aggiusta comunque. Chiedendolo a
+     * sezione ancora lontana spostava di 210px e lasciava due numeri diversi —
+     * posizione nativa a 1080, contenuto trasformato di -870 — che si
+     * riallineavano solo alla rotellata dopo.
+     *
+     * Ma quell'aggiustamento e' grande **perche' l'elemento e' lontano**. A
+     * corsa finita l'elemento e' gia' in cima alla finestra, non c'e' niente da
+     * portare in vista, e il browser non tocca niente. Si aspetta quindi che lo
+     * scroll morbido abbia finito: `SMOOTH` e' la sua durata, il quinto di
+     * secondo in piu' e' margine.
+     */
+    focoDopo?.kill();
+    focoDopo = gsap.delayedCall(SMOOTH + 0.2, () => {
+      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+      target.focus({ preventScroll: true });
+    });
+  };
+
+  const onAncora = (event: MouseEvent) => {
+    // Click con un modificatore, o non con il tasto principale: sono "apri
+    // altrove", e non ci riguardano.
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const link = (event.target as Element | null)?.closest?.('a[href]');
+    const target = ancora(link?.getAttribute('href') ?? null);
+    if (!link || !target) return;
+
+    event.preventDefault();
+    vaiAll(target);
+    history.pushState(null, '', link.getAttribute('href'));
+  };
+
+  document.addEventListener('click', onAncora);
+
+  /*
+   * E chi arriva gia' con l'ancora nell'indirizzo.
+   *
+   * Il browser fa lo stesso salto sbagliato prima che questo modulo parta: il
+   * wrapper e' gia' storto. Si azzera e si rifa' il percorso per davvero, senza
+   * animazione, perche' a pagina appena aperta non c'e' niente da accompagnare.
+   */
+  const iniziale = ancora(window.location.hash);
+  if (iniziale) {
+    const wrapper = document.getElementById('smooth-wrapper');
+    if (wrapper) wrapper.scrollTop = 0;
+    smoother.scrollTo(quotaDi(iniziale), false);
+  }
+
   return () => {
+    focoDopo?.kill();
+    document.removeEventListener('click', onAncora);
     marquee?.stop();
     smoother.kill();
   };

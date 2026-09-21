@@ -2119,6 +2119,51 @@ spiegazioni erano entrambe sbagliate finche' non le ho misurate:
 
 Le prove a pixel passano da 152 a 164.
 
+### D122. "Discover more" portava in vista la sezione senza muovere la pagina
+
+Segnalato dal committente. Il markup era **gia' giusto** da sempre:
+`href="#about"` verso `id="about"`. A romperlo era quello che c'e' sotto.
+
+**Misurato:** con lo scroll morbido attivo, il click porta la sezione in vista
+scrollando `#smooth-wrapper` — che e' `position: fixed` — invece della pagina.
+Il wrapper finisce a `scrollTop: 1080` e `window.scrollY` resta **0**.
+
+A schermo sembra funzionare, ed e' questo il punto. La pagina pero' si crede in
+cima: le finestre d'ingresso dei blocchi scavalcati non si aprono e quei blocchi
+restano **senza fili**, cioe' senza bordi, che su questa griglia e' il difetto
+peggiore che ci sia. E lo scostamento del wrapper non si riassorbe: da li' in
+poi ogni rotellata somma due posizioni diverse. Sotto reduced motion, dove lo
+smoother non esiste, l'ancora nativa era gia' corretta.
+
+**La prima sonda che ho scritto diceva ok.** Controllava che la sezione fosse in
+vista — la sola cosa che funzionava anche da rotta. Ho dovuto guardare
+`window.scrollY` accanto a `getBoundingClientRect` per vedere i due numeri
+divergere. Una misura che conferma il sintomo che il committente **non** ha
+segnalato non e' una misura.
+
+**Due inciampi nel correggerlo, tutti e due utili.**
+
+`smoother.scrollTo(elemento)` allinea a modo suo: porta a 870 invece di 1080,
+cioe' lascia la sezione 210px sotto il bordo, e `'top top'` non lo sposta di un
+pixel. Si passa quindi la quota, non l'elemento — misurata contro
+`#smooth-content` e non contro la finestra, perche' le due coincidono solo da
+fermi e un click a meta' corsa calcolerebbe male.
+
+E i 210px **non erano suoi**: erano del fuoco. `preventScroll: true` dentro un
+wrapper fisso non viene rispettato, il browser aggiusta comunque, e lasciava
+posizione nativa e trasformazione del contenuto disallineate finche' non si
+toccava la rotella. Spostare il fuoco prima non bastava, riallinearlo a mano
+peggiorava. La soluzione e' stata smettere di combatterlo: **quell'aggiustamento
+e' grande perche' l'elemento e' lontano**, quindi si chiede il fuoco a corsa
+finita, quando la sezione e' gia' in cima e non c'e' piu' niente da portare in
+vista. Misurato: fuoco sulla sezione, posizione esatta, nessun disallineamento.
+
+Il fuoco si sposta perche' lo fa l'ancora nativa: senza, chi naviga da tastiera
+resterebbe sul bottone e il tab ripartirebbe da sopra la sezione raggiunta.
+
+`verify:motion` ora guarda tutte e tre le cose, e la piu' debole — "la sezione e'
+in vista" — e' segnata come tale.
+
 ---
 
 ## 5. Blocchi aperti
