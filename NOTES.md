@@ -2350,6 +2350,55 @@ stanno, e un disegno per una lista piu' lunga non esiste: non l'ho inventato, e
 alla domanda la risposta e' stata di tenere i campi definiti finora. Quella
 parte del documento e' contesto, non contenuto di pagina.
 
+### D129. La "e" accentata non era codifica: il font display non ha il glifo
+
+Segnalato dal committente: un errore sulla "e" di "TAMA caffe'".
+
+**La codifica e' stata la prima cosa esclusa, misurandola.** Il JSON e'
+`c3a8`, cioe' `e` accentata in UTF-8 corretto; l'HTML costruito lo stesso; le
+intestazioni dichiarano `charset=utf-8`; zero sequenze di doppia codifica in
+tutto il file. Tre misure, nessuna delle quali ha trovato niente — ed e' cosi'
+che si e' scoperto che il difetto era altrove.
+
+**E' il file del font.** `DT Getai Grotesk Display Black` non ha i glifi
+accentati: misurati uno per uno, mancano `e' e' a' i' o' u'`. Poppins li ha
+tutti. Il titolo e' in display, quindi quella lettera cadeva su `Getai
+Fallback`, che e' un font di sistema **con gli override metrici di Getai
+addosso**: forma sbagliata e per giunta deformata, in mezzo a una parola.
+
+Compare in cinque pagine, non una: home, /works e le tre pagine progetto, perche'
+il titolo della card torna anche nei "Related work".
+
+**Perche' nessuna sonda l'aveva visto.** `verify:type` misurava le **altezze**
+dei titoli, e quelle restano giuste anche quando a disegnare una lettera e' un
+altro font: la geometria non si accorge di un cambio di carattere. E' la stessa
+forma di tutti i difetti di questa sessione — il meccanismo misurato non era
+quello rotto.
+
+Ora la sonda chiede, carattere per carattere e su sette rotte, se il font
+display ha davvero il glifo. Si misura per carattere e non per famiglia perche'
+`document.fonts.check` risponde sulla famiglia: stessa larghezza con e senza il
+font vuol dire che a disegnarlo e' stato il ripiego.
+
+**Il ripiego, che resta un ripiego.** `Getai Fallback` ora dichiara
+`unicode-range: U+0000-007F`, cioe' solo i caratteri che Getai ha davvero: serve
+a tenere il posto mentre Getai carica, e non deve sostituirsi per lettere che
+Getai non avra' comunque. Cosi' gli accenti scendono al prossimo della lista, e
+in `--font-display` il prossimo ora e' `Poppins`. La "e" accentata esce in
+Poppins Bold: stesso peso, accento al posto giusto, e soprattutto un carattere
+del sito invece che uno del sistema operativo.
+
+Misurato dopo: il ripiego metrico regge (45,48px contro 47,36, scarto 1,88 su 3
+di tolleranza) e le quattro altezze dei titoli non si sono mosse.
+
+**Non e' la soluzione.** La lettera resta in un carattere diverso da quelle
+accanto: si nota meno, si nota ancora. La soluzione e' un file di Getai col
+latino esteso, e la licenza e' del committente. Vedi B26.
+
+I glifi mancanti si **dichiarano**, come gli sfori del Figma: la sonda serve a
+fermare il prossimo carattere che entra in un titolo senza avere un glifo, non a
+restare rossa su un difetto di cui si e' gia' deciso cosa fare.
+
 ---
 
 ## 5. Blocchi aperti
@@ -2375,4 +2424,5 @@ parte del documento e' contesto, non contenuto di pagina.
 | B20 | **Il sottodominio `workers.dev` e' quello generato da Cloudflare** | `emanuelegiovanili.emanuele-giovanili-ap.workers.dev` ripete il nome. Si cambia dal pannello (Workers & Pages, scheda Domains) o si mette un dominio proprio |
 | B21 | **`emanuelegiovanili.it` non e' registrato** | Il form apre un `mailto:` verso `hello@emanuelegiovanili.it` (D90). Finche' il dominio non c'e', quelle mail non arrivano da nessuna parte |
 | B22 | **Il megamenu lascia piu' nero vuoto in fondo** | Conseguenza dei social alti una cella (D89): il pannello e' ancorato in alto e si e' accorciato di una riga. A base finisce a meta' schermo. Se non piace, si redistribuisce, ma quella e' una decisione di disegno |
+| B26 | **Il font display non ha i glifi accentati** | `getai-black.woff2` e' un sottoinsieme senza `U+00C0-U+00FF`: "TAMA caffe'" e' l'unico titolo che ne abbia bisogno oggi, e la sua "e" esce in Poppins Bold per il ripiego di D129. Serve al committente un export dal fornitore che includa almeno il latino esteso; poi si sostituisce il `.woff2`, si toglie `Poppins` da `--font-display`, si rimette il `unicode-range` del fallback a tutto e si svuota `GLIFI_NOTI` in `verify-type.mjs`. Tre righe |
 | B23 | **Safari resta un punto cieco** | Il motore WebKit non e' scaricabile (CDN di Playwright fuori dalla policy di uscita), quindi ogni sonda parla di Chromium. `verify:webkit` (D104) copre **una** differenza, quella costata la caccia di D101-D103, e non va spacciato per una verifica su Safari. Il difetto dei bordi e' chiuso e confermato dal committente sul suo dispositivo |

@@ -77,7 +77,10 @@
   --hover-ease: cubic-bezier(0.33, 1, 0.68, 1);
 
   /* Tipografia */
-  --font-display: 'DT Getai Grotesk Display', 'Getai Fallback', system-ui, sans-serif;
+  /* `Poppins` in mezzo non e' un ripiego di caricamento: e' dove finiscono i
+     caratteri che Getai non possiede, gli accenti in particolare. Meglio il
+     grassetto del sito che un font di sistema. Vedi NOTES.md D129. */
+  --font-display: 'DT Getai Grotesk Display', 'Getai Fallback', 'Poppins', system-ui, sans-serif;
   --font-text: 'Poppins', 'Poppins Fallback', system-ui, sans-serif;
 }
 

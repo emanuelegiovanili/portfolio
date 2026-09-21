@@ -97,6 +97,72 @@ try {
       `(scarto ${fallbackDelta.toFixed(2)}px) ${fallbackOk ? 'ok' : 'FALLITO'}`,
   );
 
+  /*
+   * Nessun testo display puo' chiedere al font un glifo che non ha.
+   *
+   * Il committente ha segnalato un difetto sulla "e" accentata di "TAMA
+   * caffe'". Non era codifica — il JSON, la build e le intestazioni sono UTF-8
+   * corretti — ma il file del font: **DT Getai Grotesk Display Black non ha i
+   * glifi accentati**. La lettera cadeva sul ripiego, cioe' un font di sistema
+   * con gli override metrici di Getai addosso: forma sbagliata e deformata, in
+   * mezzo a una parola.
+   *
+   * Non lo vedeva nessuna sonda. `verify:type` misurava le **altezze** dei
+   * titoli, che restano giuste anche quando a disegnare una lettera e' un altro
+   * font: la geometria non si accorge di un cambio di carattere.
+   *
+   * Si misura per carattere e non per famiglia, perche' `document.fonts.check`
+   * risponde sulla famiglia: stessa larghezza con e senza il font vuol dire che
+   * a disegnarlo e' stato il ripiego.
+   *
+   * I buchi gia' noti si **dichiarano**, come gli sfori del Figma: la sonda
+   * serve a fermare il **prossimo** carattere che entra in un titolo senza
+   * avere un glifo, non a restare rossa su un difetto di cui si e' gia' deciso
+   * cosa fare. Il giorno che arriva un file di Getai completo, questa lista si
+   * svuota e il ripiego in `tokens.css` si toglie. Vedi NOTES.md B26.
+   */
+  const GLIFI_NOTI = ['\u00e8'];
+  console.log('\nI testi display stanno dentro ai glifi che il font ha?\n');
+  {
+    const rotte = ['/', '/works', '/works/tama-caffe', '/works/seezy', '/works/noranutrizione', '/about', '/contact'];
+    const pagina = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
+    for (const rotta of rotte) {
+      await pagina.goto(server.base + rotta, { waitUntil: 'networkidle' });
+      await pagina.evaluate(() => document.fonts.ready);
+
+      const mancanti = await pagina.evaluate(() => {
+        const ctx = document.createElement('canvas').getContext('2d');
+        const haGlifo = (ch) => {
+          ctx.font = '900 64px "DT Getai Grotesk Display", monospace';
+          const con = ctx.measureText(ch).width;
+          ctx.font = '900 64px monospace';
+          return Math.abs(con - ctx.measureText(ch).width) > 0.01;
+        };
+        const visti = new Map();
+        for (const el of document.querySelectorAll('*')) {
+          if (!getComputedStyle(el).fontFamily.includes('Getai')) continue;
+          const testo = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('');
+          for (const ch of testo) {
+            // Spazi e a capo non hanno un glifo da disegnare.
+            if (/\s/.test(ch) || visti.has(ch)) continue;
+            visti.set(ch, haGlifo(ch));
+          }
+        }
+        return [...visti].filter(([, ok]) => !ok).map(([ch]) => ch);
+      });
+
+      const nuovi = mancanti.filter((c) => !GLIFI_NOTI.includes(c));
+      const noti = mancanti.filter((c) => GLIFI_NOTI.includes(c));
+      if (nuovi.length > 0) failures += 1;
+      console.log(
+        `  ${nuovi.length === 0 ? 'ok     ' : 'FALLITO'} ${rotta}` +
+          (nuovi.length ? ` — il font display non ha: ${nuovi.map((c) => `"${c}"`).join(' ')}` : '') +
+          (noti.length ? ` (gia' noti: ${noti.map((c) => `"${c}"`).join(' ')})` : ''),
+      );
+    }
+    await pagina.close();
+  }
+
   const pad = (v, n) => String(v).padEnd(n);
   console.log(`\n${pad('nodo', 11)}${pad('caso', 30)}${pad('px', 6)}${pad('atteso', 8)}${pad('misurato', 10)}esito`);
   console.log('-'.repeat(73));
