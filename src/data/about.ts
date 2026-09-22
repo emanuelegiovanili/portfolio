@@ -15,22 +15,32 @@ export const BIO = [
 export const LOCATION = 'Based in San Benedetto del Tronto, Italy';
 export const REMOTE = 'Working remotely';
 
-/** Le tre card del processo. Sfalsate: la 1 e la 3 partono a riga 13, la 2 a riga 14. */
+/**
+ * Le tre card del processo, riscritte dal committente.
+ *
+ * La struttura e' cambiata con il testo: prima era un numero grande, un titolo
+ * e un paragrafo; ora sono un titolo, una **riga forte** e un corpo. Il numero
+ * nel frame aggiornato non c'e' piu' (299:277, 299:314, 299:317), e la riga
+ * forte non e' una prima frase in grassetto: e' la promessa del passaggio, e il
+ * corpo spiega come si mantiene.
+ *
+ * Le posizioni delle tre schede non sono cambiate: restano sfalsate come prima.
+ */
 export const RECIPE = [
   {
-    number: '1',
     title: 'Research',
-    body: 'Before anything gets drawn, I try to be wrong about something. That usually means a handful of conversations with the people who will actually use the thing — five or six is enough. Some of it confirms the brief. Some of it kills an idea I was attached to.',
+    lead: 'Find the real problem before the budget goes into solving the wrong one.',
+    body: 'I gather what already exists, read the context, and talk to the people who are going to use it. I also ask what the business needs to happen, and which number will tell us it did. Most briefs arrive without that answer, and it is cheap to settle here.',
   },
   {
-    number: '2',
-    title: 'Blend of skills',
-    body: "Then everything goes in at once: the brand, the product, and what is realistic to build. A decision in one changes the other two, so I keep them in the same place instead of letting the trade-offs surface later, on someone else's desk.",
+    title: 'Blend',
+    lead: 'One person across brand, product and build, so nothing gets lost in between.',
+    body: 'I look at what the technology allows before committing to a direction, then work through the options against how people behave and what the business needs to earn. Brand, product and build move together, so the expensive decisions get caught while they are still being made.',
   },
   {
-    number: '3',
     title: 'Proof',
-    body: "Then it has to hold up outside the file — with a real person, and with whoever builds it. That means testing, documenting, and changing things when the answer comes back wrong. It's also where I say when a project needs a developer instead of no-code.",
+    lead: 'It ships, it works, and whoever builds it can actually build it.',
+    body: 'Components, documentation, and the build itself when the project fits no-code. When it outgrows that, I bring in a developer. Then it goes in front of real people, and I check the number we agreed on at the start.',
   },
 ];
 

@@ -14,34 +14,96 @@ import { footerMap } from './chrome';
 
 /* ---------- /about ---------- */
 
-export const ABOUT_FOOTER_ROWS = { lg: 28 };
+export const ABOUT_FOOTER_ROWS = { base: 90, md: 90, lg: 35 };
 
-export const aboutBlocks = {
-  aboutTitle: { lg: [2, 3, 4, 1] },
-  aboutBioLabel: { lg: [8, 3, 1, 1] },
-  aboutPortrait: { lg: [3, 4, 4, 5] },
-  aboutBio: { lg: [8, 4, 4, 3] },
-  aboutPin: { lg: [8, 8, 1, 1] },
-  aboutLocation: { lg: [9, 8, 2, 1] },
-  aboutRemote: { lg: [11, 9, 1, 1] },
+/**
+ * A md /about non ha un disegno suo, e prende quello di base.
+ *
+ * Non e' una scelta di ripiego: fra 720 e 1199 il file non disegna niente, e
+ * senza una dichiarazione esplicita la regola che nasconde i blocchi fuori dal
+ * proprio tier **non si applica** — vale solo se la pagina dichiara quel tier
+ * (grid.css). Il risultato sarebbe la riga di schede di base e le tre schede di
+ * desktop insieme, sovrapposte.
+ *
+ * Dichiarando md uguale a base si ottiene quello che la catena dei fallback
+ * avrebbe fatto comunque — le colonne sono dieci in tutti e due i tier — ma
+ * detto, quindi con le regole di visibilita' che funzionano.
+ */
+function mdComeBase(map: LayoutMap): LayoutMap {
+  return Object.fromEntries(
+    Object.entries(map).map(([chiave, posti]) => [chiave, posti.base ? { ...posti, md: posti.base } : posti]),
+  );
+}
 
-  recipeIcon: { lg: [2, 11, 1, 1] },
-  recipeTitle: { lg: [2, 12, 4, 1] },
+export const aboutBlocks = mdComeBase({
+  aboutTitle: { base: [2, 4, 6, 2], lg: [2, 3, 4, 1] },
+  aboutBioLabel: { base: [8, 17, 2, 2], lg: [8, 3, 1, 1] },
+  aboutPortrait: { base: [2, 6, 8, 10], lg: [3, 4, 4, 5] },
+  aboutBio: { base: [2, 19, 8, 9], lg: [8, 4, 4, 3] },
+  aboutPin: { base: [2, 29, 2, 2], lg: [8, 8, 1, 1] },
+  aboutLocation: { base: [4, 29, 6, 2], lg: [9, 8, 2, 1] },
+  aboutRemote: { base: [8, 31, 2, 2], lg: [11, 9, 1, 1] },
+
+  recipeIcon: { base: [2, 35, 2, 2], lg: [2, 11, 1, 1] },
+  recipeTitle: { base: [2, 37, 7, 2], lg: [2, 12, 4, 1] },
   recipeFlame: { lg: [11, 12, 1, 1] },
-  recipeOne: { lg: [3, 13, 3, 3] },
+  /*
+   * Quattro righe, non tre.
+   *
+   * Nel frame le schede sono 360x360 (299:277, 299:314, 299:317) e il testo
+   * nuovo dentro non ci sta: misurato, a 1440 ne chiede **13px** in piu' e a
+   * 1200 fino a 63, cioe' due righe e mezzo di corpo tagliate via. Nel file il
+   * problema c'e' lo stesso — la scheda ha `overflow-clip` e il testo e' ad
+   * altezza automatica — solo che li' non si vede.
+   *
+   * Una riga in piu' e non un corpo piu' piccolo: il testo e' del committente e
+   * non si tocca. E' la stessa decisione di D109 per la citazione di TAMA e di
+   * D127 per il case study. Non tocca nessuno degli altri blocchi: il frullino
+   * resta alla riga 13, dove la seconda scheda non arriva, e il form comincia
+   * dove la seconda scheda finisce.
+   */
+  /*
+   * A base le tre schede stanno in una riga sola, e la riga e' piu' larga
+   * della finestra: 21 colonne dentro a 10 (356:622, largo 818 in un frame da
+   * 390). E' il blocco che la contiene, alto nove righe come le schede.
+   */
+  recipeSteps: { base: [2, 39, 8, 9] },
+  recipeOne: { lg: [3, 13, 3, 4] },
   recipeBlender: { lg: [6, 13, 1, 1] },
-  recipeThree: { lg: [9, 13, 3, 3] },
-  recipeTwo: { lg: [6, 14, 3, 3] },
+  recipeThree: { lg: [9, 13, 3, 4] },
+  recipeTwo: { lg: [6, 14, 3, 4] },
 
-  kitchenTitle: { lg: [2, 19, 3, 2] },
-  kitchenPot: { lg: [5, 19, 1, 1] },
-  kitchenPhoto: { lg: [3, 20, 8, 5] },
+  /*
+   * La sezione di contatto, che prima su /about non c'era.
+   *
+   * Arriva con il frame aggiornato (382:3672, 382:3700, 382:3703) e usa lo
+   * stesso componente di home, works e contact: non e' un secondo form da
+   * mantenere.
+   */
+  aboutForm: { base: [2, 54, 8, 16], lg: [3, 18, 5, 6] },
+  aboutCta: { base: [2, 49, 7, 5], lg: [8, 19, 4, 3] },
+  aboutSend: { base: [5, 70, 5, 2], lg: [8, 22, 2, 1] },
 
-  spotifyCover: { lg: [6, 24, 2, 2] },
-  spotifyTitle: { lg: [8, 24, 3, 1] },
-  spotifyDisc: { lg: [11, 24, 1, 1] },
-  spotifyPlaylist: { lg: [8, 25, 4, 1] },
-} as const satisfies LayoutMap;
+  /*
+   * Da qui in giu' tutto scende di **sette righe**, per far posto al contatto.
+   *
+   * Nel frame questi quattro stanno 26 pixel sopra la linea: 2974 invece di
+   * 3000, 3094 invece di 3120, 3574 invece di 3600, 3694 invece di 3720.
+   * Ventisei pixel identici su tutti e quattro, cioe' un gruppo trascinato a
+   * mano e non quattro posizioni scelte. Qui si torna sulla linea — la regola
+   * zero non ammette scostamenti — e la prova che il numero giusto e' sette e'
+   * che tutti e quattro tornano esatti con lo stesso spostamento, e la loro
+   * distanza reciproca resta quella di prima.
+   */
+  kitchenTitle: { base: [2, 74, 6, 2], lg: [2, 26, 3, 2] },
+  kitchenPot: { base: [8, 74, 2, 2], lg: [5, 26, 1, 1] },
+  kitchenPhoto: { base: [3, 76, 7, 6], lg: [3, 27, 8, 5] },
+
+  spotifyCover: { base: [2, 82, 2, 2], lg: [6, 31, 2, 2] },
+  spotifyTitle: { base: [4, 82, 5, 2], lg: [8, 31, 3, 1] },
+  spotifyDisc: { base: [8, 86, 2, 2], lg: [11, 31, 1, 1] },
+  spotifyPlaylist: { base: [2, 84, 8, 2], lg: [8, 32, 4, 1] },
+} as const satisfies LayoutMap);
 
 export const aboutFooter = footerMap(ABOUT_FOOTER_ROWS);
 

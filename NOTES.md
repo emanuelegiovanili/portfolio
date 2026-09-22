@@ -2399,6 +2399,108 @@ I glifi mancanti si **dichiarano**, come gli sfori del Figma: la sonda serve a
 fermare il prossimo carattere che entra in un titolo senza avere un glifo, non a
 restare rossa su un difetto di cui si e' gia' deciso cosa fare.
 
+## 22. Fase 14 — i tre punti riscritti, e /about su mobile
+
+### D130. Quindici secondi invece di dieci
+
+Richiesta del committente. Con due citazioni lunghe, dieci secondi non bastavano
+a leggerle prima che la scheda cambiasse.
+
+### D131. I tre punti cambiano testo **e** struttura
+
+Il committente ha riscritto le tre schede nel file. Non e' solo copy: prima
+erano un numero grande, un titolo e un paragrafo; ora sono un titolo, una
+**riga forte** e un corpo. Il numero nel frame aggiornato non c'e' piu'. E
+"Blend of skills" diventa "Blend".
+
+Le **posizioni** invece non cambiano: le tre schede restano sfalsate dov'erano.
+
+**Ma il testo nuovo non ci sta.** Misurato a 1440, dove il file le disegna:
+chiedono 13px in piu'; a 1200 fino a 63, cioe' due righe e mezzo di corpo
+tagliate. Nel file il problema c'e' lo stesso — la scheda ha `overflow-clip` e
+il testo e' ad altezza automatica — solo che li' non si vede.
+
+Una riga in piu' e non un corpo piu' piccolo: il testo e' del committente e non
+si tocca. E' la terza volta (D109 per la citazione TAMA, D127 per il case
+study), e qui non sposta niente: il frullino resta alla riga 13, dove la seconda
+scheda non arriva, e il form comincia dove la seconda finisce. Dopo: 107px di
+avanzo a 1440, 37 nel caso peggiore a 1200.
+
+### D132. /about prende la sezione di contatto, e il gruppo in fondo torna sulla linea
+
+Il frame aggiornato porta su /about la CTA, il form e il Send che prima stavano
+solo su home, works e contact. Stesso componente: non e' un secondo form da
+mantenere.
+
+**E tutto quello che sta sotto scende di sette righe.** Nel file quei quattro
+blocchi — cucina, foto, playlist, disco — stanno **26 pixel sopra la linea**:
+2974 invece di 3000, 3094 invece di 3120, 3574 invece di 3600, 3694 invece di
+3720. Ventisei identici su tutti e quattro, cioe' un gruppo trascinato a mano e
+non quattro posizioni scelte.
+
+Qui si torna sulla linea, perche' la regola zero non ammette scostamenti. La
+prova che sette righe e' il numero giusto: tutti e quattro tornano esatti con lo
+stesso spostamento, e le loro distanze reciproche restano quelle di prima.
+
+### D133. /about ha un tier base, e md se lo prende in prestito
+
+Il frame mobile (356:589) e' la prima pagina interna disegnata sotto i 1200.
+Novantacinque righe, cella 39, e i numeri tornano: 3705 / 39 = 95 esatte.
+
+**A md serve una dichiarazione, non un fallback.** Fra 720 e 1199 il file non
+disegna niente. La catena dei fallback avrebbe comunque usato le posizioni di
+base — le colonne sono dieci in tutti e due i tier — ma la regola che **nasconde**
+un blocco fuori dal proprio tier vale solo se la pagina dichiara quel tier
+(grid.css). Senza dichiarare md, a quelle larghezze si sarebbero viste insieme
+la riga di schede di base e le tre schede di desktop, sovrapposte. `mdComeBase`
+lo dice invece di lasciarlo al caso.
+
+**Otto blocchi sforavano alla larghezza di disegno**, e non era estetica: era
+testo tagliato. Le misure stanno in `.about-grid` e non nelle classi comuni,
+perche' `t-display--page`, `t-display--section`, `.cta-section` e `.playlist` li
+usano anche il megamenu e la home, che a base hanno gia' il loro disegno e le
+loro altezze verificate da `verify:type`. Cambiare il valore comune per far
+stare un titolo avrebbe rotto altre due pagine in silenzio.
+
+Anche le spaziature: il frame a base stringe. La biografia ha `p-[20px]` e
+stacchi da 16, non i 40 di padding verticale del desktop. "Working remotely" e'
+il caso piu' stretto — il testo e' largo 62 in una cella da 78, cioe' otto pixel
+di respiro per lato e non venti; con venti "remotely" sbordava di otto.
+
+Dopo: a 390 e a 719, **zero sfori**.
+
+### D134. Le schede a base scorrono, ed e' uno scostamento dichiarato
+
+Nel frame le tre schede stanno in una riga larga 818 dentro 390: la prima
+intera, la seconda tagliata a meta'. Non e' un ritaglio, e' l'invito a
+trascinare.
+
+Un filo deve cadere su una linea, e dentro un contenitore che scorre non ci cade
+— e' esattamente la ragione per cui la riga dei testimonial **non** scorre
+(home.css). `scroll-snap` limita il danno: da ferme le schede sono sulle linee,
+e lo scostamento dura quanto il gesto. Resta uno scostamento, ed e' il secondo
+del sito dopo la barra fissa.
+
+Lo scorrimento sta sul **binario dentro** al blocco e non sul blocco: `overflow`
+su un `.block` gli ritaglia i quattro fili al padding box, ed e' il difetto che
+e' costato D103 e poi D107.
+
+### D135. Due sfori che erano miei, non del sito
+
+Il probe che ho scritto per questa fase ne segnalava altri due: la CTA di 5px e
+la copertina della playlist di 9.
+
+Nessuno dei due esisteva. La CTA: le scatole ci stanno (191,7 dentro 193), e i
+5px erano l'**inchiostro** del display a interlinea 1, che sporge oltre la riga
+di testo e resta comunque quindici pixel dentro il bordo — misuravo contro il
+padding box invece che contro il ritaglio. La copertina: il disegno esce dal
+viewBox di 40 unita' per lato, ma l'SVG lo taglia, e `getBBox` riporta la
+geometria anche quando non e' dipinta.
+
+Vale la pena scriverlo perche' e' la stessa forma degli errori veri di questa
+sessione, a parti invertite: **la misura guardava la cosa sbagliata**, e stavolta
+ha inventato un difetto invece di nasconderne uno.
+
 ---
 
 ## 5. Blocchi aperti
@@ -2406,7 +2508,7 @@ restare rossa su un difetto di cui si e' gia' deciso cosa fare.
 | # | Cosa manca | Conseguenza |
 |---|---|---|
 | B1 | **Accesso di rete a `figma.com`** da questa sessione | La policy di egress risponde 403 al CONNECT: nessun asset immagine scaricabile (vedi `README.md`). Dalla Fase 5 il server MCP di Figma legge il file — nodi, misure, variabili, anteprime — quindi le misure si verificano alla fonte; restano fuori portata solo gli URL degli asset |
-| B2 | Frame mobile e md per `/about`, `/works`, `/works/[slug]`, `/contact` e megamenu | Sotto 1200px quelle quattro route non hanno disegno |
+| B2 | Frame mobile e md per `/works`, `/works/[slug]` e `/contact` | Sotto 1200px quelle tre route non hanno disegno e restano un desktop rimpicciolito. **`/about` non e' piu' fra loro** (D133): ha il suo frame a 390 e lo usa anche a md. Il megamenu ce l'ha da sempre |
 | B3 | Backend del form, stati di errore / invio / conferma, privacy policy | Il form non è inviabile |
 | B4 | Blocco Spotify: **chiuso, con il dato a mano** | Il meccanismo c'e' ed e' provato (D114, D116), ma il Web API vuole un account **Premium** come proprietario dell'app e quello del committente e' Free (D117). Decisione sua: non si prende Premium per questo. In pagina restano nome e conteggio scritti in `src/data/about.ts`, piu' il link alla playlist che ora funziona. Resta da fare una cosa sola, e non e' codice: **togliere i due secret Spotify da GitHub**, o ogni deploy continuera' a loggare un errore che sappiamo gia'. Il conteggio invecchia: quando cambia, si aggiorna li' |
 | B5 | Stati hover e focus per **tutto il resto** | I due bottoni ora sono disegnati (D63). Restano senza hover le voci del footer, quelle del megamenu, le card progetto e i filtri. Il focus da tastiera e' visibile solo dentro il megamenu |

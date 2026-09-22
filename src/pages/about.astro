@@ -12,6 +12,7 @@ import Grid from '../components/Grid.astro';
 import Block from '../components/Block.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ContactSection from '../components/ContactSection.astro';
 import Icon from '../components/Icon.astro';
 import { headerMap } from '../lib/blocks/chrome';
 import { aboutBlocks, aboutFooter } from '../lib/blocks/pages';
@@ -47,7 +48,7 @@ const mix = await playlist(SPOTIFY.id, {
 ---
 
 <Base title="About — Emanuele Giovanili" description="Chi sono, come lavoro e cosa ascolto mentre lo faccio.">
-  <Grid map={map} tiers={['lg']}>
+  <Grid map={map} tiers={["base", "md", "lg"]} class="about-grid">
     <Header current="/about" />
 
     <Block at={aboutBlocks.aboutTitle} class="page-title" clip>
@@ -74,7 +75,7 @@ const mix = await playlist(SPOTIFY.id, {
       at={aboutBlocks.aboutBio}
       class="prose"
       clip
-      data-known-overflow="274:2063 — tiene a 1440, si stringe sotto: a 1200 la biografia chiede 17px in piu' di quanti il blocco ne offra"
+      data-known-overflow="274:2063 — misurato: 22px di avanzo a 1440, 12 di sforo a 1200, dove le colonne si stringono e il testo guadagna una riga"
     >
       {BIO.map((paragraph) => <p class="t-body">{paragraph}</p>)}
     </Block>
@@ -103,14 +104,35 @@ const mix = await playlist(SPOTIFY.id, {
       <Icon name="flame" />
     </Block>
 
+    {/*
+      A base e md le tre schede stanno in una riga sola che scorre di lato
+      (356:622): 21 colonne dentro a 10. Le tre qui sotto hanno solo `lg`,
+      quindi spariscono da sole sotto i 1200, e questa sparisce sopra.
+
+      Lo scorrimento sta sul binario **dentro** al blocco e non sul blocco:
+      `overflow` su un blocco gli ritaglia i quattro fili al padding box, ed e'
+      il difetto di D103 e D107. Le schede prendono il filo come le schede dei
+      testimonial, con lo pseudo-elemento che eredita `--edge-x` e `--edge-y`.
+    */}
+    <Block at={aboutBlocks.recipeSteps} class="recipe-steps" surface="bare">
+      <div class="recipe-steps__track">
+        {RECIPE.map((passo) => (
+          <article class="recipe-steps__card" data-ruled>
+            <h3 class="recipe-card__title">{passo.title}</h3>
+            <p class="t-body recipe-card__lead">{passo.lead}</p>
+            <p class="t-body recipe-card__body">{passo.body}</p>
+          </article>
+        ))}
+      </div>
+    </Block>
+
     <Block
       at={aboutBlocks.recipeOne}
       class="recipe-card"
       clip
-      data-known-overflow="299:277 — tiene a 1440, chiede fino a 11px in piu' a 1200"
     >
-      <p class="t-display recipe-card__number">{RECIPE[0].number}</p>
       <h3 class="recipe-card__title">{RECIPE[0].title}</h3>
+      <p class="t-body recipe-card__lead">{RECIPE[0].lead}</p>
       <p class="t-body recipe-card__body">{RECIPE[0].body}</p>
     </Block>
 
@@ -122,10 +144,9 @@ const mix = await playlist(SPOTIFY.id, {
       at={aboutBlocks.recipeTwo}
       class="recipe-card"
       clip
-      data-known-overflow="299:277 — tiene a 1440, chiede fino a 11px in piu' a 1200"
     >
-      <p class="t-display recipe-card__number">{RECIPE[1].number}</p>
       <h3 class="recipe-card__title">{RECIPE[1].title}</h3>
+      <p class="t-body recipe-card__lead">{RECIPE[1].lead}</p>
       <p class="t-body recipe-card__body">{RECIPE[1].body}</p>
     </Block>
 
@@ -133,12 +154,16 @@ const mix = await playlist(SPOTIFY.id, {
       at={aboutBlocks.recipeThree}
       class="recipe-card"
       clip
-      data-known-overflow="299:277 — tiene a 1440, chiede fino a 11px in piu' a 1200"
     >
-      <p class="t-display recipe-card__number">{RECIPE[2].number}</p>
       <h3 class="recipe-card__title">{RECIPE[2].title}</h3>
+      <p class="t-body recipe-card__lead">{RECIPE[2].lead}</p>
       <p class="t-body recipe-card__body">{RECIPE[2].body}</p>
     </Block>
+
+    {/* Stessa sezione di home, works e contact: un solo form nel sito. */}
+    <ContactSection
+      at={{ form: aboutBlocks.aboutForm, cta: aboutBlocks.aboutCta, send: aboutBlocks.aboutSend }}
+    />
 
     <Block
       at={aboutBlocks.kitchenTitle}
@@ -188,7 +213,7 @@ const mix = await playlist(SPOTIFY.id, {
       rel="noopener noreferrer"
       class="playlist is-opaque"
       clip
-      data-known-overflow="300:440 — tiene a 1440, chiede 3px in piu' a 1200"
+      data-known-overflow="300:440 — tiene a 390 e a 1440; chiede qualche pixel in piu' alle larghezze in mezzo, dove la cella si stringe ma il corpo del testo ha un minimo"
     >
       <p class="playlist__row">
         <span class="t-title">{mix.name}</span>

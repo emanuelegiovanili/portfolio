@@ -109,11 +109,6 @@
   padding: var(--pad) var(--pad) var(--pad-lg);
 }
 
-.recipe-card__number {
-  margin: 0;
-  font-size: calc(var(--u) * 40);
-}
-
 .recipe-card__title {
   margin: 0;
   font-weight: 700;
@@ -122,9 +117,260 @@
   text-box: trim-both cap alphabetic;
 }
 
+/*
+ * La riga forte sopra al corpo.
+ *
+ * Nel frame aggiornato la scheda non ha piu' il numero grande: ha il titolo,
+ * questa riga, e il corpo. Non e' una prima frase in grassetto — e' la promessa
+ * del passaggio, e il corpo spiega come si mantiene. Stesso corpo del testo di
+ * lettura, solo piu' pesante: e' il grassetto di Poppins che il file usa.
+ */
+.recipe-card__lead {
+  margin: 0;
+  font-weight: 700;
+}
+
 .recipe-card__body {
   flex: 1 0 0;
   margin: 0;
+}
+
+/*
+ * Le misure di /about a base, dal frame 356:589.
+ *
+ * Stanno qui e non nelle classi condivise perche' `t-display--page`,
+ * `t-display--section`, `.cta-section` e `.playlist` li usano anche il megamenu
+ * e la home, che a base hanno gia' il loro disegno e le loro altezze verificate
+ * da `verify:type`. Cambiare il valore comune per far stare il titolo di questa
+ * pagina vorrebbe dire romperne altre due senza accorgersene.
+ *
+ * Ogni misura e' quella del nodo corrispondente, e a 1200 si torna a quella di
+ * desktop. Prima di queste righe otto blocchi sforavano alla larghezza di
+ * disegno: non e' una messa a punto estetica, e' testo tagliato.
+ */
+.about-grid .page-title h1 {
+  /* 354:3552 */
+  font-size: calc(var(--u) * 32);
+}
+
+.about-grid .label-cell .t-title {
+  /* 356:607 */
+  font-size: calc(var(--u) * 14);
+}
+
+.about-grid .text-cell .t-body {
+  /* 354:3532 */
+  font-size: max(12px, calc(var(--u) * 12));
+}
+
+.about-grid .section-title h2 {
+  /* 356:621 e 354:3601 */
+  font-size: calc(var(--u) * 20);
+}
+
+.about-grid .kitchen-title {
+  /* 356:638 */
+  font-size: calc(var(--u) * 32);
+}
+
+.about-grid .prose .t-body {
+  /* 356:610 e 356:611 */
+  font-size: max(14px, calc(var(--u) * 14));
+}
+
+/* 356:610 e' in grassetto: e' l'apertura, non un paragrafo come gli altri. */
+.about-grid .prose .t-body:first-child {
+  font-weight: 700;
+}
+
+.about-grid .cta-section__lead {
+  /* 382:3799 */
+  font-size: calc(var(--u) * 16);
+}
+
+.about-grid .cta-section__title {
+  /* 382:3800 */
+  font-size: calc(var(--u) * 32);
+}
+
+.about-grid .playlist .t-title {
+  /* 354:3568 */
+  font-size: calc(var(--u) * 16);
+}
+
+.about-grid .playlist__count {
+  /* 354:3569 */
+  font-size: max(12px, calc(var(--u) * 12));
+}
+
+/*
+ * E le spaziature, che a base il frame stringe.
+ *
+ * Non e' messa a punto estetica: con i valori di desktop la biografia sforava
+ * di 21px, la riga della playlist di 11 e la CTA di 9, cioe' testo tagliato
+ * alla larghezza di disegno. I numeri sono quelli dei nodi: la biografia ha
+ * `p-[20px]` e stacchi da 16 (356:609), non i 40 di padding verticale che usa
+ * a desktop.
+ *
+ * "Working remotely" e' il caso piu' stretto: nel frame il testo e' largo 62 in
+ * una cella da 78 (354:3534), cioe' otto pixel di respiro per lato e non venti.
+ * Con venti, "remotely" non ci sta e sborda di otto.
+ */
+.about-grid .prose {
+  gap: calc(var(--u) * 16);
+  padding: var(--pad);
+}
+
+.about-grid .text-cell--center {
+  padding-inline: calc(var(--u) * 8);
+}
+
+.about-grid .cta-section {
+  gap: calc(var(--u) * 16);
+}
+
+.about-grid .playlist {
+  padding: var(--pad-sm) var(--pad);
+}
+
+@media (min-width: 1200px) {
+  .about-grid .prose {
+    gap: var(--pad);
+    padding: var(--pad-lg) var(--pad);
+  }
+
+  .about-grid .text-cell--center {
+    padding-inline: var(--pad);
+  }
+
+  .about-grid .cta-section {
+    gap: var(--pad-lg);
+  }
+
+  .about-grid .playlist {
+    padding: var(--pad);
+  }
+}
+
+@media (min-width: 1200px) {
+  .about-grid .page-title h1,
+  .about-grid .kitchen-title,
+  .about-grid .cta-section__title {
+    font-size: calc(var(--u) * 64);
+  }
+
+  .about-grid .section-title h2 {
+    font-size: calc(var(--u) * 40);
+  }
+
+  .about-grid :is(.label-cell .t-title, .cta-section__lead, .playlist .t-title) {
+    font-size: calc(var(--u) * 24);
+  }
+
+  .about-grid :is(.text-cell .t-body, .prose .t-body, .playlist__count) {
+    font-size: max(14px, calc(var(--u) * 16));
+  }
+
+  .about-grid .prose .t-body:first-child {
+    font-weight: 700;
+  }
+}
+
+/*
+ * Le tre schede a base e md: una riga sola, piu' larga della finestra.
+ *
+ * Nel frame (356:622) il binario e' largo 818 dentro un frame da 390: tre
+ * schede da sette colonne, di cui la prima intera e la seconda tagliata a
+ * meta'. Non e' un ritaglio: e' l'invito a trascinare.
+ *
+ * ---------------------------------------------------------------------------
+ * LO SCORRIMENTO STA SUL BINARIO, NON SUL BLOCCO
+ *
+ * `overflow` su un `.block` gli ritaglia i quattro fili al padding box, ed e'
+ * il difetto che e' costato D103 e poi D107. Il blocco resta `bare` — niente
+ * filo suo — e a scorrere e' il binario dentro di lui.
+ *
+ * ---------------------------------------------------------------------------
+ * E LE SCHEDE SI FERMANO SULLA LINEA
+ *
+ * Un filo deve cadere su una linea di griglia. Dentro un contenitore che scorre
+ * questo non puo' valere in ogni istante — e' la ragione per cui la riga dei
+ * testimonial non scorre (home.css) — ma con `scroll-snap` vale **da ferme**,
+ * che e' dove lo sguardo si posa. I punti di aggancio cadono sull'inizio di
+ * ogni scheda, cioe' ogni sette celle.
+ *
+ * Resta uno scostamento dichiarato: mentre si trascina, i fili delle schede non
+ * sono sulle linee. Vedi NOTES.md D130.
+ */
+.recipe-steps {
+  display: flex;
+}
+
+.recipe-steps__track {
+  display: grid;
+  /* Tracce fisse da `--cell`, come la riga dei testimonial: e' lo stesso numero
+     con cui la pagina disegna le sue linee, non una divisione che gli somiglia. */
+  grid-template-columns: repeat(3, calc(var(--cell) * 7));
+  grid-template-rows: 100%;
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .recipe-steps__track {
+    scroll-behavior: smooth;
+  }
+}
+
+.recipe-steps__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 12);
+  min-width: 0;
+  padding: var(--pad);
+  scroll-snap-align: start;
+  /* Trasparente e non `0`: regge il modello di scatola, come sui blocchi. */
+  border: var(--line) solid transparent;
+}
+
+/* Il filo, con lo stesso meccanismo dei blocchi e delle schede testimonial: la
+   scheda non e' un `.block` ma eredita da lui `--edge-x` e `--edge-y`. */
+.recipe-steps__card::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--line) * -1);
+  left: calc(var(--line) * -1);
+  right: calc(var(--line) * (-2 + var(--edge-x)));
+  bottom: calc(var(--line) * (-2 + var(--edge-y)));
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color));
+  background-repeat: no-repeat;
+  background-position:
+    left top,
+    right top,
+    right bottom,
+    left bottom;
+  background-size:
+    100% var(--line),
+    var(--line) 100%,
+    100% var(--line),
+    var(--line) 100%;
+}
+
+/* Le misure del frame mobile: titolo 18, testo 14 (356:625, 356:626). */
+.recipe-steps__card .recipe-card__title {
+  font-size: calc(var(--u) * 18);
+}
+
+.recipe-steps__card :is(.recipe-card__lead, .recipe-card__body) {
+  font-size: calc(var(--u) * 14);
 }
 
 /* 300:354 — "kitchen" e' viola. Il testo e' largo 438 dentro un blocco da 360:
