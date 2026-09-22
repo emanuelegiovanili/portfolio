@@ -2478,12 +2478,54 @@ trascinare.
 Un filo deve cadere su una linea, e dentro un contenitore che scorre non ci cade
 — e' esattamente la ragione per cui la riga dei testimonial **non** scorre
 (home.css). `scroll-snap` limita il danno: da ferme le schede sono sulle linee,
-e lo scostamento dura quanto il gesto. Resta uno scostamento, ed e' il secondo
-del sito dopo la barra fissa.
+e lo scostamento dura quanto il gesto.
 
 Lo scorrimento sta sul **binario dentro** al blocco e non sul blocco: `overflow`
 su un `.block` gli ritaglia i quattro fili al padding box, ed e' il difetto che
 e' costato D103 e poi D107.
+
+**Superato da D136**: su richiesta del committente la riga e' diventata un
+carosello a una scheda per volta, e con quello anche lo scostamento e' sparito.
+
+### D136. Da riga che scorre a carosello, e lo scostamento si chiude
+
+Tre richieste del committente in una: scorrimento morbido, una scheda per
+gesto, e nessuna scheda tagliata. Le tre insieme cambiano la natura del
+componente.
+
+**La scheda ora e' larga quanto la finestra.** Era la mezza scheda tagliata a
+fare da invito; togliendo il taglio l'invito diventa il gesto. Misurato a 390,
+768 e 1024: larghezza scheda uguale alla finestra, una sola visibile, corsa
+lunga esattamente tre schede.
+
+**`scroll-snap-stop: always` e' la riga che fa il lavoro.** Senza, l'aggancio
+obbliga a fermarsi su *un* punto ma non impedisce di saltarne quanti se ne
+vuole, e una spinta decisa arriva in fondo. Misurato: spinta da 200px, avanza di
+una scheda; spinta da 2000px, avanza di una sola lo stesso. E' la promessa che
+si rompe piu' facilmente, perche' rotta somiglia a uno scorrimento normale e non
+a un difetto: ora `verify:motion` la guarda.
+
+**Due guadagni non richiesti.** I fili li disegna ora il **blocco**, perche' la
+scheda visibile lo riempie esattamente: prima ognuna doveva disegnarsi i quattro
+fili con lo pseudo-elemento, come le schede dei testimonial. Un meccanismo in
+meno, e per giunta sostituito da quello che le sonde a pixel gia' verificano. E
+le schede, piu' larghe, hanno piu' respiro: il testo avanza fra 31 e 94px invece
+di stare al limite.
+
+**E lo scostamento di D134 si chiude.** Non perche' il problema sia stato
+risolto, ma perche' non si pone piu': con una scheda per finestra, i suoi fili
+coincidono con quelli del blocco, e il blocco e' fermo sulla griglia. Restava il
+secondo scostamento del sito dopo la barra fissa; ora la barra e' l'unico.
+
+`100%` e non `calc(var(--cell) * 8)` per la traccia: il blocco ha un bordo
+trasparente da un pixel per lato, quindi il suo box interno e' due pixel piu'
+stretto di otto celle. Con le celle la scheda sarebbe due pixel piu' larga della
+finestra e se ne vedrebbe una scheggia — cioe' esattamente il taglio che si
+stava togliendo.
+
+**Resta aperto l'invito.** Quella mezza scheda era l'unico segnale che ce ne
+fossero altre due, e ora non c'e'. Su telefono lo si scopre trascinando; fra 720
+e 1199, dove il dito non c'e', si puo' non scoprirlo affatto. Vedi B27.
 
 ### D135. Due sfori che erano miei, non del sito
 
@@ -2527,4 +2569,5 @@ ha inventato un difetto invece di nasconderne uno.
 | B21 | **`emanuelegiovanili.it` non e' registrato** | Il form apre un `mailto:` verso `hello@emanuelegiovanili.it` (D90). Finche' il dominio non c'e', quelle mail non arrivano da nessuna parte |
 | B22 | **Il megamenu lascia piu' nero vuoto in fondo** | Conseguenza dei social alti una cella (D89): il pannello e' ancorato in alto e si e' accorciato di una riga. A base finisce a meta' schermo. Se non piace, si redistribuisce, ma quella e' una decisione di disegno |
 | B26 | **Il font display non ha i glifi accentati** | `getai-black.woff2` e' un sottoinsieme senza `U+00C0-U+00FF`: "TAMA caffe'" e' l'unico titolo che ne abbia bisogno oggi, e la sua "e" esce in Poppins Bold per il ripiego di D129. Serve al committente un export dal fornitore che includa almeno il latino esteso; poi si sostituisce il `.woff2`, si toglie `Poppins` da `--font-display`, si rimette il `unicode-range` del fallback a tutto e si svuota `GLIFI_NOTI` in `verify-type.mjs`. Tre righe |
+| B27 | **Il carosello delle schede non dice di esserlo** | Da D136 nessuna scheda e' tagliata, e con il taglio e' sparito l'unico segnale che ce ne siano altre due. Su telefono si scopre trascinando; fra 720 e 1199, senza swipe, si puo' non scoprirlo. Tre strade — due frecce come sugli altri caroselli (l'unica che funziona anche senza dito), tre puntini, o niente — ed e' UI che il Figma non disegna, quindi la decisione e' del committente |
 | B23 | **Safari resta un punto cieco** | Il motore WebKit non e' scaricabile (CDN di Playwright fuori dalla policy di uscita), quindi ogni sonda parla di Chromium. `verify:webkit` (D104) copre **una** differenza, quella costata la caccia di D101-D103, e non va spacciato per una verifica su Safari. Il difetto dei bordi e' chiuso e confermato dal committente sul suo dispositivo |

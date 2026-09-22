@@ -277,47 +277,71 @@
 }
 
 /*
- * Le tre schede a base e md: una riga sola, piu' larga della finestra.
+ * Le tre schede a base e md: un carosello, una scheda alla volta.
  *
- * Nel frame (356:622) il binario e' largo 818 dentro un frame da 390: tre
- * schede da sette colonne, di cui la prima intera e la seconda tagliata a
- * meta'. Non e' un ritaglio: e' l'invito a trascinare.
- *
- * ---------------------------------------------------------------------------
- * LO SCORRIMENTO STA SUL BINARIO, NON SUL BLOCCO
- *
- * `overflow` su un `.block` gli ritaglia i quattro fili al padding box, ed e'
- * il difetto che e' costato D103 e poi D107. Il blocco resta `bare` — niente
- * filo suo — e a scorrere e' il binario dentro di lui.
+ * Nel frame (356:622) la riga e' larga 818 dentro 390, con la seconda scheda
+ * tagliata a meta': quel mezzo serviva da invito a trascinare. Su richiesta del
+ * committente nessuna scheda viene piu' tagliata, quindi la scheda occupa tutta
+ * la finestra e l'invito ora e' il gesto.
  *
  * ---------------------------------------------------------------------------
- * E LE SCHEDE SI FERMANO SULLA LINEA
+ * I FILI SONO DEL BLOCCO, NON DELLE SCHEDE
  *
- * Un filo deve cadere su una linea di griglia. Dentro un contenitore che scorre
- * questo non puo' valere in ogni istante — e' la ragione per cui la riga dei
- * testimonial non scorre (home.css) — ma con `scroll-snap` vale **da ferme**,
- * che e' dove lo sguardo si posa. I punti di aggancio cadono sull'inizio di
- * ogni scheda, cioe' ogni sette celle.
+ * E' il guadagno di far combaciare scheda e finestra. Prima le schede erano
+ * piu' strette del blocco e ognuna doveva disegnarsi i propri quattro fili con
+ * lo pseudo-elemento, come le schede dei testimonial. Ora la scheda visibile
+ * riempie esattamente il blocco, quindi a disegnare il contorno e' il blocco
+ * stesso, con il meccanismo di `grid.css` che le sonde a pixel gia' verificano.
+ * Un meccanismo in meno da tenere allineato.
  *
- * Resta uno scostamento dichiarato: mentre si trascina, i fili delle schede non
- * sono sulle linee. Vedi NOTES.md D130.
+ * Lo scorrimento resta sul **binario dentro** al blocco e non sul blocco:
+ * `overflow` su un `.block` gli ritaglia i quattro fili al padding box, ed e' il
+ * difetto che e' costato D103 e poi D107. Il binario e' un figlio, e il suo
+ * `overflow` non tocca lo pseudo-elemento del fratello.
+ *
+ * ---------------------------------------------------------------------------
+ * UNA SCHEDA PER GESTO
+ *
+ * `scroll-snap-stop: always` e' la riga che lo ottiene: senza, una spinta deve
+ * fermarsi su *un* punto d'aggancio ma puo' saltarne quanti ne vuole, e una
+ * scrollata decisa arrivava in fondo. Con `always` il punto successivo e'
+ * obbligatorio, quindi un gesto vale una scheda comunque lo si dia.
  */
 .recipe-steps {
   display: flex;
+  /* Il ritaglio e' qui e non sul blocco: `clip` sul blocco taglierebbe i fili. */
+  overflow: hidden;
 }
 
 .recipe-steps__track {
   display: grid;
-  /* Tracce fisse da `--cell`, come la riga dei testimonial: e' lo stesso numero
-     con cui la pagina disegna le sue linee, non una divisione che gli somiglia. */
-  grid-template-columns: repeat(3, calc(var(--cell) * 7));
+  /*
+   * Tre tracce larghe quanto la finestra, non quanto sette celle.
+   *
+   * `100%` e non `calc(var(--cell) * 8)`: il blocco ha un bordo trasparente da
+   * un pixel per lato (e' cosi' che regge il modello di scatola), quindi il suo
+   * box interno e' due pixel piu' stretto di otto celle. Con le celle la scheda
+   * sarebbe due pixel piu' larga della finestra, e di quei due pixel si
+   * vedrebbe una scheggia della successiva: cioe' esattamente il taglio che si
+   * sta togliendo.
+   */
+  grid-template-columns: repeat(3, 100%);
   grid-template-rows: 100%;
   width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
+  /* Nessuna barra di scorrimento: il gesto e' il comando, e una barra dentro un
+     blocco bordato sarebbe un elemento che il disegno non ha. */
+  scrollbar-width: none;
 }
 
+.recipe-steps__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Lo scorrimento morbido vale per chi lo chiede a comandi — tastiera, frecce,
+   `scrollIntoView`. Il trascinamento lo accompagna il browser da se'. */
 @media (prefers-reduced-motion: no-preference) {
   .recipe-steps__track {
     scroll-behavior: smooth;
@@ -325,43 +349,13 @@
 }
 
 .recipe-steps__card {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: calc(var(--u) * 12);
   min-width: 0;
   padding: var(--pad);
   scroll-snap-align: start;
-  /* Trasparente e non `0`: regge il modello di scatola, come sui blocchi. */
-  border: var(--line) solid transparent;
-}
-
-/* Il filo, con lo stesso meccanismo dei blocchi e delle schede testimonial: la
-   scheda non e' un `.block` ma eredita da lui `--edge-x` e `--edge-y`. */
-.recipe-steps__card::after {
-  content: '';
-  position: absolute;
-  top: calc(var(--line) * -1);
-  left: calc(var(--line) * -1);
-  right: calc(var(--line) * (-2 + var(--edge-x)));
-  bottom: calc(var(--line) * (-2 + var(--edge-y)));
-  pointer-events: none;
-  background-image:
-    linear-gradient(var(--rule-color), var(--rule-color)),
-    linear-gradient(var(--rule-color), var(--rule-color)),
-    linear-gradient(var(--rule-color), var(--rule-color)),
-    linear-gradient(var(--rule-color), var(--rule-color));
-  background-repeat: no-repeat;
-  background-position:
-    left top,
-    right top,
-    right bottom,
-    left bottom;
-  background-size:
-    100% var(--line),
-    var(--line) 100%,
-    100% var(--line),
-    var(--line) 100%;
+  scroll-snap-stop: always;
 }
 
 /* Le misure del frame mobile: titolo 18, testo 14 (356:625, 356:626). */

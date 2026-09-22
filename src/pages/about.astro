@@ -109,15 +109,15 @@ const mix = await playlist(SPOTIFY.id, {
       (356:622): 21 colonne dentro a 10. Le tre qui sotto hanno solo `lg`,
       quindi spariscono da sole sotto i 1200, e questa sparisce sopra.
 
-      Lo scorrimento sta sul binario **dentro** al blocco e non sul blocco:
-      `overflow` su un blocco gli ritaglia i quattro fili al padding box, ed e'
-      il difetto di D103 e D107. Le schede prendono il filo come le schede dei
-      testimonial, con lo pseudo-elemento che eredita `--edge-x` e `--edge-y`.
+      Una scheda alla volta, larga quanto la finestra: nessuna viene tagliata.
+      I fili li disegna il blocco, perche' la scheda visibile lo riempie
+      esattamente. Lo scorrimento sta sul binario **dentro** al blocco:
+      `overflow` su un blocco gli ritaglia i quattro fili (D103, D107).
     */}
-    <Block at={aboutBlocks.recipeSteps} class="recipe-steps" surface="bare">
+    <Block at={aboutBlocks.recipeSteps} class="recipe-steps">
       <div class="recipe-steps__track">
         {RECIPE.map((passo) => (
-          <article class="recipe-steps__card" data-ruled>
+          <article class="recipe-steps__card">
             <h3 class="recipe-card__title">{passo.title}</h3>
             <p class="t-body recipe-card__lead">{passo.lead}</p>
             <p class="t-body recipe-card__body">{passo.body}</p>

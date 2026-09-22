@@ -287,6 +287,89 @@ try {
     await context.close();
   }
 
+  /*
+   * Il carosello delle tre schede di /about, a base.
+   *
+   * Tre promesse, e tutte e tre si rompono in silenzio: nessuna scheda
+   * tagliata, un gesto una scheda, e la corsa lunga tre schede. La seconda e'
+   * quella che si perde per prima — basta togliere `scroll-snap-stop: always`
+   * e una spinta decisa vola in fondo, che a schermo somiglia a uno
+   * scorrimento normale invece che a un difetto.
+   */
+  console.log('\nLe schede di /about: una alla volta, e nessuna tagliata?');
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 1200 }, deviceScaleFactor: 1 });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto(server.base + '/about', { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(() => document.querySelector('.recipe-steps')?.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(2200);
+
+    const misura = await page.evaluate(() => {
+      const blocco = document.querySelector('.recipe-steps');
+      const binario = document.querySelector('.recipe-steps__track');
+      if (!blocco || !binario) return null;
+      const schede = [...binario.querySelectorAll('.recipe-steps__card')];
+      const bb = blocco.getBoundingClientRect();
+      const fb = binario.getBoundingClientRect();
+      return {
+        schede: schede.length,
+        larghezzaScheda: schede[0].getBoundingClientRect().width,
+        finestra: fb.width,
+        corsa: binario.scrollWidth,
+        visibili: schede.filter((s) => {
+          const b = s.getBoundingClientRect();
+          return b.left < bb.right - 1 && b.right > bb.left + 1;
+        }).length,
+        stop: getComputedStyle(schede[0]).scrollSnapStop,
+      };
+    });
+
+    if (misura === null) {
+      check('il carosello delle schede esiste', false, 'blocco o binario assenti');
+    } else {
+      check(
+        'la scheda e\' larga quanto la finestra: nessuna tagliata',
+        Math.abs(misura.larghezzaScheda - misura.finestra) < 0.5 && misura.visibili === 1,
+        `scheda ${misura.larghezzaScheda.toFixed(2)} su finestra ${misura.finestra.toFixed(2)}, visibili ${misura.visibili}`,
+      );
+      check(
+        'la corsa e\' lunga quanto le schede che ci sono',
+        Math.abs(misura.corsa - misura.finestra * misura.schede) < 2,
+        `${misura.corsa} contro ${(misura.finestra * misura.schede).toFixed(0)}`,
+      );
+
+      const posizione = () =>
+        page.evaluate(() => {
+          const t = document.querySelector('.recipe-steps__track');
+          return t.scrollLeft / t.getBoundingClientRect().width;
+        });
+      const centro = await page.evaluate(() => {
+        const b = document.querySelector('.recipe-steps__track').getBoundingClientRect();
+        return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+      });
+      await page.mouse.move(centro.x, centro.y);
+      await page.mouse.wheel(200, 0);
+      await page.waitForTimeout(1200);
+      const dopoPiccola = await posizione();
+      // Molto piu' di una scheda: senza `scroll-snap-stop` arriverebbe in fondo.
+      await page.mouse.wheel(2000, 0);
+      await page.waitForTimeout(1500);
+      const dopoGrande = await posizione();
+
+      check('una spinta misurata avanza di una scheda', Math.abs(dopoPiccola - 1) < 0.05, `e\' a ${dopoPiccola.toFixed(2)}`);
+      check(
+        'e una spinta decisa avanza di una sola lo stesso',
+        Math.abs(dopoGrande - 2) < 0.05,
+        `e\' a ${dopoGrande.toFixed(2)} invece che a 2 (scroll-snap-stop: ${misura.stop})`,
+      );
+    }
+    check('nessun errore in console', errors.length === 0, errors[0] ?? '');
+    await context.close();
+  }
+
   console.log('\nI testimonial: la barra si riempie?');
   {
     const { context, page, errors } = await open('no-preference');
