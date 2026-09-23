@@ -283,47 +283,44 @@
  * tagliata a meta': quel mezzo serviva da invito a trascinare. Per un giro le
  * schede hanno riempito il blocco, senza taglio e senza invito, e a schermo una
  * scheda sola sembrava tutto il contenuto: su richiesta del committente lo
- * sbordo e' tornato, misurato in una cella.
+ * sbordo e' tornato.
  *
  * ---------------------------------------------------------------------------
- * IL CONTORNO E' DEL BLOCCO, LA RIGA IN MEZZO E' DELLE SCHEDE
+ * IL CONTORNO E' DELLE SCHEDE, E IL CONTENITORE E' NUDO
  *
- * Nel file ogni scheda ha il suo bordo su tutti e quattro i lati (356:623), e
- * fra due schede se ne vedono due affiancati: e' quella riga che il committente
- * cercava. Qui il contorno lo disegna il blocco, con il meccanismo di
- * `grid.css` che le sonde a pixel gia' verificano, e alle schede resta il solo
- * bordo destro, uno per confine. La nota sotto a `.recipe-steps__card` spiega
- * perche' e' il destro e non il sinistro.
+ * E' la struttura del file, e ci sono voluti tre giri per arrivarci.
+ * `get_design_context` su 356:622 dice che "Steps" non ha ne' bordo ne' fondo,
+ * e che ognuna delle tre schede ha `border border-[var(--dark-grey,#504d5c)]`
+ * su tutti e quattro i lati.
  *
- * Lo scorrimento resta sul **binario dentro** al blocco e non sul blocco:
- * `overflow` su un `.block` gli ritaglia i quattro fili al padding box, ed e' il
- * difetto che e' costato D103 e poi D107. Il binario e' un figlio, e il suo
- * `overflow` non tocca lo pseudo-elemento del fratello.
+ * Per due giorni il contorno e' stato del blocco. Funziona finche' la scheda
+ * riempie il blocco; appena sborda, e' il **bordo del blocco** a tagliare la
+ * scheda successiva, e il blocco deve pur stare da qualche parte. Allargandolo
+ * fino al bordo destro della griglia si e' sistemato il taglio a destra e
+ * restava identico a sinistra, dove il blocco si ferma alla seconda colonna.
+ * Allargarlo anche a sinistra non si poteva: un blocco che parte da zero non
+ * puo' avere il filo sinistro sulla prima scheda, che parte da 39.
+ *
+ * Con il contorno sulle schede il problema sparisce: il contenitore e' un
+ * blocco `bare` largo quanto la griglia, non disegna niente, e a tagliare le
+ * schede e' il bordo dello schermo da tutti e due i lati. Quello che si vede —
+ * una fascia bordata che si ferma dove finiscono le schede — lo disegnano le
+ * schede stesse.
  *
  * ---------------------------------------------------------------------------
- * UNA SCHEDA PER GESTO
+ * LE MISURE
  *
- * `scroll-snap-stop: always` e' la riga che lo chiede: senza, una spinta deve
- * fermarsi su *un* punto d'aggancio ma puo' saltarne quanti ne vuole.
+ * Il binario ha una cella di padding davanti e dietro: e' il margine di pagina,
+ * quello che fa partire la prima scheda da 39 invece che da zero e lascia
+ * all'ultima lo stesso margine dall'altra parte. `scroll-padding-inline` sposta
+ * di altrettanto i punti d'aggancio, cosi' una scheda agganciata si ferma sul
+ * margine e non sul bordo dello schermo.
  *
- * Chiedere non e' ottenere, ed e' bene saperlo scritto qui. Sul percorso della
- * rotellina Chromium non lo applica: una spinta lunga il doppio di una scheda
- * salta la seconda e arriva in fondo, con lo sbordo e senza, e lo faceva gia'
- * prima che lo sbordo ci fosse. Il percorso del dito e' un altro, ed e' quello
- * per cui la proprieta' esiste, ma da qui non si misura: i gesti sintetizzati
- * via CDP su questa pagina non arrivano al documento. Quello che le sonde
- * provano davvero e' `mandatory` — ogni sosta cade su un aggancio, mai a meta'
- * scheda — e che la proprieta' sia dichiarata. Vedi NOTES.md D138.
- */
-/*
- * Il ritaglio lo fa `clip` sul blocco, non un `overflow` qui.
- *
- * Qui c'era `overflow: hidden`, ed e' la trappola di D103 rimessa in piedi: il
- * filo del blocco vive su uno pseudo-elemento che sporge di un pixel oltre il
- * border box — e' li' che cade la linea di griglia — mentre `overflow` ritaglia
- * dal padding box. Il ritaglio si mangiava tutti e quattro i fili, e il blocco
- * delle schede era l'unico senza bordo su mobile. `clip` sul blocco usa
- * `clip-path: inset(-2px)`, che lascia proprio quei due pixel di franchigia.
+ * Il binario e' **un pixel piu' alto** del blocco. I fili basso e destro di una
+ * scheda cadono un pixel oltre la sua scatola — e' li' che sta la linea di
+ * griglia che la chiude (D61) — e `overflow-x: auto` ritaglia anche in
+ * verticale: senza quel pixel il filo basso di tutte e tre veniva mangiato, che
+ * e' la trappola di D103 in una veste nuova.
  */
 .recipe-steps {
   display: flex;
@@ -332,30 +329,27 @@
 .recipe-steps__track {
   display: grid;
   /*
-   * Sette celle per scheda, la misura del file.
-   *
-   * 356:623, 356:627 e 382:3809 sono larghe 273 e stanno a 0, 273 e 546: sette
-   * celle esatte. Quello che avanza della finestra — settantasei pixel a base,
-   * perche' il blocco arriva al bordo destro della griglia — e' la scheda
-   * successiva scoperta, cioe' l'unico invito a scorrere che il blocco ha,
-   * visto che la barra non c'e' e il disegno non prevede frecce ne' puntini.
-   * A tagliarla e' il bordo dello schermo, come nel file: vedi la nota sullo
-   * span in `src/lib/blocks/pages.ts`.
-   *
-   * Sette celle e non `100% - una cella`: il blocco ha un bordo trasparente da
-   * un pixel per lato, quindi il suo box interno e' due pixel piu' stretto di
-   * otto celle, e la scheda ne uscirebbe larga 271. Due pixel invisibili, ma
-   * con 271 il bordo fra le schede cade **accanto** alla linea di griglia
-   * invece che sopra, ed e' tutto il punto (vedi la nota sul bordo qui sotto).
+   * Sette celle per scheda, la misura del file: 356:623, 356:627 e 382:3809
+   * sono larghe 273 e stanno a 0, 273 e 546. Con sette celle esatte i fili
+   * verticali cadono sulle linee di griglia in tutte e tre le soste, compresa
+   * l'ultima: il disallineamento di due pixel annotato in D139 non c'e' piu'.
    */
   grid-template-columns: repeat(3, calc(var(--cell) * 7));
-  grid-template-rows: 100%;
+  /* Vedi la nota sul pixel in piu': il binario e' 100% + 1, la riga 100% - 1,
+     cioe' alta quanto il blocco, e quel pixel resta libero per il filo basso. */
+  height: calc(100% + var(--line));
+  grid-template-rows: calc(100% - var(--line));
   width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-  /* Nessuna barra di scorrimento: il gesto e' il comando, e una barra dentro un
-     blocco bordato sarebbe un elemento che il disegno non ha. */
+  /* Il margine di pagina davanti e dietro alle schede. Padding e non due
+     colonne vuote: le colonne vuote se le prendevano le schede, perche' la
+     griglia colloca gli elementi in ordine dalla prima cella libera. */
+  padding-inline: var(--cell);
+  scroll-padding-inline: var(--cell);
+  /* Nessuna barra di scorrimento: il gesto e' il comando, e una barra dentro
+     una fascia bordata sarebbe un elemento che il disegno non ha. */
   scrollbar-width: none;
 }
 
@@ -378,50 +372,60 @@
   min-width: 0;
   padding: var(--pad);
   position: relative;
+  /* Il fondo era del blocco, che ora e' nudo. E' lo stesso di tutto il sito
+     (D1): sopra al colore di pagina non si vede, sopra a una foto si'. */
+  background-color: var(--block-bg);
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
 
 /*
- * Il bordo fra una scheda e l'altra.
- *
- * Nel file ogni scheda ha il suo bordo su tutti e quattro i lati, in
- * `--dark-grey` (356:623). Qui se ne disegna uno solo, il destro, e non per
- * pigrizia: il bordo sinistro della prima scheda cadrebbe sul pixel 40, cioe'
- * **accanto** al filo sinistro del blocco che sta sul 39, ed e' il bordo doppio
- * di D61. Il blocco i suoi quattro fili li ha gia'; quello che manca al disegno
- * e' la riga in mezzo, e in mezzo ci sono solo due confini.
- *
- * Sta sull'ultimo pixel della scheda, non fuori, e con la scheda larga sette
- * celle quel pixel e' 312 a base: una linea di griglia. E quando si scorre di
- * una scheda, lo stesso bordo finisce sul pixel 39, cioe' esattamente **sopra**
- * al filo sinistro del blocco invece di raddoppiarlo. Con 271 non tornava
- * nessuna delle due.
- *
- * Su uno pseudo-elemento e non un `border-right`: nel file il testo e' largo
- * 233 su 273, cioe' venti di padding per lato e il bordo sopra al padding. Un
- * `border` vero si mangerebbe un pixel di testo.
- */
-.recipe-steps__card:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 0 auto;
-  width: var(--line);
-  background: var(--rule-color);
-  pointer-events: none;
-}
-
-/*
  * L'ultima scheda si ancora a destra, non a sinistra.
  *
- * Tre schede larghe 100% meno una cella non arrivano a tre schermate: la terza
- * non puo' mai portare il proprio bordo sinistro a filo del blocco, quindi con
- * `mandatory` il suo punto d'aggancio sarebbe irraggiungibile e il browser
- * rimbalzerebbe indietro sulla seconda. Ancorandola a destra il punto cade
- * esattamente a fine corsa. Lo sbordo si vede ancora, dall'altra parte.
+ * Il suo aggancio a sinistra cadrebbe oltre la fine della corsa, e con
+ * `mandatory` una sosta non raggiungibile la si raggiunge solo per troncamento:
+ * funziona, ma per caso, e il browser e' libero di rimbalzare indietro sulla
+ * seconda. Ancorata a destra l'aggancio cade **esattamente** a fine corsa, col
+ * margine di pagina dall'altra parte.
  */
 .recipe-steps__card:last-child {
   scroll-snap-align: end;
+}
+
+/*
+ * I quattro fili di una scheda.
+ *
+ * Stessa geometria dei blocchi (grid.css): alto e sinistro dentro la scatola,
+ * destro e basso **un pixel oltre**, dove cade la linea di griglia che chiude
+ * la scheda. Due schede vicine finiscono cosi' a disegnare lo stesso pixel
+ * invece di affiancarne due, che e' il bordo doppio di D61.
+ *
+ * Non sono `border` per la stessa ragione dei blocchi: un bordo dentro la
+ * scatola su quattro lati cade sulla linea solo su due. E non si animano —
+ * il giro allo scroll e' del blocco che le contiene, e quello ora e' nudo.
+ */
+.recipe-steps__card::after {
+  content: '';
+  position: absolute;
+  inset: 0 calc(var(--line) * -1) calc(var(--line) * -1) 0;
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color)),
+    linear-gradient(var(--rule-color), var(--rule-color));
+  background-repeat: no-repeat;
+  background-position:
+    left top,
+    right top,
+    right bottom,
+    left bottom;
+  background-size:
+    100% var(--line),
+    var(--line) 100%,
+    100% var(--line),
+    var(--line) 100%;
 }
 
 /* Le misure del frame mobile: titolo 18, testo 14 (356:625, 356:626). */

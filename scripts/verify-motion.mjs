@@ -342,6 +342,12 @@ try {
           const b = s.getBoundingClientRect();
           return b.left < bb.right - 1 && b.right > bb.left + 1;
         }).length,
+        // Quanto si vede davvero della seconda: non `finestra - scheda`, che
+        // da quando il binario ha i margini non e' piu' la stessa cosa.
+        scoperto: (() => {
+          const b = schede[1].getBoundingClientRect();
+          return Math.min(bb.right, b.right) - Math.max(bb.left, b.left);
+        })(),
         stop: getComputedStyle(schede[0]).scrollSnapStop,
         tipo: getComputedStyle(binario).scrollSnapType,
         ultimaAncora: getComputedStyle(schede.at(-1)).scrollSnapAlign,
@@ -351,21 +357,25 @@ try {
     if (misura === null) {
       check('il carosello delle schede esiste', false, 'blocco o binario assenti');
     } else {
-      const sbordo = misura.finestra - misura.larghezzaScheda;
+      const sbordo = misura.scoperto;
       check(
         'la scheda e\' larga sette celle, come nel file',
         Math.abs(misura.larghezzaScheda - misura.cella * 7) < 0.5,
         `${misura.larghezzaScheda.toFixed(2)} invece di ${(misura.cella * 7).toFixed(2)} (356:623)`,
       );
       check(
-        'e quella dopo resta scoperta: si vede che ce n\'e\' un\'altra',
-        sbordo > 1 && misura.visibili === 2,
-        `scoperti ${sbordo.toFixed(2)}px, schede in vista ${misura.visibili}`,
+        'e quella dopo resta scoperta fino al bordo dello schermo',
+        Math.abs(sbordo - misura.cella * 2) < 0.5 && misura.visibili === 2,
+        `scoperti ${sbordo.toFixed(2)}px invece di ${(misura.cella * 2).toFixed(0)}, schede in vista ${misura.visibili}`,
       );
+      // Le schede, piu' il margine di pagina davanti e dietro: e' il padding
+      // del binario, quello che fa partire la prima scheda da 39 invece che da
+      // zero e lascia all'ultima lo stesso margine dall'altra parte.
+      const attesa = misura.larghezzaScheda * misura.schede + misura.cella * 2;
       check(
-        'la corsa e\' lunga quanto le schede che ci sono',
-        Math.abs(misura.corsa - misura.larghezzaScheda * misura.schede) < 2,
-        `${misura.corsa} contro ${(misura.larghezzaScheda * misura.schede).toFixed(0)}`,
+        'la corsa e\' lunga quanto le schede piu\' i due margini',
+        Math.abs(misura.corsa - attesa) < 2,
+        `${misura.corsa} contro ${attesa.toFixed(0)}`,
       );
 
       const passo = () =>
@@ -423,84 +433,88 @@ try {
         `scroll-snap-stop: ${misura.stop}`,
       );
 
-      const fili = await page.evaluate(() => {
-        const el = document.querySelector('.recipe-steps');
-        const b = el.getBoundingClientRect();
-        // Il filo destro e quello basso cadono **fuori** dal border box, sulla
-        // linea di griglia che chiude il blocco (NOTES.md D61) — salvo sul
-        // bordo della griglia, dove rientrano di un pixel come fa l'ultima
-        // linea, perche' fuori cadrebbero oltre il contenitore (--edge-x).
-        const g = el.closest('.grid').getBoundingClientRect();
-        const bordoX = b.right >= g.right - 0.5 ? 1 : 0;
-        const bordoY = b.bottom >= g.bottom - 0.5 ? 1 : 0;
-        return {
-          alto: [Math.round(b.left + b.width / 2), Math.round(b.top)],
-          sinistro: [Math.round(b.left), Math.round(b.top + b.height / 2)],
-          destro: [Math.round(b.right) - bordoX, Math.round(b.top + b.height / 2)],
-          basso: [Math.round(b.left + b.width / 2), Math.round(b.bottom) - bordoY],
-        };
-      });
-      const scatto = await page.screenshot({ clip: { x: 0, y: 0, width: 390, height: 1200 } });
-      const { data, info } = await sharp(scatto).raw().toBuffer({ resolveWithObject: true });
-      const pixel = ([x, y]) => {
-        const o = (y * info.width + x) * info.channels;
-        return [data[o], data[o + 1], data[o + 2]];
-      };
       // Il colore del filo, non "un colore scuro": una fotografia scura sopra
       // alla linea passerebbe la soglia larga. Vedi verify-edges.mjs.
       const RULE = [0x50, 0x4d, 0x5c];
       const eFilo = (p) => p.every((c, i) => Math.abs(c - RULE[i]) <= 12);
-      const rotti = Object.entries(fili).filter(([, punto]) => !eFilo(pixel(punto)));
-      check(
-        'il blocco delle schede dipinge tutti e quattro i fili',
-        rotti.length === 0,
-        rotti.map(([lato, punto]) => `${lato}: ${pixel(punto).join(',')}`).join(' | '),
-      );
 
       /*
-       * E il bordo fra una scheda e l'altra, che nel file c'e' (356:623) e qui
-       * e' stato assente per un giorno intero.
+       * I fili delle schede, in tutte e tre le soste.
        *
-       * Due posizioni, perche' sono due promesse diverse. A riposo il bordo
-       * deve cadere **su** una linea di griglia, e ci cade solo se la scheda e'
-       * larga sette celle esatte: con 271 finiva accanto, che e' il bordo
-       * doppio di D61. Scorrendo di una scheda, lo stesso bordo arriva a filo
-       * sinistro del blocco e deve **coprire** quel filo, non affiancarlo: il
-       * campione guarda anche il pixel accanto, perche' due righe scure
-       * appaiate e una sola si distinguono solo cosi'.
+       * Il contorno non e' piu' del blocco: il contenitore e' nudo, come nel
+       * file, e a disegnare i quattro fili e' ogni scheda (D141). Quindi non si
+       * guarda piu' un rettangolo solo, si guardano le schede che stanno in
+       * vista, in ognuna delle posizioni in cui il carosello puo' fermarsi.
+       *
+       * Tre cose per ogni filo verticale, e servono tutte e tre:
+       *   - dipinge il colore del filo, non un colore scuro qualsiasi;
+       *   - cade **su** una linea di griglia, che e' la regola zero del
+       *     progetto e l'unica ragione per cui la scheda e' larga sette celle
+       *     esatte invece che "quanto avanza";
+       *   - il pixel accanto **non** e' filo, perche' due schede vicine devono
+       *     disegnare lo stesso pixel e non affiancarne due (D61). Due righe
+       *     appaiate e una sola si distinguono solo guardando il vicino.
+       *
+       * E i due fili orizzontali, che nella prima stesura di questa struttura
+       * sparivano tutti e tre in basso: `overflow-x: auto` ritaglia anche in
+       * verticale, e il filo basso cade un pixel sotto la scheda. Il binario e'
+       * un pixel piu' alto apposta, e senza questo controllo nessuno se ne
+       * accorgerebbe.
        */
-      for (const [dove, quanto] of [['a riposo', 0], ['scorsa di una scheda', misura.larghezzaScheda]]) {
+      const soste = [
+        ['a riposo', 0],
+        ['scorsa di una scheda', misura.larghezzaScheda],
+        ['a fine corsa', misura.corsa - misura.finestra],
+      ];
+      for (const [dove, quanto] of soste) {
         await page.evaluate((v) => {
-          document.querySelector('.recipe-steps__track').scrollLeft = v;
-        }, quanto);
-        await page.waitForTimeout(1200);
-        const bordi = await page.evaluate(() => {
           const t = document.querySelector('.recipe-steps__track');
-          const b = document.querySelector('.recipe-steps').getBoundingClientRect();
-          return [...t.querySelectorAll('.recipe-steps__card')]
-            .slice(0, -1)
-            .map((c) => Math.round(c.getBoundingClientRect().right) - 1)
-            .filter((x) => x >= b.left - 1 && x <= b.right)
-            .map((x) => ({ x, y: Math.round(b.top + b.height / 2) }));
+          t.style.scrollBehavior = 'auto';
+          t.scrollLeft = v;
+        }, quanto);
+        await page.waitForTimeout(1300);
+        const schede = await page.evaluate(() => {
+          const larga = window.innerWidth;
+          return [...document.querySelectorAll('.recipe-steps__card')]
+            .map((c, i) => {
+              const r = c.getBoundingClientRect();
+              if (r.right <= 2 || r.left >= larga - 2) return null;
+              return {
+                i,
+                // Il filo destro cade un pixel oltre la scatola, dove sta la
+                // linea che chiude la scheda; il sinistro dentro (D61).
+                verticali: [Math.round(r.left), Math.round(r.right)].filter((x) => x >= 0 && x <= larga - 1),
+                x: Math.round((Math.max(2, r.left) + Math.min(larga - 3, r.right)) / 2),
+                y: Math.round((r.top + r.bottom) / 2),
+                alto: Math.round(r.top),
+                basso: Math.round(r.bottom),
+              };
+            })
+            .filter(Boolean);
         });
         const foto = await sharp(await page.screenshot()).raw().toBuffer({ resolveWithObject: true });
         const punto = (x, y) => {
           const o = (y * foto.info.width + x) * foto.info.channels;
           return [foto.data[o], foto.data[o + 1], foto.data[o + 2]];
         };
-        const guasti = bordi.flatMap(({ x, y }) => {
-          const sopra = (x - misura.grigliaL) / misura.cella;
-          const fuoriLinea = Math.abs(sopra - Math.round(sopra)) > 0.02;
+        const guasti = schede.flatMap((s) => {
           const male = [];
-          if (!eFilo(punto(x, y))) male.push(`x=${x} dipinge ${punto(x, y).join(',')}`);
-          if (fuoriLinea) male.push(`x=${x} non cade su una linea (${sopra.toFixed(2)} celle)`);
-          if (eFilo(punto(x - 1, y))) male.push(`x=${x} e' doppio: anche ${x - 1} e' filo`);
+          for (const x of s.verticali) {
+            const celle = (x - misura.grigliaL) / misura.cella;
+            if (!eFilo(punto(x, s.y))) male.push(`scheda ${s.i}: x=${x} dipinge ${punto(x, s.y).join(',')}`);
+            if (Math.abs(celle - Math.round(celle)) > 0.02)
+              male.push(`scheda ${s.i}: x=${x} non cade su una linea (${celle.toFixed(2)} celle)`);
+            if (eFilo(punto(x - 1, s.y))) male.push(`scheda ${s.i}: x=${x} e' doppio, anche ${x - 1} e' filo`);
+          }
+          for (const [nome, y] of [['alto', s.alto], ['basso', s.basso]]) {
+            if (!eFilo(punto(s.x, y))) male.push(`scheda ${s.i}: filo ${nome} a y=${y} dipinge ${punto(s.x, y).join(',')}`);
+          }
           return male;
         });
         check(
-          `il bordo fra le schede ${dove}: dipinto, sulla linea, e singolo`,
-          bordi.length > 0 && guasti.length === 0,
-          bordi.length === 0 ? 'nessun bordo in vista' : guasti.join(' | '),
+          `i fili delle schede ${dove}: dipinti, sulle linee, e singoli`,
+          schede.length >= 2 && guasti.length === 0,
+          schede.length < 2 ? `solo ${schede.length} schede in vista` : guasti.slice(0, 4).join(' | '),
         );
       }
     }

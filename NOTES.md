@@ -2654,13 +2654,10 @@ il colore del filo, cade su una linea di griglia, e **quello accanto non e'
 filo**. L'ultimo controllo e' quello che serve: due righe scure appaiate e una
 sola si distinguono solo guardando il vicino.
 
-Resta uno scostamento, e sta scritto qui perche' e' l'unico: nella posizione di
-fine corsa l'ultima scheda e' ancorata a destra, e il bordo fra seconda e terza
-cade sul pixel 76 invece che sul 78. Due pixel, in una sola delle tre soste. Per
-azzerarlo servirebbe una coda vuota da trentasette pixel in fondo al binario, e
-il prezzo e' che nella sosta finale la seconda scheda sparisce del tutto: si
-perderebbe l'unico segnale che dietro c'e' altro, cioe' proprio quello per cui
-lo sbordo e' tornato.
+Restava uno scostamento: nella sosta di fine corsa il bordo fra seconda e terza
+cadeva sul pixel 76 invece che sul 78. **Chiuso da D141**, e non perche' l'abbia
+corretto: la struttura giusta — contorno alle schede, contenitore nudo, margini
+sul binario — non lo produce.
 
 ### D140. Chi taglia la scheda successiva: il blocco o lo schermo
 
@@ -2696,6 +2693,49 @@ vorrebbe dire dare a questo blocco un contorno diverso da tutti gli altri.
 volte: la terza scheda nel file e' alta 312 e non 351 (382:3809). Le nostre sono
 tutte uguali da D136 e il committente non l'ha mai segnalato, quindi resta cosi';
 ma e' uno scostamento, non una svista del file.
+
+### D141. Il contorno passa alle schede, ed e' l'unico modo perche' a tagliare sia lo schermo
+
+Il committente, dopo D140: "le card non devono tagliarsi neanche a sinistra".
+
+Aveva ragione, e la correzione di D140 era una pezza. Finche' il contorno e' del
+**blocco**, il blocco deve stare da qualche parte, e dove sta lui taglia. A nove
+colonne il taglio a destra cadeva sul bordo dello schermo e quello a sinistra
+restava alla seconda colonna, a 39. Allargare anche a sinistra non si poteva: un
+blocco che parte da zero non puo' avere il filo sinistro sulla prima scheda, che
+parte da 39. Non e' una questione di misure, e' che la struttura era sbagliata.
+
+Il file lo diceva da due giorni. `get_design_context` su 356:622: il contenitore
+"Steps" non ha ne' bordo ne' fondo, e ognuna delle tre schede ha
+`border border-[var(--dark-grey,#504d5c)]` su tutti e quattro i lati. Io in D136
+avevo tolto il contorno alle schede per darlo al blocco, con una motivazione che
+suonava bene — "la scheda riempie il blocco, un meccanismo in meno" — e che era
+vera solo finche' la scheda riempiva il blocco. Rimesso lo sbordo in D138, era
+gia' falsa, e ci sono voluti altri due giri per accorgersene.
+
+Ora: il blocco e' `bare` e largo quanto la griglia (colonna 1, dieci colonne),
+non disegna niente; le schede disegnano i loro quattro fili con la stessa
+geometria dei blocchi — alto e sinistro dentro, destro e basso un pixel oltre
+(D61) — e due schede vicine finiscono a dipingere lo stesso pixel invece di
+affiancarne due. Il margine di pagina lo da' il `padding-inline` del binario,
+una cella per lato, con `scroll-padding-inline` a spostare di altrettanto i
+punti d'aggancio.
+
+**Tutti i fili cadono su una linea di griglia, in tutte e tre le soste.** A
+riposo 39 e 312; scorsa di una scheda 39 e 312; a fine corsa 78 e 351. Sparisce
+anche lo scostamento di due pixel annotato in D139: non l'ho corretto, e'
+sparito perche' la struttura giusta non lo produce.
+
+**E una trappola nuova, che e' la vecchia.** Il filo basso di una scheda cade un
+pixel sotto la sua scatola, e `overflow-x: auto` sul binario ritaglia anche in
+verticale: alla prima stesura i fili bassi di tutte e tre erano spariti. E'
+D103 in una veste nuova — la terza volta che un ritaglio si mangia dei fili in
+questo progetto. Il binario e' alto `100% + 1` e la riga `100% - 1`, cosi' quel
+pixel resta libero. La sonda lo guarda, e con il pixel tolto segnala sei fili
+bassi mancanti su tre posizioni.
+
+Resta lo scostamento gia' annotato in D140: la terza scheda nel file e' alta 312
+e non 351 (382:3809). Le nostre restano uguali.
 
 ---
 
