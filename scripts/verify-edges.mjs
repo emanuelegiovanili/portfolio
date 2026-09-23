@@ -239,6 +239,9 @@ const WIDTHS = value('--width', null) ? [Number(value('--width', null))] : [390,
 const HEIGHT = 1200;
 
 const SENZA_CLIP_MARGIN = args.includes('--senza-clip-margin');
+// Solo la rassegna: serve a provare che la rassegna stessa veda un difetto,
+// senza rifare i cinque minuti dei casi curati.
+const SOLO_RASSEGNA = args.includes('--solo-rassegna');
 const NEUTRALIZZA = '*, *::before, *::after { overflow-clip-margin: 0px !important; }';
 
 const explicitUrl = value('--url', null);
@@ -285,7 +288,7 @@ async function strip(page, clip) {
 try {
   console.log(`\nI fili cadono sulla linea?${SENZA_CLIP_MARGIN ? ' (fingendo un browser senza overflow-clip-margin)' : ''}\n`);
 
-  for (const larghezza of WIDTHS)
+  for (const larghezza of SOLO_RASSEGNA ? [] : WIDTHS)
   for (const { route, selector, nome, apri, filo } of CASES) {
     // Densita' 1: un pixel dell'immagine e' un pixel CSS, e i conti tornano.
     const context = await browser.newContext({
@@ -393,7 +396,7 @@ try {
    */
   console.log('\nE il marquee ha i suoi due fili?\n');
 
-  {
+  if (!SOLO_RASSEGNA) {
     const context = await browser.newContext({ viewport: { width: 1440, height: HEIGHT }, deviceScaleFactor: 1 });
     const page = await context.newPage();
     await page.goto(server.base + '/', { waitUntil: 'networkidle' });
@@ -434,7 +437,7 @@ try {
 
   console.log('\nLo strato dell\'hover copre il blocco e la sua linea?\n');
 
-  {
+  if (!SOLO_RASSEGNA) {
     const context = await browser.newContext({ viewport: { width: 1440, height: HEIGHT }, deviceScaleFactor: 1 });
     const page = await context.newPage();
     await page.goto(server.base + HOVER[0].route, { waitUntil: 'networkidle' });
@@ -580,6 +583,266 @@ try {
 
     await context.close();
   }
+
+  /*
+   * La rassegna: tutti i blocchi bordati di tutte le rotte, a 390.
+   *
+   * I casi qui sopra sono una lista curata, e una lista curata verifica i
+   * blocchi a cui qualcuno ha pensato. Il committente ha segnalato che su
+   * mobile i bordi non si vedevano, ed erano due blocchi che nella lista non
+   * c'erano: uno con un `overflow` che gli mangiava lo pseudo-elemento dei fili
+   * (D103 di nuovo), l'altro con la foto del vicino sopra al filo basso (D112
+   * di nuovo). Nessuna sonda li guardava.
+   *
+   * Due modi di sbagliare, e questa rassegna li ha fatti tutti e due prima di
+   * funzionare.
+   *
+   * Il primo: misurare niente. Il megamenu chiuso resta un rettangolo grande
+   * quanto la finestra, e l'esclusione dei blocchi viola lo prendeva per una
+   * copertura: ogni punto di ogni blocco veniva cancellato, zero lati guardati,
+   * cinque "ok" di fila. Da qui il conto dei lati e il conto dei blocchi mai
+   * misurati: una rassegna vuota e una rassegna pulita si stampano uguale.
+   *
+   * Il secondo: inventarsi un difetto. I fili si disegnano sullo scroll e
+   * chiudono il giro quando il bordo alto del blocco arriva al 25% della
+   * finestra (vedi `porta()` qui sopra). Misurando ogni blocco che entra
+   * intero nella finestra si misurano lati ancora corti, e diciassette di
+   * questi erano finiti in un elenco di difetti che non esistevano. Quindi non
+   * si misura per posizione: si guardano le quattro variabili del filo, e si
+   * misura solo chi ha chiuso il giro.
+   */
+  console.log('\nE tutti gli altri, a 390?\n');
+  {
+    const ROTTE = ['/', '/about', '/works', '/works/seezy', '/contact'];
+    const context = await browser.newContext({ viewport: { width: 390, height: 800 }, deviceScaleFactor: 1 });
+    const page = await context.newPage();
+
+    for (const rotta of ROTTE) {
+      await page.goto(server.base + rotta, { waitUntil: 'networkidle' });
+      if (SENZA_CLIP_MARGIN) await page.addStyleTag({ content: NEUTRALIZZA });
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForTimeout(800);
+
+      // Un numero a ciascun blocco, per sapere alla fine chi non e' stato visto.
+      const { totale, fuoriMisura } = await page.evaluate(() => {
+        const tutti = [...document.querySelectorAll('#smooth-content .block[data-surface="line"]')]
+          // A base la pagina dichiara un tier solo: i blocchi degli altri sono
+          // `display: none` e non sono blocchi mancanti, non esistono.
+          .filter((e) => getComputedStyle(e).display !== 'none');
+        tutti.forEach((e, i) => { e.dataset.sonda = String(i); });
+        return {
+          totale: tutti.length,
+          // Piu' alti della finestra: i quattro lati non stanno mai in uno
+          // scatto solo. Si dicono, non si fingono misurati.
+          fuoriMisura: tutti.filter((e) => e.getBoundingClientRect().height > window.innerHeight - 4).map((e) => e.className),
+        };
+      });
+      const altezza = await page.evaluate(() => document.documentElement.scrollHeight);
+      const misurati = new Set();
+      const guasti = [];
+      let lati = 0;
+
+      /*
+       * Il giro lo guidano i blocchi, non i pixel.
+       *
+       * A passi fissi un blocco alto 624 in una finestra da 800 ha 174 pixel di
+       * posizioni buone: con passi da 300 lo si salta, ed e' cosi' che il
+       * blocco del modulo di contatto e' rimasto fuori da due rotte. Qui si
+       * porta sotto gli occhi il primo blocco non ancora misurato, e in quello
+       * stesso scatto si misura tutto quello che nel frattempo e' a posto.
+       */
+      const tentativi = new Map();
+      for (let giro = 0; giro < totale * 2 + 4; giro += 1) {
+        const portato = await page.evaluate(([gia, arresi, ritentare]) => {
+          const restano = [...document.querySelectorAll('#smooth-content .block[data-surface="line"]')]
+            .filter((e) => e.dataset.sonda !== undefined)
+            .filter((e) => !gia.includes(e.dataset.sonda) && !arresi.includes(e.dataset.sonda))
+            .filter((e) => e.getBoundingClientRect().height <= window.innerHeight - 4);
+          if (restano.length === 0) return null;
+          const b = restano[0].getBoundingClientRect();
+          /*
+           * A un settimo dall'alto, come `porta()`: sopra il 25% il giro dei
+           * fili e' finito e il blocco e' fermo. Ma un blocco alto 700 in una
+           * finestra da 800 messo a 120 esce di sotto e non si misura mai: si
+           * alza quel tanto che basta a farcelo stare intero.
+           */
+          /*
+           * Al secondo tentativo si sale a filo della finestra.
+           *
+           * I fili si disegnano scorrendo, e un blocco alto 624 in una finestra
+           * da 800 a 120 dall'alto ha il lato sinistro ancora al 74%: non e' un
+           * difetto, e' meta' del giro. A top 0 e' al 100% ed e' ancora tutto
+           * in vista. Senza questo secondo giro il blocco del modulo di
+           * contatto restava fuori dalla rassegna su due rotte.
+           */
+          const quota = ritentare.includes(restano[0].dataset.sonda) ? 0 : window.innerHeight * 0.15;
+          const alto = Math.max(0, Math.min(quota, window.innerHeight - 2 - b.height));
+          window.scrollTo(0, Math.max(0, window.scrollY + b.top - alto));
+          return restano[0].dataset.sonda;
+        }, [
+          [...misurati],
+          [...tentativi].filter(([, n]) => n >= 3).map(([k]) => k),
+          [...tentativi].filter(([, n]) => n >= 1).map(([k]) => k),
+        ]);
+        if (portato === null) break;
+        tentativi.set(portato, (tentativi.get(portato) ?? 0) + 1);
+        // Non un'attesa a occhio: si aspetta che **quel** blocco abbia chiuso
+        // il giro. Un'attesa fissa da 1500ms lasciava fuori il blocco del
+        // modulo di contatto, che e' il piu' alto del sito e ci mette di piu'.
+        await page
+          .waitForFunction(
+            (id) => {
+              const e = document.querySelector(`[data-sonda="${id}"]`);
+              if (!e) return true;
+              const st = getComputedStyle(e);
+              return ['t', 'r', 'b', 'l']
+                .map((k) => st.getPropertyValue('--rule-' + k).trim())
+                .every((v) => v === '' || parseFloat(v) >= 99.5);
+            },
+            portato,
+            { timeout: 6000 },
+          )
+          .catch(() => {});
+        /*
+         * E che la pagina sia ferma.
+         *
+         * ScrollSmoother frena per quasi un secondo dopo che i fili hanno
+         * chiuso il giro: misurando li' il rettangolo si legge in un fotogramma
+         * e lo scatto si prende nel successivo, il blocco si e' spostato di
+         * qualche pixel, e il campione cade accanto al filo invece che sopra.
+         * Sessantatre lati "senza filo" in una passata, tutti inventati dalla
+         * sonda. Due letture uguali a 200ms di distanza: la pagina e' ferma.
+         */
+        await page
+          .evaluate(() => { delete window.__fermo; })
+          .then(() =>
+            page.waitForFunction(
+              () => {
+                const c = document.getElementById('smooth-content');
+                const y = c ? c.getBoundingClientRect().top : -window.scrollY;
+                const prima = window.__fermo;
+                window.__fermo = y;
+                return prima !== undefined && Math.abs(prima - y) < 0.05;
+              },
+              null,
+              { timeout: 6000, polling: 200 },
+            ),
+          )
+          .catch(() => {});
+        const blocchi = await page.evaluate((gia) => {
+          const accenti = [...document.querySelectorAll('.block[data-surface="accent"], .megamenu, .sticky-header')]
+            .filter((e) => getComputedStyle(e).visibility !== 'hidden')
+            .map((e) => e.getBoundingClientRect())
+            .filter((b) => b.width > 0);
+          const coperto = (x, y) =>
+            accenti.some((a) => x >= a.left - 1 && x <= a.right + 1 && y >= a.top - 1 && y <= a.bottom + 1);
+          const intero = (v) => v === '' || parseFloat(v) >= 99.5;
+
+          return [...document.querySelectorAll('#smooth-content .block[data-surface="line"]')]
+            .filter((e) => getComputedStyle(e).display !== 'none' && !gia.includes(e.dataset.sonda))
+            .map((e) => {
+              const b = e.getBoundingClientRect();
+              /*
+               * Le soglie sono larghe di un pixel, e non per pigrizia.
+               *
+               * `top < 2` teneva fuori la prima riga di ogni pagina, che
+               * comincia a zero: logo e bottone del menu non erano misurabili
+               * da nessuna posizione. E `top < 0` teneva fuori il blocco del
+               * modulo di contatto, che portato a filo della finestra si ferma
+               * a -0.2 per via dell'inerzia dello smoother. Un sottopixel non
+               * e' un blocco fuori dalla finestra.
+               */
+              if (b.top < -1 || b.bottom > window.innerHeight + 1 || b.width < 4 || b.height < 4) return null;
+              // Solo chi ha chiuso il giro: un lato a meta' non e' un lato coperto.
+              const st = getComputedStyle(e);
+              const fili = ['t', 'r', 'b', 'l'].map((k) => st.getPropertyValue('--rule-' + k).trim());
+              if (!fili.every(intero)) return null;
+              // Sul bordo della griglia il filo torna dentro, come fa l'ultima
+              // linea: fuori cadrebbe oltre il contenitore.
+              const g = e.closest('.grid').getBoundingClientRect();
+              const bordoX = b.right >= g.right - 0.5 ? 1 : 0;
+              const bordoY = b.bottom >= g.bottom - 0.5 ? 1 : 0;
+              const punti = {
+                alto: [Math.round(b.left + b.width / 2), Math.max(0, Math.round(b.top))],
+                sinistro: [Math.max(0, Math.round(b.left)), Math.round(b.top + b.height / 2)],
+                // Destro e basso cadono un pixel **fuori** dal border box, sulla
+                // linea che chiude il blocco (D61).
+                destro: [Math.round(b.right) - bordoX, Math.round(b.top + b.height / 2)],
+                basso: [Math.round(b.left + b.width / 2), Math.min(Math.round(b.bottom) - bordoY, window.innerHeight - 1)],
+              };
+              for (const [lato, [x, yy]] of Object.entries(punti)) if (coperto(x, yy)) delete punti[lato];
+              return { id: e.dataset.sonda, nome: e.className, punti };
+            })
+            .filter(Boolean);
+        }, [...misurati]);
+        if (blocchi.length > 0) {
+        const { data, info } = await sharp(await page.screenshot()).raw().toBuffer({ resolveWithObject: true });
+        const px = (x, yy) => {
+          const o = (yy * info.width + x) * info.channels;
+          return [data[o], data[o + 1], data[o + 2]];
+        };
+        for (const b of blocchi) {
+          misurati.add(b.id);
+          for (const [lato, [x, yy]] of Object.entries(b.punti)) {
+            lati += 1;
+            const c = px(x, yy);
+            /*
+             * Il colore del filo, non "un colore scuro".
+             *
+             * Con la soglia larga questa rassegna ha dichiarato pulita una
+             * pagina in cui la fotografia del ritratto copriva il filo basso
+             * del titolo: la foto li' e' scura, e scuro passava. Il filo e'
+             * opaco e ha un colore solo, quindi si pretende quello. I casi in
+             * cui la linea e' legittimamente coperta — i blocchi viola, D2 —
+             * sono tolti prima, per rettangolo.
+             */
+            if (!near(c, RULE)) guasti.push(`${b.nome} · ${lato} = ${c.join(',')}`);
+          }
+        }
+        }
+
+        /*
+         * Perche' quel blocco non e' stato misurato.
+         *
+         * Senza questo, un blocco che sfugge alla rassegna si presenta come un
+         * nome in un elenco e basta, e per sapere se e' un difetto del sito o
+         * della sonda bisogna rifare a mano tutto il giro.
+         */
+        if (!misurati.has(portato) && tentativi.get(portato) >= 3) {
+          const perche = await page.evaluate((id) => {
+            const e = document.querySelector(`[data-sonda="${id}"]`);
+            if (!e) return 'sparito dal documento';
+            const b = e.getBoundingClientRect();
+            const st = getComputedStyle(e);
+            return `alto ${Math.round(b.top)} basso ${Math.round(b.bottom)} di ${window.innerHeight}, largo ${Math.round(b.width)}, display ${st.display}, fili ${['t', 'r', 'b', 'l'].map((k) => st.getPropertyValue('--rule-' + k).trim() || 'vuoto').join(' ')}`;
+          }, portato);
+          guasti.push(`non misurabile — ${perche}`);
+        }
+      }
+
+      if (lati === 0) guasti.push('nessun lato guardato: la rassegna non ha misurato niente');
+      if (fuoriMisura.length > 0) console.log(`            (fuori misura, piu' alti della finestra: ${fuoriMisura.join(', ')})`);
+      if (misurati.size < totale - fuoriMisura.length) {
+        const mai = await page.evaluate(
+          (gia) =>
+            [...document.querySelectorAll('#smooth-content .block[data-surface="line"]')]
+              .filter((e) => e.dataset.sonda !== undefined && !gia.includes(e.dataset.sonda))
+              .filter((e) => e.getBoundingClientRect().height <= window.innerHeight - 4)
+              .map((e) => e.className),
+          [...misurati],
+        );
+        guasti.push(`mai misurati: ${mai.join(', ')}`);
+      }
+
+      failures += guasti.length;
+      console.log(
+        `  ${guasti.length === 0 ? 'ok     ' : 'FALLITO'} ${rotta} — ${misurati.size}/${totale} blocchi, ${lati} lati, ${guasti.length} guasti`,
+      );
+      for (const g of guasti.slice(0, 12)) console.log(`            ${g}`);
+    }
+    await context.close();
+  }
+
 } finally {
   await browser.close();
   server.stop();

@@ -280,19 +280,18 @@
  * Le tre schede a base e md: un carosello, una scheda alla volta.
  *
  * Nel frame (356:622) la riga e' larga 818 dentro 390, con la seconda scheda
- * tagliata a meta': quel mezzo serviva da invito a trascinare. Su richiesta del
- * committente nessuna scheda viene piu' tagliata, quindi la scheda occupa tutta
- * la finestra e l'invito ora e' il gesto.
+ * tagliata a meta': quel mezzo serviva da invito a trascinare. Per un giro le
+ * schede hanno riempito il blocco, senza taglio e senza invito, e a schermo una
+ * scheda sola sembrava tutto il contenuto: su richiesta del committente lo
+ * sbordo e' tornato, misurato in una cella.
  *
  * ---------------------------------------------------------------------------
  * I FILI SONO DEL BLOCCO, NON DELLE SCHEDE
  *
- * E' il guadagno di far combaciare scheda e finestra. Prima le schede erano
- * piu' strette del blocco e ognuna doveva disegnarsi i propri quattro fili con
- * lo pseudo-elemento, come le schede dei testimonial. Ora la scheda visibile
- * riempie esattamente il blocco, quindi a disegnare il contorno e' il blocco
- * stesso, con il meccanismo di `grid.css` che le sonde a pixel gia' verificano.
- * Un meccanismo in meno da tenere allineato.
+ * Le schede non hanno contorno proprio: a disegnarlo e' il blocco, con il
+ * meccanismo di `grid.css` che le sonde a pixel gia' verificano. Lo sbordo non
+ * cambia niente qui, perche' quello che si vede della scheda successiva e' il
+ * suo testo, non un suo bordo. Un meccanismo in meno da tenere allineato.
  *
  * Lo scorrimento resta sul **binario dentro** al blocco e non sul blocco:
  * `overflow` su un `.block` gli ritaglia i quattro fili al padding box, ed e' il
@@ -302,30 +301,45 @@
  * ---------------------------------------------------------------------------
  * UNA SCHEDA PER GESTO
  *
- * `scroll-snap-stop: always` e' la riga che lo ottiene: senza, una spinta deve
- * fermarsi su *un* punto d'aggancio ma puo' saltarne quanti ne vuole, e una
- * scrollata decisa arrivava in fondo. Con `always` il punto successivo e'
- * obbligatorio, quindi un gesto vale una scheda comunque lo si dia.
+ * `scroll-snap-stop: always` e' la riga che lo chiede: senza, una spinta deve
+ * fermarsi su *un* punto d'aggancio ma puo' saltarne quanti ne vuole.
+ *
+ * Chiedere non e' ottenere, ed e' bene saperlo scritto qui. Sul percorso della
+ * rotellina Chromium non lo applica: una spinta lunga il doppio di una scheda
+ * salta la seconda e arriva in fondo, con lo sbordo e senza, e lo faceva gia'
+ * prima che lo sbordo ci fosse. Il percorso del dito e' un altro, ed e' quello
+ * per cui la proprieta' esiste, ma da qui non si misura: i gesti sintetizzati
+ * via CDP su questa pagina non arrivano al documento. Quello che le sonde
+ * provano davvero e' `mandatory` — ogni sosta cade su un aggancio, mai a meta'
+ * scheda — e che la proprieta' sia dichiarata. Vedi NOTES.md D138.
+ */
+/*
+ * Il ritaglio lo fa `clip` sul blocco, non un `overflow` qui.
+ *
+ * Qui c'era `overflow: hidden`, ed e' la trappola di D103 rimessa in piedi: il
+ * filo del blocco vive su uno pseudo-elemento che sporge di un pixel oltre il
+ * border box — e' li' che cade la linea di griglia — mentre `overflow` ritaglia
+ * dal padding box. Il ritaglio si mangiava tutti e quattro i fili, e il blocco
+ * delle schede era l'unico senza bordo su mobile. `clip` sul blocco usa
+ * `clip-path: inset(-2px)`, che lascia proprio quei due pixel di franchigia.
  */
 .recipe-steps {
   display: flex;
-  /* Il ritaglio e' qui e non sul blocco: `clip` sul blocco taglierebbe i fili. */
-  overflow: hidden;
 }
 
 .recipe-steps__track {
   display: grid;
   /*
-   * Tre tracce larghe quanto la finestra, non quanto sette celle.
+   * Una cella di scheda successiva resta scoperta: e' l'unico invito a
+   * scorrere che il blocco ha, visto che la barra non c'e' e il disegno non
+   * prevede frecce ne' puntini.
    *
-   * `100%` e non `calc(var(--cell) * 8)`: il blocco ha un bordo trasparente da
-   * un pixel per lato (e' cosi' che regge il modello di scatola), quindi il suo
-   * box interno e' due pixel piu' stretto di otto celle. Con le celle la scheda
-   * sarebbe due pixel piu' larga della finestra, e di quei due pixel si
-   * vedrebbe una scheggia della successiva: cioe' esattamente il taglio che si
-   * sta togliendo.
+   * La misura parte da `100%` e non da `calc(var(--cell) * 8)` perche' il
+   * blocco ha un bordo trasparente da un pixel per lato (e' cosi' che regge il
+   * modello di scatola): il suo box interno e' due pixel piu' stretto di otto
+   * celle, e con le celle lo sbordo sarebbe di 41 pixel invece di 39.
    */
-  grid-template-columns: repeat(3, 100%);
+  grid-template-columns: repeat(3, calc(100% - var(--cell)));
   grid-template-rows: 100%;
   width: 100%;
   overflow-x: auto;
@@ -356,6 +370,19 @@
   padding: var(--pad);
   scroll-snap-align: start;
   scroll-snap-stop: always;
+}
+
+/*
+ * L'ultima scheda si ancora a destra, non a sinistra.
+ *
+ * Tre schede larghe 100% meno una cella non arrivano a tre schermate: la terza
+ * non puo' mai portare il proprio bordo sinistro a filo del blocco, quindi con
+ * `mandatory` il suo punto d'aggancio sarebbe irraggiungibile e il browser
+ * rimbalzerebbe indietro sulla seconda. Ancorandola a destra il punto cade
+ * esattamente a fine corsa. Lo sbordo si vede ancora, dall'altra parte.
+ */
+.recipe-steps__card:last-child {
+  scroll-snap-align: end;
 }
 
 /* Le misure del frame mobile: titolo 18, testo 14 (356:625, 356:626). */

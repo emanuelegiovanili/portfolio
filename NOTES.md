@@ -2525,7 +2525,10 @@ stava togliendo.
 
 **Resta aperto l'invito.** Quella mezza scheda era l'unico segnale che ce ne
 fossero altre due, e ora non c'e'. Su telefono lo si scopre trascinando; fra 720
-e 1199, dove il dito non c'e', si puo' non scoprirlo affatto. Vedi B27.
+e 1199, dove il dito non c'e', si puo' non scoprirlo affatto.
+
+**Chiuso da D138**: su richiesta del committente lo sbordo e' tornato, largo una
+cella. Questa decisione e' durata un giorno, ed e' giusto che si veda.
 
 ### D135. Due sfori che erano miei, non del sito
 
@@ -2542,6 +2545,81 @@ geometria anche quando non e' dipinta.
 Vale la pena scriverlo perche' e' la stessa forma degli errori veri di questa
 sessione, a parti invertite: **la misura guardava la cosa sbagliata**, e stavolta
 ha inventato un difetto invece di nasconderne uno.
+
+### D137. I bordi che non si vedevano su mobile, e la rassegna che non li vedeva nemmeno
+
+Il committente: "controlla anche i bordi perche' non li vedo su mobile". Due
+difetti veri, tutti e due in blocchi che nessuna sonda guardava.
+
+**Il primo e' mio, ed e' la trappola di D103 rimessa in piedi con le mie mani.**
+Il blocco delle tre schede di /about aveva `overflow: hidden`. I quattro fili di
+un blocco vivono su uno pseudo-elemento che sporge di un pixel oltre il border
+box, perche' e' li' che cade la linea di griglia, e `overflow` ritaglia dal
+padding box: se li mangiava tutti e quattro. Il ritaglio giusto e' `clip` sul
+blocco, che usa `clip-path: inset(-2px)` e lascia proprio quei due pixel. Lo
+avevo scritto in `grid.css` in venti righe di commento, e tre giorni dopo ho
+scritto `overflow: hidden` due file piu' in la'.
+
+**Il secondo e' D112 di nuovo**: a base il ritratto comincia sulla riga dove
+finisce il titolo di pagina, viene dopo nel documento, e a parita' di z-index
+vince l'ultimo. La fotografia copriva il filo basso del titolo. Rimedio gia' in
+casa: `is-over`.
+
+**Ma la parte che vale e' la terza.** Ho scritto una rassegna che guarda tutti i
+blocchi bordati di tutte le rotte a 390, e prima di funzionare ha sbagliato in
+tutti e tre i modi possibili.
+
+*Ha misurato niente.* Il megamenu chiuso resta un rettangolo grande quanto la
+finestra, e l'esclusione dei blocchi viola lo prendeva per una copertura: ogni
+punto di ogni blocco cancellato, zero lati guardati, cinque "ok" di fila. Da qui
+il conto dei lati e il conto dei blocchi mai misurati, stampati sempre: **una
+rassegna vuota e una rassegna pulita si scrivono uguale.**
+
+*Si e' inventata difetti.* I fili si disegnano sullo scroll e chiudono il giro
+quando il bordo alto arriva al 25% della finestra. Misurando ogni blocco intero
+nella finestra si misurano lati a meta': diciassette "lati senza filo" in una
+passata, tutti inesistenti. Poi, corretto quello, altri sessantatre: misuravo il
+rettangolo in un fotogramma e prendevo lo scatto nel successivo, con
+ScrollSmoother ancora in frenata. Ora si aspetta che **quel** blocco abbia
+chiuso il giro e che la pagina sia ferma per due letture di fila.
+
+*Ha dichiarato pulito un difetto vero.* Il test del pixel chiedeva "e' scuro?".
+La fotografia del ritratto, li', e' scura. Passava. Il filo e' opaco e ha un
+colore solo: ora si pretende `#504D5C` con la tolleranza di sempre, ed e' cosi'
+che il difetto del ritratto si fa prendere.
+
+Ogni correzione e' stata verificata rimettendo il difetto: con `overflow` la
+rassegna segnala quattro lati su quattro, con il ritratto scoperto segnala
+`page-title · basso = 75,65,55`. Senza quella prova sarebbe una sonda che dice
+"ok" e non vuol dire niente, che e' peggio di nessuna sonda.
+
+Stato finale: 104 blocchi, 384 lati, cinque rotte, a 390. Cinquanta secondi.
+
+### D138. Lo sbordo torna, e una promessa di ieri era piu' grande del vero
+
+Il committente: "facciamo andare le card in overflow, cosi' da dare un nudge a
+scrollarle". E' il contrario della richiesta di ieri (D136), e la ragione e'
+quella scritta in D136: senza taglio non c'e' nessun segnale che ci siano altre
+due schede. Lo sbordo e' una cella esatta, `calc(100% - var(--cell))`.
+
+L'ultima scheda si ancora **a destra** e non a sinistra. Tre schede piu' strette
+del blocco non fanno tre schermate: il terzo aggancio ancorato a sinistra non e'
+raggiungibile, e con `mandatory` il browser rimbalza sulla seconda. Ancorata a
+destra l'aggancio cade a fine corsa, e lo sbordo si vede dall'altra parte.
+
+**E una correzione.** Ieri ho scritto che `scroll-snap-stop: always` da' una
+scheda per gesto. Non e' vero, e non lo era nemmeno ieri. Una spinta di rotellina
+lunga il doppio di una scheda salta la seconda e arriva in fondo, con lo sbordo e
+senza. La sonda di ieri passava solo perche' partiva gia' dalla seconda scheda,
+dove la fine era a un passo: non stava mettendo alla prova niente.
+
+Il percorso del dito e' un altro, ed e' quello per cui la proprieta' esiste, ma
+da qui non si misura: i gesti sintetizzati via CDP su questa pagina non arrivano
+al documento, provato anche in verticale con la pagina che non si muove. Quindi
+non lo so, e non lo scrivo come se lo sapessi. Le sonde provano `mandatory` —
+ogni sosta cade su un aggancio, mai a meta' scheda — e che la proprieta' sia
+dichiarata. **Resta possibile che su telefono una sberla molto decisa salti la
+seconda scheda, e nessuna sonda se ne accorgerebbe.**
 
 ---
 
@@ -2569,5 +2647,5 @@ ha inventato un difetto invece di nasconderne uno.
 | B21 | **`emanuelegiovanili.it` non e' registrato** | Il form apre un `mailto:` verso `hello@emanuelegiovanili.it` (D90). Finche' il dominio non c'e', quelle mail non arrivano da nessuna parte |
 | B22 | **Il megamenu lascia piu' nero vuoto in fondo** | Conseguenza dei social alti una cella (D89): il pannello e' ancorato in alto e si e' accorciato di una riga. A base finisce a meta' schermo. Se non piace, si redistribuisce, ma quella e' una decisione di disegno |
 | B26 | **Il font display non ha i glifi accentati** | `getai-black.woff2` e' un sottoinsieme senza `U+00C0-U+00FF`: "TAMA caffe'" e' l'unico titolo che ne abbia bisogno oggi, e la sua "e" esce in Poppins Bold per il ripiego di D129. Serve al committente un export dal fornitore che includa almeno il latino esteso; poi si sostituisce il `.woff2`, si toglie `Poppins` da `--font-display`, si rimette il `unicode-range` del fallback a tutto e si svuota `GLIFI_NOTI` in `verify-type.mjs`. Tre righe |
-| B27 | **Il carosello delle schede non dice di esserlo** | Da D136 nessuna scheda e' tagliata, e con il taglio e' sparito l'unico segnale che ce ne siano altre due. Su telefono si scopre trascinando; fra 720 e 1199, senza swipe, si puo' non scoprirlo. Tre strade — due frecce come sugli altri caroselli (l'unica che funziona anche senza dito), tre puntini, o niente — ed e' UI che il Figma non disegna, quindi la decisione e' del committente |
+| B28 | **Una sberla molto decisa puo' saltare la seconda scheda di /about** | `scroll-snap-stop: always` e' dichiarato, ma sul percorso della rotellina Chromium non lo applica e da qui il percorso del dito non si misura (D138). Le schede sono tre e il salto possibile e' uno solo, quindi il danno massimo e' leggere il terzo passaggio senza il secondo. Si chiude con un test su un telefono vero, o rinunciando al nativo e scrivendo lo scorrimento a mano, che e' peggio |
 | B23 | **Safari resta un punto cieco** | Il motore WebKit non e' scaricabile (CDN di Playwright fuori dalla policy di uscita), quindi ogni sonda parla di Chromium. `verify:webkit` (D104) copre **una** differenza, quella costata la caccia di D101-D103, e non va spacciato per una verifica su Safari. Il difetto dei bordi e' chiuso e confermato dal committente sul suo dispositivo |

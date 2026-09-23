@@ -32,6 +32,7 @@
 const PAGE_GRID = '#smooth-content .grid';
 
 import { chromium } from 'playwright';
+import sharp from 'sharp';
 import { startDevServer, CHROMIUM } from './dev-server.mjs';
 
 const ROUTE = process.argv[2] ?? '/';
@@ -290,13 +291,23 @@ try {
   /*
    * Il carosello delle tre schede di /about, a base.
    *
-   * Tre promesse, e tutte e tre si rompono in silenzio: nessuna scheda
-   * tagliata, un gesto una scheda, e la corsa lunga tre schede. La seconda e'
-   * quella che si perde per prima — basta togliere `scroll-snap-stop: always`
-   * e una spinta decisa vola in fondo, che a schermo somiglia a uno
-   * scorrimento normale invece che a un difetto.
+   * Quattro promesse, e si rompono tutte in silenzio: lo sbordo che invita a
+   * scorrere, un gesto una scheda, l'ultima scheda raggiungibile intera, e i
+   * quattro fili del blocco.
+   *
+   * Lo sbordo e' l'unico invito che c'e': senza barra, senza frecce e senza
+   * puntini, una scheda larga quanto il blocco sembra tutto il contenuto.
+   *
+   * L'ultima scheda e' il prezzo dello sbordo: tre schede piu' strette del
+   * blocco non arrivano a tre schermate, quindi il terzo punto d'aggancio non
+   * e' raggiungibile ancorato a sinistra e `mandatory` rimbalza indietro. Si
+   * ancora a destra, e questa sonda e' l'unica cosa che se ne accorge.
+   *
+   * I fili sono la lezione di D103 ripetuta: un `overflow` qualsiasi sul
+   * blocco ritaglia dal padding box e si mangia lo pseudo-elemento dove i
+   * quattro fili vivono. Qui si guardano i pixel dipinti, non le variabili.
    */
-  console.log('\nLe schede di /about: una alla volta, e nessuna tagliata?');
+  console.log('\nLe schede di /about: una alla volta, e con i suoi bordi?');
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 1200 }, deviceScaleFactor: 1 });
     const page = await context.newPage();
@@ -304,8 +315,13 @@ try {
     page.on('pageerror', (e) => errors.push(String(e)));
     await page.goto(server.base + '/about', { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
-    await page.evaluate(() => document.querySelector('.recipe-steps')?.scrollIntoView({ block: 'center' }));
-    await page.waitForTimeout(2200);
+    // Mai `scrollIntoView` dentro allo smoother: sposta il wrapper invece della
+    // pagina e lascia tutto fermo a meta' animazione (NOTES.md D122).
+    await page.evaluate(() => {
+      const b = document.querySelector('.recipe-steps');
+      if (b) window.scrollTo(0, window.scrollY + b.getBoundingClientRect().top - 200);
+    });
+    await page.waitForTimeout(2400);
 
     const misura = await page.evaluate(() => {
       const blocco = document.querySelector('.recipe-steps');
@@ -318,52 +334,114 @@ try {
         schede: schede.length,
         larghezzaScheda: schede[0].getBoundingClientRect().width,
         finestra: fb.width,
+        cella: parseFloat(getComputedStyle(document.querySelector('.grid')).getPropertyValue('--cell')),
         corsa: binario.scrollWidth,
         visibili: schede.filter((s) => {
           const b = s.getBoundingClientRect();
           return b.left < bb.right - 1 && b.right > bb.left + 1;
         }).length,
         stop: getComputedStyle(schede[0]).scrollSnapStop,
+        tipo: getComputedStyle(binario).scrollSnapType,
+        ultimaAncora: getComputedStyle(schede.at(-1)).scrollSnapAlign,
       };
     });
 
     if (misura === null) {
       check('il carosello delle schede esiste', false, 'blocco o binario assenti');
     } else {
+      const sbordo = misura.finestra - misura.larghezzaScheda;
       check(
-        'la scheda e\' larga quanto la finestra: nessuna tagliata',
-        Math.abs(misura.larghezzaScheda - misura.finestra) < 0.5 && misura.visibili === 1,
-        `scheda ${misura.larghezzaScheda.toFixed(2)} su finestra ${misura.finestra.toFixed(2)}, visibili ${misura.visibili}`,
+        'la scheda sborda di una cella: si vede che ce n\'e\' un\'altra',
+        Math.abs(sbordo - misura.cella) < 0.5 && misura.visibili === 2,
+        `sbordo ${sbordo.toFixed(2)} contro cella ${misura.cella}, schede in vista ${misura.visibili}`,
       );
       check(
         'la corsa e\' lunga quanto le schede che ci sono',
-        Math.abs(misura.corsa - misura.finestra * misura.schede) < 2,
-        `${misura.corsa} contro ${(misura.finestra * misura.schede).toFixed(0)}`,
+        Math.abs(misura.corsa - misura.larghezzaScheda * misura.schede) < 2,
+        `${misura.corsa} contro ${(misura.larghezzaScheda * misura.schede).toFixed(0)}`,
       );
 
-      const posizione = () =>
+      const passo = () =>
         page.evaluate(() => {
           const t = document.querySelector('.recipe-steps__track');
-          return t.scrollLeft / t.getBoundingClientRect().width;
+          const s = t.querySelector('.recipe-steps__card').getBoundingClientRect().width;
+          return { schede: t.scrollLeft / s, fine: t.scrollLeft >= t.scrollWidth - t.clientWidth - 1 };
         });
       const centro = await page.evaluate(() => {
         const b = document.querySelector('.recipe-steps__track').getBoundingClientRect();
         return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
       });
       await page.mouse.move(centro.x, centro.y);
-      await page.mouse.wheel(200, 0);
-      await page.waitForTimeout(1200);
-      const dopoPiccola = await posizione();
-      // Molto piu' di una scheda: senza `scroll-snap-stop` arriverebbe in fondo.
+      await page.mouse.wheel(300, 0);
+      await page.waitForTimeout(1500);
+      const dopoUna = await passo();
       await page.mouse.wheel(2000, 0);
       await page.waitForTimeout(1500);
-      const dopoGrande = await posizione();
+      const dopoDue = await passo();
 
-      check('una spinta misurata avanza di una scheda', Math.abs(dopoPiccola - 1) < 0.05, `e\' a ${dopoPiccola.toFixed(2)}`);
       check(
-        'e una spinta decisa avanza di una sola lo stesso',
-        Math.abs(dopoGrande - 2) < 0.05,
-        `e\' a ${dopoGrande.toFixed(2)} invece che a 2 (scroll-snap-stop: ${misura.stop})`,
+        'una spinta avanza di una scheda sola',
+        Math.abs(dopoUna.schede - 1) < 0.05,
+        `e\' a ${dopoUna.schede.toFixed(2)} schede (scroll-snap-stop: ${misura.stop})`,
+      );
+      check(
+        'e l\'ultima scheda si raggiunge intera',
+        dopoDue.fine && dopoDue.schede > 1.5,
+        `e\' a ${dopoDue.schede.toFixed(2)} schede, fine corsa ${dopoDue.fine} (ancora: ${misura.ultimaAncora})`,
+      );
+      /*
+       * `mandatory` e' la promessa che si puo' davvero misurare da qui: dove
+       * che si fermi, si ferma su un aggancio, mai a meta' di una scheda.
+       *
+       * `scroll-snap-stop: always` invece questa sonda **non lo prova**. Una
+       * spinta di rotellina lunga il doppio di una scheda salta la seconda e
+       * arriva in fondo, con lo sbordo e senza, e lo faceva gia' prima che lo
+       * sbordo ci fosse: sul percorso della rotellina Chromium non lo applica.
+       * Il percorso del dito e' un altro, ed e' quello per cui la proprieta'
+       * esiste, ma i gesti sintetizzati via CDP su questa pagina non arrivano
+       * al documento (provato anche in verticale: la pagina non si muove). Si
+       * controlla quindi che la proprieta' ci sia, e il limite sta in NOTES.md
+       * D138.
+       */
+      const agganci = [0, misura.larghezzaScheda, misura.corsa - misura.finestra];
+      const fermo = dopoDue.schede * misura.larghezzaScheda;
+      check(
+        'ogni sosta cade su un aggancio, mai a meta\' scheda',
+        agganci.some((a) => Math.abs(fermo - a) < 1) && misura.tipo === 'x mandatory',
+        `fermo a ${fermo.toFixed(1)} fra ${agganci.map((a) => a.toFixed(0)).join(', ')} (${misura.tipo})`,
+      );
+      check(
+        'la scheda chiede al browser di fermarsi su ognuna',
+        misura.stop === 'always',
+        `scroll-snap-stop: ${misura.stop}`,
+      );
+
+      const fili = await page.evaluate(() => {
+        const b = document.querySelector('.recipe-steps').getBoundingClientRect();
+        // Il filo destro e quello basso cadono **fuori** dal border box, sulla
+        // linea di griglia che chiude il blocco (NOTES.md D61).
+        return {
+          alto: [Math.round(b.left + b.width / 2), Math.round(b.top)],
+          sinistro: [Math.round(b.left), Math.round(b.top + b.height / 2)],
+          destro: [Math.round(b.right), Math.round(b.top + b.height / 2)],
+          basso: [Math.round(b.left + b.width / 2), Math.round(b.bottom)],
+        };
+      });
+      const scatto = await page.screenshot({ clip: { x: 0, y: 0, width: 390, height: 1200 } });
+      const { data, info } = await sharp(scatto).raw().toBuffer({ resolveWithObject: true });
+      const pixel = ([x, y]) => {
+        const o = (y * info.width + x) * info.channels;
+        return [data[o], data[o + 1], data[o + 2]];
+      };
+      // Il colore del filo, non "un colore scuro": una fotografia scura sopra
+      // alla linea passerebbe la soglia larga. Vedi verify-edges.mjs.
+      const RULE = [0x50, 0x4d, 0x5c];
+      const eFilo = (p) => p.every((c, i) => Math.abs(c - RULE[i]) <= 12);
+      const rotti = Object.entries(fili).filter(([, punto]) => !eFilo(pixel(punto)));
+      check(
+        'il blocco delle schede dipinge tutti e quattro i fili',
+        rotti.length === 0,
+        rotti.map(([lato, punto]) => `${lato}: ${pixel(punto).join(',')}`).join(' | '),
       );
     }
     check('nessun errore in console', errors.length === 0, errors[0] ?? '');

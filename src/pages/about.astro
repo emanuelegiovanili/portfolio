@@ -51,7 +51,7 @@ const mix = await playlist(SPOTIFY.id, {
   <Grid map={map} tiers={["base", "md", "lg"]} class="about-grid">
     <Header current="/about" />
 
-    <Block at={aboutBlocks.aboutTitle} class="page-title" clip>
+    <Block at={aboutBlocks.aboutTitle} class="page-title is-over" clip>
       <h1 class="t-display t-display--page">About</h1>
     </Block>
 
@@ -114,7 +114,7 @@ const mix = await playlist(SPOTIFY.id, {
       esattamente. Lo scorrimento sta sul binario **dentro** al blocco:
       `overflow` su un blocco gli ritaglia i quattro fili (D103, D107).
     */}
-    <Block at={aboutBlocks.recipeSteps} class="recipe-steps">
+    <Block at={aboutBlocks.recipeSteps} class="recipe-steps" clip>
       <div class="recipe-steps__track">
         {RECIPE.map((passo) => (
           <article class="recipe-steps__card">
