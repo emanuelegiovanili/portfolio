@@ -2621,6 +2621,47 @@ ogni sosta cade su un aggancio, mai a meta' scheda — e che la proprieta' sia
 dichiarata. **Resta possibile che su telefono una sberla molto decisa salti la
 seconda scheda, e nessuna sonda se ne accorgerebbe.**
 
+### D139. Il bordo fra le schede, e perche' sette celle non sono 271 pixel
+
+Il committente: "sulla versione online non vedo il separatore tra le card".
+
+Non era un separatore da inventare. `get_design_context` su 356:623 dice
+`border border-[var(--dark-grey,#504d5c)] border-solid`: **ogni scheda nel file
+ha il suo bordo su tutti e quattro i lati**, e quella che si vede in mezzo sono
+due bordi affiancati. Lo avevo tolto in D136 con una motivazione che suonava
+bene — "la scheda riempie il blocco, il contorno lo disegna il blocco, un
+meccanismo in meno" — e che era vera solo finche' le schede erano larghe quanto
+la finestra. Rimesso lo sbordo, il file torna ad avere ragione.
+
+Qui il contorno resta del blocco e alle schede va il **solo bordo destro**, uno
+per confine. Il sinistro della prima cadrebbe sul pixel 40, accanto al filo
+sinistro del blocco che sta sul 39: e' il bordo doppio di D61, di nuovo.
+
+**E la scheda passa da 271 a 273.** Il file le fa larghe 273 a 0, 273 e 546:
+sette celle esatte. Io avevo scritto `100% - una cella`, che dentro un blocco
+col bordo trasparente da un pixel per lato fa 271. Due pixel invisibili, e
+cambiano tutto:
+
+- a 273 il bordo fra prima e seconda cade sul pixel **312**, che e' una linea di
+  griglia. A 271 cade sul 310, accanto alla linea: due righe appaiate, una
+  scura e una chiara.
+- scorrendo di una scheda, quel bordo arriva sul pixel **39** — cioe'
+  esattamente **sopra** al filo sinistro del blocco, non di fianco. A 271
+  arrivava sul 38 e la riga diventava spessa due.
+
+La sonda guarda tutte e tre le cose insieme, in due posizioni: il pixel dipinge
+il colore del filo, cade su una linea di griglia, e **quello accanto non e'
+filo**. L'ultimo controllo e' quello che serve: due righe scure appaiate e una
+sola si distinguono solo guardando il vicino.
+
+Resta uno scostamento, e sta scritto qui perche' e' l'unico: nella posizione di
+fine corsa l'ultima scheda e' ancorata a destra, e il bordo fra seconda e terza
+cade sul pixel 76 invece che sul 78. Due pixel, in una sola delle tre soste. Per
+azzerarlo servirebbe una coda vuota da trentasette pixel in fondo al binario, e
+il prezzo e' che nella sosta finale la seconda scheda sparisce del tutto: si
+perderebbe l'unico segnale che dietro c'e' altro, cioe' proprio quello per cui
+lo sbordo e' tornato.
+
 ---
 
 ## 5. Blocchi aperti

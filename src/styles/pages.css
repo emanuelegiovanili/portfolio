@@ -286,12 +286,14 @@
  * sbordo e' tornato, misurato in una cella.
  *
  * ---------------------------------------------------------------------------
- * I FILI SONO DEL BLOCCO, NON DELLE SCHEDE
+ * IL CONTORNO E' DEL BLOCCO, LA RIGA IN MEZZO E' DELLE SCHEDE
  *
- * Le schede non hanno contorno proprio: a disegnarlo e' il blocco, con il
- * meccanismo di `grid.css` che le sonde a pixel gia' verificano. Lo sbordo non
- * cambia niente qui, perche' quello che si vede della scheda successiva e' il
- * suo testo, non un suo bordo. Un meccanismo in meno da tenere allineato.
+ * Nel file ogni scheda ha il suo bordo su tutti e quattro i lati (356:623), e
+ * fra due schede se ne vedono due affiancati: e' quella riga che il committente
+ * cercava. Qui il contorno lo disegna il blocco, con il meccanismo di
+ * `grid.css` che le sonde a pixel gia' verificano, e alle schede resta il solo
+ * bordo destro, uno per confine. La nota sotto a `.recipe-steps__card` spiega
+ * perche' e' il destro e non il sinistro.
  *
  * Lo scorrimento resta sul **binario dentro** al blocco e non sul blocco:
  * `overflow` su un `.block` gli ritaglia i quattro fili al padding box, ed e' il
@@ -330,16 +332,21 @@
 .recipe-steps__track {
   display: grid;
   /*
-   * Una cella di scheda successiva resta scoperta: e' l'unico invito a
-   * scorrere che il blocco ha, visto che la barra non c'e' e il disegno non
-   * prevede frecce ne' puntini.
+   * Sette celle per scheda, la misura del file.
    *
-   * La misura parte da `100%` e non da `calc(var(--cell) * 8)` perche' il
-   * blocco ha un bordo trasparente da un pixel per lato (e' cosi' che regge il
-   * modello di scatola): il suo box interno e' due pixel piu' stretto di otto
-   * celle, e con le celle lo sbordo sarebbe di 41 pixel invece di 39.
+   * 356:623, 356:627 e 382:3809 sono larghe 273 e stanno a 0, 273 e 546: sette
+   * celle esatte. Quello che avanza della finestra — trentasette pixel a base —
+   * e' la scheda successiva scoperta, cioe' l'unico invito a scorrere che il
+   * blocco ha, visto che la barra non c'e' e il disegno non prevede frecce ne'
+   * puntini.
+   *
+   * Sette celle e non `100% - una cella`: il blocco ha un bordo trasparente da
+   * un pixel per lato, quindi il suo box interno e' due pixel piu' stretto di
+   * otto celle, e la scheda ne uscirebbe larga 271. Due pixel invisibili, ma
+   * con 271 il bordo fra le schede cade **accanto** alla linea di griglia
+   * invece che sopra, ed e' tutto il punto (vedi la nota sul bordo qui sotto).
    */
-  grid-template-columns: repeat(3, calc(100% - var(--cell)));
+  grid-template-columns: repeat(3, calc(var(--cell) * 7));
   grid-template-rows: 100%;
   width: 100%;
   overflow-x: auto;
@@ -368,8 +375,38 @@
   gap: calc(var(--u) * 12);
   min-width: 0;
   padding: var(--pad);
+  position: relative;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+}
+
+/*
+ * Il bordo fra una scheda e l'altra.
+ *
+ * Nel file ogni scheda ha il suo bordo su tutti e quattro i lati, in
+ * `--dark-grey` (356:623). Qui se ne disegna uno solo, il destro, e non per
+ * pigrizia: il bordo sinistro della prima scheda cadrebbe sul pixel 40, cioe'
+ * **accanto** al filo sinistro del blocco che sta sul 39, ed e' il bordo doppio
+ * di D61. Il blocco i suoi quattro fili li ha gia'; quello che manca al disegno
+ * e' la riga in mezzo, e in mezzo ci sono solo due confini.
+ *
+ * Sta sull'ultimo pixel della scheda, non fuori, e con la scheda larga sette
+ * celle quel pixel e' 312 a base: una linea di griglia. E quando si scorre di
+ * una scheda, lo stesso bordo finisce sul pixel 39, cioe' esattamente **sopra**
+ * al filo sinistro del blocco invece di raddoppiarlo. Con 271 non tornava
+ * nessuna delle due.
+ *
+ * Su uno pseudo-elemento e non un `border-right`: nel file il testo e' largo
+ * 233 su 273, cioe' venti di padding per lato e il bordo sopra al padding. Un
+ * `border` vero si mangerebbe un pixel di testo.
+ */
+.recipe-steps__card:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: var(--line);
+  background: var(--rule-color);
+  pointer-events: none;
 }
 
 /*

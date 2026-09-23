@@ -335,6 +335,8 @@ try {
         larghezzaScheda: schede[0].getBoundingClientRect().width,
         finestra: fb.width,
         cella: parseFloat(getComputedStyle(document.querySelector('.grid')).getPropertyValue('--cell')),
+        grigliaL: document.querySelector('#smooth-content .grid').getBoundingClientRect().left,
+        bloccoL: blocco.getBoundingClientRect().left,
         corsa: binario.scrollWidth,
         visibili: schede.filter((s) => {
           const b = s.getBoundingClientRect();
@@ -351,9 +353,14 @@ try {
     } else {
       const sbordo = misura.finestra - misura.larghezzaScheda;
       check(
-        'la scheda sborda di una cella: si vede che ce n\'e\' un\'altra',
-        Math.abs(sbordo - misura.cella) < 0.5 && misura.visibili === 2,
-        `sbordo ${sbordo.toFixed(2)} contro cella ${misura.cella}, schede in vista ${misura.visibili}`,
+        'la scheda e\' larga sette celle, come nel file',
+        Math.abs(misura.larghezzaScheda - misura.cella * 7) < 0.5,
+        `${misura.larghezzaScheda.toFixed(2)} invece di ${(misura.cella * 7).toFixed(2)} (356:623)`,
+      );
+      check(
+        'e quella dopo resta scoperta: si vede che ce n\'e\' un\'altra',
+        sbordo > 1 && misura.visibili === 2,
+        `scoperti ${sbordo.toFixed(2)}px, schede in vista ${misura.visibili}`,
       );
       check(
         'la corsa e\' lunga quanto le schede che ci sono',
@@ -443,6 +450,53 @@ try {
         rotti.length === 0,
         rotti.map(([lato, punto]) => `${lato}: ${pixel(punto).join(',')}`).join(' | '),
       );
+
+      /*
+       * E il bordo fra una scheda e l'altra, che nel file c'e' (356:623) e qui
+       * e' stato assente per un giorno intero.
+       *
+       * Due posizioni, perche' sono due promesse diverse. A riposo il bordo
+       * deve cadere **su** una linea di griglia, e ci cade solo se la scheda e'
+       * larga sette celle esatte: con 271 finiva accanto, che e' il bordo
+       * doppio di D61. Scorrendo di una scheda, lo stesso bordo arriva a filo
+       * sinistro del blocco e deve **coprire** quel filo, non affiancarlo: il
+       * campione guarda anche il pixel accanto, perche' due righe scure
+       * appaiate e una sola si distinguono solo cosi'.
+       */
+      for (const [dove, quanto] of [['a riposo', 0], ['scorsa di una scheda', misura.larghezzaScheda]]) {
+        await page.evaluate((v) => {
+          document.querySelector('.recipe-steps__track').scrollLeft = v;
+        }, quanto);
+        await page.waitForTimeout(1200);
+        const bordi = await page.evaluate(() => {
+          const t = document.querySelector('.recipe-steps__track');
+          const b = document.querySelector('.recipe-steps').getBoundingClientRect();
+          return [...t.querySelectorAll('.recipe-steps__card')]
+            .slice(0, -1)
+            .map((c) => Math.round(c.getBoundingClientRect().right) - 1)
+            .filter((x) => x >= b.left - 1 && x <= b.right)
+            .map((x) => ({ x, y: Math.round(b.top + b.height / 2) }));
+        });
+        const foto = await sharp(await page.screenshot()).raw().toBuffer({ resolveWithObject: true });
+        const punto = (x, y) => {
+          const o = (y * foto.info.width + x) * foto.info.channels;
+          return [foto.data[o], foto.data[o + 1], foto.data[o + 2]];
+        };
+        const guasti = bordi.flatMap(({ x, y }) => {
+          const sopra = (x - misura.grigliaL) / misura.cella;
+          const fuoriLinea = Math.abs(sopra - Math.round(sopra)) > 0.02;
+          const male = [];
+          if (!eFilo(punto(x, y))) male.push(`x=${x} dipinge ${punto(x, y).join(',')}`);
+          if (fuoriLinea) male.push(`x=${x} non cade su una linea (${sopra.toFixed(2)} celle)`);
+          if (eFilo(punto(x - 1, y))) male.push(`x=${x} e' doppio: anche ${x - 1} e' filo`);
+          return male;
+        });
+        check(
+          `il bordo fra le schede ${dove}: dipinto, sulla linea, e singolo`,
+          bordi.length > 0 && guasti.length === 0,
+          bordi.length === 0 ? 'nessun bordo in vista' : guasti.join(' | '),
+        );
+      }
     }
     check('nessun errore in console', errors.length === 0, errors[0] ?? '');
     await context.close();
