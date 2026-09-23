@@ -2662,6 +2662,41 @@ il prezzo e' che nella sosta finale la seconda scheda sparisce del tutto: si
 perderebbe l'unico segnale che dietro c'e' altro, cioe' proprio quello per cui
 lo sbordo e' tornato.
 
+### D140. Chi taglia la scheda successiva: il blocco o lo schermo
+
+Il committente: "la card successiva viene tagliata, mentre io vorrei che
+continuino a vedersi anche se escono dallo schermo, venendo tagliate da esso".
+
+Aveva ragione, e il file glielo dava. `get_design_context` su 356:622 dice che
+il contenitore "Steps" **non ha ne' bordo ne' fondo**: e' una riga nuda, larga
+818, che parte da x=40 e la taglia il frame a 390. La seconda scheda nel file si
+vede per settantasette pixel. Da noi se ne vedevano trentasette, perche' il
+blocco che le contiene si fermava a otto colonne — a 351 — e a tagliare era il
+suo bordo destro, non lo schermo.
+
+Il blocco passa a **nove colonne**, cioe' fino al bordo destro della griglia.
+E' l'unico blocco della pagina che non lascia l'ultima colonna di margine, ed e'
+voluto: il resto della pagina sta in otto, questa riga no perche' nel file
+sborda. Lo sbordo diventa settantasei pixel, due celle, e il taglio cade dove il
+committente lo vuole.
+
+`--edge-x` fa il resto da solo: sul bordo della griglia il filo destro rientra
+di un pixel invece di cadere fuori dal contenitore. La sonda no — campionava a
+`right` e leggeva un pixel che non c'e', esattamente l'errore che la rassegna di
+D137 aveva gia' imparato a non fare. Ora `verify:motion` ha la stessa logica di
+bordo di `verify-edges`.
+
+**Uno scostamento dichiarato.** Nel file la riga e' tagliata dal frame e basta,
+senza filo; da noi il blocco disegna il suo filo destro sull'ultimo pixel utile,
+il 389. E' un pixel scuro a filo di schermo, dove la griglia ha comunque la sua
+ultima linea, ed e' quello che fa ogni altro blocco che tocca il bordo. Toglierlo
+vorrebbe dire dare a questo blocco un contorno diverso da tutti gli altri.
+
+**E una cosa che il file ha e noi no**, scritta perche' non venga scoperta due
+volte: la terza scheda nel file e' alta 312 e non 351 (382:3809). Le nostre sono
+tutte uguali da D136 e il committente non l'ha mai segnalato, quindi resta cosi';
+ma e' uno scostamento, non una svista del file.
+
 ---
 
 ## 5. Blocchi aperti

@@ -335,10 +335,12 @@
    * Sette celle per scheda, la misura del file.
    *
    * 356:623, 356:627 e 382:3809 sono larghe 273 e stanno a 0, 273 e 546: sette
-   * celle esatte. Quello che avanza della finestra — trentasette pixel a base —
-   * e' la scheda successiva scoperta, cioe' l'unico invito a scorrere che il
-   * blocco ha, visto che la barra non c'e' e il disegno non prevede frecce ne'
-   * puntini.
+   * celle esatte. Quello che avanza della finestra — settantasei pixel a base,
+   * perche' il blocco arriva al bordo destro della griglia — e' la scheda
+   * successiva scoperta, cioe' l'unico invito a scorrere che il blocco ha,
+   * visto che la barra non c'e' e il disegno non prevede frecce ne' puntini.
+   * A tagliarla e' il bordo dello schermo, come nel file: vedi la nota sullo
+   * span in `src/lib/blocks/pages.ts`.
    *
    * Sette celle e non `100% - una cella`: il blocco ha un bordo trasparente da
    * un pixel per lato, quindi il suo box interno e' due pixel piu' stretto di

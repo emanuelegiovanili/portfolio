@@ -66,8 +66,16 @@ export const aboutBlocks = mdComeBase({
    * A base le tre schede stanno in una riga sola, e la riga e' piu' larga
    * della finestra: 21 colonne dentro a 10 (356:622, largo 818 in un frame da
    * 390). E' il blocco che la contiene, alto nove righe come le schede.
+   *
+   * Nove colonne e non otto, cioe' fino al bordo destro della griglia. Tutti
+   * gli altri blocchi della pagina stanno in otto e lasciano l'ultima colonna
+   * di margine; questo no, perche' nel file la riga parte dal margine sinistro
+   * e la taglia il frame a 390, non un contenitore a 351. Con otto colonne la
+   * scheda successiva si vedeva per trentasette pixel invece che per
+   * settantasei, e a tagliarla era il bordo del blocco: il committente l'ha
+   * visto subito. Vedi NOTES.md D140.
    */
-  recipeSteps: { base: [2, 39, 8, 9] },
+  recipeSteps: { base: [2, 39, 9, 9] },
   recipeOne: { lg: [3, 13, 3, 4] },
   recipeBlender: { lg: [6, 13, 1, 1] },
   recipeThree: { lg: [9, 13, 3, 4] },

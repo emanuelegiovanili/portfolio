@@ -424,14 +424,20 @@ try {
       );
 
       const fili = await page.evaluate(() => {
-        const b = document.querySelector('.recipe-steps').getBoundingClientRect();
+        const el = document.querySelector('.recipe-steps');
+        const b = el.getBoundingClientRect();
         // Il filo destro e quello basso cadono **fuori** dal border box, sulla
-        // linea di griglia che chiude il blocco (NOTES.md D61).
+        // linea di griglia che chiude il blocco (NOTES.md D61) — salvo sul
+        // bordo della griglia, dove rientrano di un pixel come fa l'ultima
+        // linea, perche' fuori cadrebbero oltre il contenitore (--edge-x).
+        const g = el.closest('.grid').getBoundingClientRect();
+        const bordoX = b.right >= g.right - 0.5 ? 1 : 0;
+        const bordoY = b.bottom >= g.bottom - 0.5 ? 1 : 0;
         return {
           alto: [Math.round(b.left + b.width / 2), Math.round(b.top)],
           sinistro: [Math.round(b.left), Math.round(b.top + b.height / 2)],
-          destro: [Math.round(b.right), Math.round(b.top + b.height / 2)],
-          basso: [Math.round(b.left + b.width / 2), Math.round(b.bottom)],
+          destro: [Math.round(b.right) - bordoX, Math.round(b.top + b.height / 2)],
+          basso: [Math.round(b.left + b.width / 2), Math.round(b.bottom) - bordoY],
         };
       });
       const scatto = await page.screenshot({ clip: { x: 0, y: 0, width: 390, height: 1200 } });
