@@ -49,8 +49,10 @@ export const RECIPE = [
  *
  * `playlist` e `count` sono **ripieghi**: il valore vero lo legge la build da
  * Spotify (`src/lib/spotify.ts`), e questi due restano per quando le credenziali
- * non ci sono — in locale, sempre — o la lettura fallisce. Sono i valori del
- * Figma, quindi il peggio che possa capitare e' la pagina di prima.
+ * non ci sono — in locale, sempre — o la lettura fallisce. Finche' l'API resta
+ * chiusa (B4: vuole un account Premium) sono gli unici valori che la pagina
+ * vede, quindi li da' il committente e invecchiano con la playlist: quando
+ * cambia, si cambiano qui.
  *
  * `heading` no, quello e' scritto nel disegno: "Now playing" e' il titolo della
  * sezione, non il brano in ascolto. Una playlist ferma non sa cosa sto
@@ -64,8 +66,8 @@ export const SPOTIFY = {
   heading: 'Now playing',
   action: 'Play now on Spotify',
   /** L'id della playlist, l'unica cosa che la build usa davvero. */
-  id: '5O4DY0tPikApfk7UvqMAJx',
+  id: '6ilF0yNkzBFGdNdLmxHaO4',
   playlist: 'Let me cook',
-  count: '32 songs',
-  href: 'https://open.spotify.com/playlist/5O4DY0tPikApfk7UvqMAJx',
+  count: '50 songs',
+  href: 'https://open.spotify.com/playlist/6ilF0yNkzBFGdNdLmxHaO4',
 };
