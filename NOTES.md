@@ -2737,6 +2737,68 @@ bassi mancanti su tre posizioni.
 Resta lo scostamento gia' annotato in D140: la terza scheda nel file e' alta 312
 e non 351 (382:3809). Le nostre restano uguali.
 
+### D142. Il sipario fra le pagine, e il transform che GSAP legge in pixel
+
+Il committente: "vorrei una transizione tra le pagine, come se uno sfondo bianco
+salisse dal basso per poi rivelare la pagina che si carica".
+
+**Non con il router di Astro.** `<ClientRouter />` darebbe la transizione senza
+ricaricare, ma vorrebbe dire rifare a ogni cambio pagina ScrollSmoother,
+ScrollTrigger, il giro dei fili, la barra fissa, il carosello e i testimonial —
+cioe' rimettere in gioco tutto il sistema di movimento, che oggi e' verificato.
+Il guadagno e' una transizione un po' piu' liscia; il rischio e' l'intero
+impianto. Qui la navigazione resta quella del browser, ogni pagina si
+inizializza una volta sola come sempre, e il sipario non sa niente di routing:
+copre e scopre.
+
+Il movimento e' **uno solo e sempre nella stessa direzione**: sale a coprire
+quando si lascia la pagina, esce dall'alto quando la successiva e' arrivata.
+Non e' una tendina che va e torna, e' un foglio che passa. Il colore e'
+`--page-bg` e non il bianco pieno: il sito non ha bianco puro da nessuna parte,
+e quello che si vede e' la pagina che si svuota.
+
+Tre cose che non sono dettagli, e che stanno scritte nel codice:
+
+- **Lo stato di copertura lo mette uno script inline in `<head>`**, non il
+  modulo. Se la pagina nuova aspettasse `transition.ts` per sapere di dover
+  essere coperta, si vedrebbe per un istante prima che il sipario arrivi: cioe'
+  esattamente il lampo che il sipario serve a togliere.
+- **Lo stesso script alza il sipario dopo un secondo e mezzo, comunque.** E' il
+  rischio vero di questo meccanismo: un modulo che non arriva lascerebbe una
+  schermata piena che non se ne va piu'. La sonda lo prova staccando il
+  JavaScript.
+- **`pageshow` lo rimette giu'.** Tornando indietro la pagina arriva dalla
+  cache **com'era**, cioe' col sipario calato sopra.
+
+**E il difetto che ha reso utile la sonda.**
+
+Il riposo del pannello e' `transform: translateY(100%)` scritto nel CSS. GSAP
+quel 100% non lo legge come percentuale: lo converte in **novecento pixel** e se
+lo tiene, poi ci somma la percentuale che anima. L'inline diventava
+`translate(0%, 98.126%) translate3d(0px, 900px, 0px)`, cioe' il sipario scendeva
+da 200% a 100% e non copriva mai niente. A schermo: un click che aspetta mezzo
+secondo e poi cambia pagina di colpo. Si risolve azzerando `y` in tutti e due
+gli estremi del tween.
+
+**La prima stesura della sonda diceva che funzionava.** Fotografava la finestra
+dopo il click, la trovava tutta del colore di pagina, e dichiarava ok — ma
+quella era la pagina **nuova**, che arriva coperta di suo. Fra il click e la
+navigazione passano quattro decimi di secondo e una schermata da 1440x900 piu'
+la sua analisi ne costa quasi uno: dall'esterno quel fotogramma non si prende.
+Ora la copertura si misura **da dentro la pagina che se ne va** — un giro su
+`requestAnimationFrame` tiene il massimo raggiunto e `pagehide` lo deposita in
+`sessionStorage` — e il rettangolo misurato e' quello vero, non uno stato
+dichiarato dal modulo che stiamo verificando.
+
+E' la stessa forma di D137: una sonda che guarda il posto sbagliato e una che
+guarda il momento sbagliato si scrivono uguale, e tutte e due stampano ok.
+
+Un secondo errore della sonda, piu' piccolo e vale scriverlo: su un'ancora
+interna `preventDefault` c'e', e il primo controllo lo prendeva per il sipario.
+Non lo chiama il sipario, lo chiama lo scroll morbido, che porta al bersaglio
+passando per lo smoother (D122). La domanda giusta non era "chi ha fermato il
+click" ma "il sipario e' sceso?".
+
 ---
 
 ## 5. Blocchi aperti

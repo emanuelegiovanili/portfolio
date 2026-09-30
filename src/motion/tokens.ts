@@ -114,3 +114,27 @@ export const CARD = {
   stagger: 0.08,
   ease: 'power3.out',
 } as const;
+
+/**
+ * Il sipario fra una pagina e l'altra.
+ *
+ * Un pannello del colore della pagina sale dal basso a coprire, sotto parte la
+ * navigazione vera, e la pagina nuova arriva gia' coperta e si scopre uscendo
+ * dall'alto. Il movimento e' uno solo e va sempre nella stessa direzione: non
+ * e' una tendina che va e torna, e' un foglio che passa.
+ *
+ * Il caricamento sta nascosto dentro la copertura, quindi `cover` non e' solo
+ * estetica: e' il tempo che il browser ha per cominciare a prendere la pagina
+ * nuova prima che si veda qualcosa. Sotto i tre decimi il taglio si sente.
+ *
+ * Non e' nel Figma: e' una richiesta del committente. Vedi NOTES.md D142.
+ */
+export const SIPARIO = {
+  /** Sale a coprire, al click. */
+  cover: 0.45,
+  /** Esce dall'alto, a pagina nuova caricata. */
+  reveal: 0.55,
+  /** Se il modulo non arriva, il sipario si alza lo stesso dopo tanto. */
+  soccorso: 1500,
+  ease: 'power3.inOut',
+} as const;

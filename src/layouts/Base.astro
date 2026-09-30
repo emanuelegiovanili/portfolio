@@ -32,8 +32,47 @@ const { title, description, noindex = false } = Astro.props;
     <link rel="preload" href="/fonts/poppins-500.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/poppins-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/getai-black.woff2" as="font" type="font/woff2" crossorigin />
+
+    {/*
+      Il sipario, prima del primo fotogramma.
+
+      Questo script deve stare qui, in `<head>`, e non nel modulo: se la pagina
+      nuova aspettasse `transition.ts` per sapere di dover essere coperta, si
+      vedrebbe per un istante prima che il sipario arrivi — che e' esattamente
+      il lampo che il sipario serve a togliere.
+
+      Fa tre cose e nient'altro: legge il segnale lasciato dalla pagina
+      precedente, lo consuma, e alza comunque il sipario dopo un secondo e
+      mezzo. Quel terzo punto e' il ripiego: se il modulo non arriva — rete
+      caduta, errore in un altro script — la pagina resta coperta per un
+      secondo e mezzo invece che per sempre.
+
+      `sessionStorage` puo' lanciare in modalita' privata: il try/catch non e'
+      pignoleria, e senza si romperebbe il caricamento di ogni pagina.
+    */}
+    <script is:inline>
+      (function () {
+        try {
+          var arrivo = sessionStorage.getItem('sipario') === '1';
+          sessionStorage.removeItem('sipario');
+          if (!arrivo) return;
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          var radice = document.documentElement;
+          radice.dataset.sipario = 'entra';
+          setTimeout(function () {
+            if (radice.dataset.sipario === 'entra') delete radice.dataset.sipario;
+          }, 1500);
+        } catch (e) {
+          /* Niente sipario, e la pagina si vede: e' il ripiego giusto. */
+        }
+      })();
+    </script>
   </head>
   <body>
+    {/* Primo figlio del body: deve esistere presto, perche' e' quello che si
+        vede mentre il resto della pagina si compone. */}
+    <div class="sipario" aria-hidden="true"></div>
+
     {/*
       La struttura che ScrollSmoother si aspetta. I due elementi non hanno stile
       proprio: li imposta ScrollSmoother a runtime, e se il JavaScript non
@@ -55,6 +94,7 @@ const { title, description, noindex = false } = Astro.props;
     <slot name="fixed" />
 
     <script>
+      import '../scripts/transition';
       import '../scripts/motion';
       import '../scripts/megamenu';
       import '../scripts/sticky-header';

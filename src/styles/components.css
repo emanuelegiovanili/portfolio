@@ -826,3 +826,53 @@
   outline: calc(var(--u) * 2) solid var(--purple);
   outline-offset: calc(var(--u) * -6);
 }
+
+/*
+ * Il sipario fra una pagina e l'altra.
+ *
+ * Un pannello del colore della pagina, fuori dalla finestra in basso, che sale
+ * a coprire quando si lascia la pagina ed esce dall'alto quando la successiva
+ * e' arrivata. Il colore e' `--page-bg` e non il bianco pieno: il sito non ha
+ * bianco puro da nessuna parte, e quello che si vede e' la pagina che si
+ * svuota, non un foglio di un altro colore che ci passa sopra.
+ *
+ * Sta **fuori** da `#smooth-content`, come il megamenu e la barra fissa: il
+ * contenuto e' traslato da ScrollSmoother, e una trasformazione fa da
+ * contenitore di riferimento ai discendenti fissi.
+ *
+ * `z-index: 100` e' sopra a tutto: 40 la barra fissa, 50 il megamenu. Un
+ * sipario che passa sotto al menu aperto non copre niente.
+ *
+ * Lo stato di riposo e' `translateY(100%)`, cioe' sotto la finestra: senza
+ * JavaScript non c'e' nessun sipario e la navigazione e' quella del browser.
+ * `[data-sipario='entra']` sull'elemento radice lo mette a coprire **prima del
+ * primo fotogramma**, e lo mette uno script in `<head>`: se aspettasse il
+ * modulo, la pagina nuova si vedrebbe per un istante prima di essere coperta,
+ * che e' esattamente il lampo che il sipario serve a togliere.
+ */
+.sipario {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--page-bg);
+  transform: translateY(100%);
+  /* Inerte a riposo: non deve intercettare un click che non e' suo. */
+  pointer-events: none;
+}
+
+/* Mentre copre, i click sotto non arrivano: la pagina sta gia' andando via. */
+html[data-sipario] .sipario {
+  pointer-events: auto;
+}
+
+html[data-sipario='entra'] .sipario {
+  transform: none;
+}
+
+/* Chi chiede meno movimento non ha nessun sipario: la navigazione resta secca,
+   che e' quello che il browser farebbe da solo. */
+@media (prefers-reduced-motion: reduce) {
+  .sipario {
+    display: none;
+  }
+}

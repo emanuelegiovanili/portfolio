@@ -224,6 +224,10 @@ try {
     // La barra fissa sta fuori dalle griglie di pagina, quindi la sonda della
     // griglia non la vede: ha la sua (NOTES.md D123).
     ['barra fissa', 'scripts/verify-sticky.mjs', []],
+    // Il sipario dipende da uno script inline in `<head>` e da un modulo
+    // impacchettato: due cose che la build tratta diversamente da `astro dev`,
+    // quindi qui conta piu' che altrove (NOTES.md D142).
+    ['sipario', 'scripts/verify-transition.mjs', []],
   ]) {
     console.log(`\nSonda: ${nome}`);
     const res = spawnSync('node', [script, '--url', base, ...extra], { stdio: 'inherit' });
