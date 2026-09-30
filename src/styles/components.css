@@ -165,13 +165,20 @@
   }
 }
 
-/* Barra 4px al fondo della voce corrispondente alla pagina corrente. Nel Figma
-   e' larga quanto il blocco e sborda di mezzo pixel sul bordo: qui copre il
-   bordo basso, che e' la linea di griglia. */
+/*
+ * Barra 4px **in cima** alla voce della pagina corrente.
+ *
+ * Stava in fondo. Il committente l'ha spostata in alto nel blocco per
+ * garantirne la visibilita', e i frame aggiornati lo confermano a tutte e due
+ * le larghezze: 397:794 e 397:806 la mettono a y=0.
+ *
+ * E' larga quanto il blocco e copre il filo alto, che e' una linea di griglia:
+ * come ogni blocco viola, la linea la copre e non la rimpiazza (D2).
+ */
 .footer-link__indicator {
   position: absolute;
   inset-inline: 0;
-  bottom: 0;
+  top: 0;
   height: calc(var(--u) * 4);
   background: var(--purple);
 }

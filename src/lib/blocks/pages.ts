@@ -9,7 +9,7 @@
  * Dove il file e' fuori griglia si usa lo span, mai il pixel: `310:1798` e
  * `312:1991` stanno a x=114 invece che a 120.
  */
-import type { LayoutMap } from '../layout';
+import type { LayoutMap, Tier } from '../layout';
 import { footerMap } from './chrome';
 
 /* ---------- /about ---------- */
@@ -84,47 +84,71 @@ export const aboutFooter = footerMap(ABOUT_FOOTER_ROWS);
 
 /* ---------- /works ---------- */
 
-export const WORKS_FOOTER_ROWS = { lg: 28 };
+export const WORKS_FOOTER_ROWS = { base: 71, md: 71, lg: 28 };
 
-export const worksBlocks = {
-  worksTitle: { lg: [2, 3, 4, 1] },
-  worksFlame: { lg: [6, 3, 1, 1] },
-  worksContactForm: { lg: [3, 20, 5, 6] },
-  worksContactCta: { lg: [8, 21, 4, 3] },
-  worksContactSend: { lg: [8, 24, 2, 1] },
-} as const satisfies LayoutMap;
+export const worksBlocks = mdComeBase({
+  worksTitle: { base: [2, 4, 6, 2], lg: [2, 3, 4, 1] },
+  worksFlame: { base: [8, 4, 2, 2], lg: [6, 3, 1, 1] },
+  /*
+   * La barra dei filtri a base: un blocco nudo largo quanto la griglia, dentro
+   * al quale i quattro tab scorrono di lato.
+   *
+   * Nel file la riga e' larga 627 dentro 390 (397:389) e la taglia il frame,
+   * esattamente come la riga delle schede di /about. Quindi stessa costruzione:
+   * il contenitore non disegna niente, i margini di pagina li da' il padding
+   * del binario, e il contorno e' dei tab. Vedi D141.
+   */
+  worksFilterBar: { base: [1, 6, 10, 2] },
+  worksContactForm: { base: [2, 51, 8, 16], lg: [3, 20, 5, 6] },
+  worksContactCta: { base: [2, 46, 7, 5], lg: [8, 21, 4, 3] },
+  worksContactSend: { base: [5, 67, 5, 2], lg: [8, 24, 2, 1] },
+} as const satisfies LayoutMap);
 
-/** I quattro filtri, da col 3 in avanti, due colonne ciascuno. */
+/** I quattro filtri a desktop, da col 3 in avanti, due colonne ciascuno. */
 export function worksFilterAt(index: number): LayoutMap[string] {
   return { lg: [3 + index * 2, 4, 2, 1] };
 }
 
-/** Quante righe occupa una card, contando lo stacco dalla successiva. */
-export const WORKS_CARD_STRIDE = 4;
+/**
+ * Quante righe occupa una card, contando lo stacco dalla successiva, e da
+ * quale riga comincia la prima.
+ *
+ * A desktop sono 8x4 una ogni quattro righe dalla quinta (310:1492); a mobile
+ * sono 8x12 una ogni dodici dalla ottava (397:390, 397:403, 397:420). Le due
+ * misure stanno qui e non sparse, perche' chi filtra le usa tutte e due.
+ */
+const PASSO_CARD = { base: 12, md: 12, lg: 4 } as const;
+const PRIMA_CARD = { base: 8, md: 8, lg: 5 } as const;
 
-/** La riga della card che occupa il posto `index`. */
-export function worksCardRow(index: number): number {
-  return 5 + index * WORKS_CARD_STRIDE;
+/** La riga della card che occupa il posto `index`, nel tier dato. */
+export function worksCardRow(index: number, tier: Tier): number {
+  return PRIMA_CARD[tier] + index * PASSO_CARD[tier];
 }
 
-/** Le card progetto: 8x4 da col 3, una ogni quattro righe a partire dalla 5. */
 export function worksCardAt(index: number): LayoutMap[string] {
-  return { lg: [3, worksCardRow(index), 8, 4] };
+  return {
+    base: [2, worksCardRow(index, 'base'), 8, 12],
+    md: [2, worksCardRow(index, 'md'), 8, 12],
+    lg: [3, worksCardRow(index, 'lg'), 8, 4],
+  };
 }
 
 /**
  * Gli stati del filtro di /works.
  *
  * Filtrare **sposta i blocchi sulla griglia**: con meno card, tutto quello che
- * sta sotto sale di quattro righe per card tolta, e la pagina si accorcia di
+ * sta sotto sale di un passo per card tolta, e la pagina si accorcia di
  * altrettanto. Non e' un `display: none` su qualche elemento, e' un layout
  * diverso.
  *
  * Le righe di ogni stato si calcolano **qui, al build**. In pagina diventano
  * una custom property per stato, e il JavaScript sceglie quale stato e' attivo:
  * non calcola posizioni, non sa quanto e' alta una card, non puo' inventarsi un
- * numero che non cade su una linea. E' la stessa regola di sempre — la
- * posizione viene dalla mappa — applicata a quattro mappe invece che a una.
+ * numero che non cade su una linea.
+ *
+ * Da quando /works ha anche un tier base, `shift` e `rows` sono **per tier**:
+ * a mobile una card ne vale dodici di righe e a desktop quattro, quindi un
+ * numero solo darebbe la pagina giusta a una larghezza e sbagliata all'altra.
  */
 export interface WorksFilterState {
   /** Identificatore usato nell'attributo e nei nomi delle custom property. */
@@ -134,10 +158,10 @@ export interface WorksFilterState {
   tag: string | null;
   /** Gli id dei progetti visibili, nell'ordine in cui compaiono. */
   ids: string[];
-  /** Di quante righe sale tutto cio' che sta sotto le card. */
-  shift: number;
-  /** L'ultima riga occupata dalla pagina in questo stato. */
-  rows: number;
+  /** Di quante righe sale tutto cio' che sta sotto le card, tier per tier. */
+  shift: Partial<Record<Tier, number>>;
+  /** L'ultima riga occupata dalla pagina in questo stato, tier per tier. */
+  rows: Partial<Record<Tier, number>>;
 }
 
 /**
@@ -154,18 +178,23 @@ export function tagSlug(tag: string): string {
 export function worksFilterStates(
   works: { id: string; tags: readonly string[] }[],
   tags: readonly string[],
-  rowsFull: number,
+  rowsFull: Partial<Record<Tier, number>>,
 ): WorksFilterState[] {
   const build = (slug: string, label: string, tag: string | null): WorksFilterState => {
     const ids = works.filter((w) => tag === null || w.tags.includes(tag)).map((w) => w.id);
-    const shift = WORKS_CARD_STRIDE * (works.length - ids.length);
-    return { slug, label, tag, ids, shift, rows: rowsFull - shift };
+    const tolte = works.length - ids.length;
+    const shift: Partial<Record<Tier, number>> = {};
+    const rows: Partial<Record<Tier, number>> = {};
+    for (const tier of ['base', 'md', 'lg'] as const) {
+      const pieno = rowsFull[tier];
+      if (pieno === undefined) continue;
+      shift[tier] = PASSO_CARD[tier] * tolte;
+      rows[tier] = pieno - shift[tier]!;
+    }
+    return { slug, label, tag, ids, shift, rows };
   };
 
-  return [
-    build('all', 'All', null),
-    ...tags.map((tag) => build(tagSlug(tag), tag, tag)),
-  ];
+  return [build('all', 'All', null), ...tags.map((tag) => build(tagSlug(tag), tag, tag))];
 }
 
 export const worksFooter = footerMap(WORKS_FOOTER_ROWS);

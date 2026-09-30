@@ -148,8 +148,9 @@
  * desktop. Prima di queste righe otto blocchi sforavano alla larghezza di
  * disegno: non e' una messa a punto estetica, e' testo tagliato.
  */
-.about-grid .page-title h1 {
-  /* 354:3552 */
+/* 354:3552 per /about, 397:251 per /works: stesso corpo, 32, e stessa altezza
+   di riga nel file. Le due pagine hanno un tier base e questa e' la misura. */
+:is(.about-grid, .works-grid) .page-title h1 {
   font-size: calc(var(--u) * 32);
 }
 
@@ -264,7 +265,7 @@
 }
 
 @media (min-width: 1200px) {
-  .about-grid .page-title h1,
+  :is(.about-grid, .works-grid) .page-title h1,
   .about-grid .section-title .what-title,
   .about-grid .cta-section__title {
     font-size: calc(var(--u) * 64);
@@ -415,7 +416,8 @@
  * scatola su quattro lati cade sulla linea solo su due. E non si animano —
  * il giro allo scroll e' del blocco che le contiene, e quello ora e' nudo.
  */
-.recipe-steps__card::after {
+.recipe-steps__card::after,
+.filter-tab::after {
   content: '';
   position: absolute;
   inset: 0 calc(var(--line) * -1) calc(var(--line) * -1) 0;
@@ -762,4 +764,106 @@
 
 .related-title h2 {
   margin: 0;
+}
+
+
+/* ---------- /works a base: la barra dei filtri che scorre ---------- */
+
+/*
+ * Stessa costruzione della riga delle schede di /about (D141), e per la stessa
+ * ragione: nel file la riga e' larga 627 dentro 390 (397:389) e la taglia il
+ * frame, non un contenitore.
+ *
+ * Il blocco e' nudo e largo quanto la griglia, quindi non disegna niente; i
+ * margini di pagina li da' il padding del binario, una cella per lato; il
+ * contorno e' dei tab, che disegnano i propri quattro fili con la geometria dei
+ * blocchi — alto e sinistro dentro, destro e basso un pixel oltre — cosi' due
+ * tab vicini dipingono lo stesso pixel invece di affiancarne due (D61).
+ *
+ * Il binario e' **un pixel piu' alto** del blocco: `overflow-x: auto` ritaglia
+ * anche in verticale, e senza quel pixel il filo basso di tutti e quattro
+ * sparirebbe. E' la terza volta che serve scriverlo (D103, D141).
+ */
+.filter-bar {
+  display: flex;
+}
+
+.filter-bar__track {
+  display: grid;
+  grid-template-columns: repeat(4, calc(var(--cell) * 4));
+  height: calc(100% + var(--line));
+  grid-template-rows: calc(100% - var(--line));
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-inline: var(--cell);
+  scrollbar-width: none;
+}
+
+.filter-bar__track::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-tab {
+  position: relative;
+  background-color: var(--block-bg);
+}
+
+/* ---------- /works a base: i tag tornano sulla card ---------- */
+
+/*
+ * Nel frame mobile aggiornato la card mostra i tag, in due celle 2x2 sopra al
+ * titolo (397:391 e 397:401 sopra 397:398). Prima a base sparivano e restava il
+ * solo titolo.
+ *
+ * La regola e' scoped a `.works-grid`: la card del carosello in home usa le
+ * stesse classi, e per la home a mobile un frame aggiornato non c'e'. Cambiarla
+ * li' sarebbe uno scostamento non richiesto.
+ *
+ * I tag stanno su una riga e il titolo sull'altra perche' insieme non ci
+ * stanno: due tag da due celle fanno quattro, il titolo sei, e la card ne e'
+ * larga otto.
+ */
+@media (width < 1200px) {
+  /*
+   * Due righe esplicite, non un `flex-wrap`.
+   *
+   * Col wrap la riga andava a capo solo quando i tag erano abbastanza larghi:
+   * Seezy ne ha due (quattro celle) e col titolo (sei) sforava le otto della
+   * card, quindi andava a capo; TAMA ne ha uno solo, due piu' sei fa otto
+   * esatte, e tag e titolo finivano appaiati sulla stessa riga. Due card
+   * disposte in due modi diversi, e a deciderlo era quanti tag ha il progetto —
+   * misurato: il titolo di TAMA partiva da 117 invece che da 40.
+   *
+   * Con la griglia il posto di ognuno e' scritto: i tag in alto, il titolo
+   * sotto, sempre, qualunque sia il numero di tag.
+   */
+  .works-grid .works-card__tags {
+    display: grid;
+    grid-template-columns: repeat(3, calc(var(--cell) * 2));
+    grid-template-rows: repeat(2, calc(var(--cell) * 2));
+    width: calc(var(--cell) * 6);
+    height: calc(var(--cell) * 4);
+  }
+
+  .works-grid .works-card__tag {
+    display: flex;
+    width: auto;
+    /* Come lo stacco orizzontale fra due tag: un pixel di sovrapposizione, o
+       fra la riga dei tag e quella del titolo resterebbero due fili. */
+    margin-block-end: calc(var(--line) * -1);
+  }
+
+  .works-grid .works-card__tag:nth-child(2) {
+    grid-area: 1 / 1 / 2 / 2;
+  }
+
+  .works-grid .works-card__tag:nth-child(3) {
+    grid-area: 1 / 2 / 2 / 3;
+  }
+
+  .works-grid .works-card__title {
+    grid-area: 2 / 1 / 3 / 4;
+    width: auto;
+  }
 }

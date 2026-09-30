@@ -26,6 +26,8 @@ interface WorksFilter {
   stop(): void;
 }
 
+const TIER = ['base', 'md', 'lg'] as const;
+
 export function startWorksFilter(root: ParentNode = document): WorksFilter | null {
   const grid = root.querySelector<HTMLElement>('.works-grid');
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('.work-filter')];
@@ -35,20 +37,33 @@ export function startWorksFilter(root: ParentNode = document): WorksFilter | nul
   const lines = [...grid.querySelectorAll<HTMLElement>('.grid-line--h')];
 
   /*
-   * L'ultima linea orizzontale sta **dentro** l'ultima riga, non sotto: e' la
-   * regola dei bordi di griglia (grid.css). Cambiando il numero di righe va
-   * spostata, quindi il suo `--at` originale non si puo' rileggere dopo la
-   * prima volta e si tiene da parte.
+   * Le ultime linee orizzontali stanno **dentro** l'ultima riga, non sotto: e'
+   * la regola dei bordi di griglia (grid.css). Cambiando il numero di righe
+   * vanno spostate, quindi il loro `--at` originale non si puo' rileggere dopo
+   * la prima volta e si tiene da parte.
+   *
+   * Al plurale, e non e' un dettaglio: le linee sono in gruppi, uno per tier,
+   * e **ogni gruppo ha la sua linea di bordo**. Finche' /works aveva il solo
+   * disegno desktop ce n'era una e `find` bastava; col tier mobile ne sono
+   * comparse altre due, e quella di md restava alla riga 72 dentro una griglia
+   * che il filtro aveva accorciato a 60. La griglia restava allineata: mancava
+   * solo la linea che chiude la pagina, e con lei il confine su cui il bordo
+   * basso del footer doveva cadere. Vedi NOTES.md D144.
    */
-  const edge = lines.find((line) => line.hasAttribute('data-edge'));
+  const edges = lines.filter((line) => line.hasAttribute('data-edge'));
   const atOf = new Map(lines.map((line) => [line, Number(line.style.getPropertyValue('--at'))]));
 
   /**
    * Una card si vede in uno stato se il build le ha dato una riga per quello
    * stato. Non serve sapere che tag ha: la domanda e' gia' stata risposta.
+   *
+   * Le righe sono **una per tier** da quando /works ha anche un disegno mobile,
+   * quindi il nome porta il tier in coda. Cercando ancora `--row-<stato>` la
+   * risposta era sempre "no" e il filtro nascondeva tutte le card: la griglia
+   * restava impeccabile e la pagina vuota. Vedi NOTES.md D144.
    */
   const shownIn = (card: HTMLElement, slug: string) =>
-    card.style.getPropertyValue(`--row-${slug}`).trim() !== '';
+    TIER.some((tier) => card.style.getPropertyValue(`--row-${slug}-${tier}`).trim() !== '');
 
   const apply = (slug: string) => {
     grid.dataset.filter = slug;
@@ -70,10 +85,10 @@ export function startWorksFilter(root: ParentNode = document): WorksFilter | nul
     if (!Number.isFinite(rows) || rows <= 0) return;
 
     for (const line of lines) {
-      if (line === edge) continue;
+      if (edges.includes(line)) continue;
       line.hidden = (atOf.get(line) ?? 0) > rows;
     }
-    edge?.style.setProperty('--at', String(rows));
+    for (const bordo of edges) bordo.style.setProperty('--at', String(rows));
 
     /*
      * I fili dei blocchi sono agganciati allo scroll, e i blocchi si sono

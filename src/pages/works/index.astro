@@ -52,7 +52,7 @@ const map = {
  * scriverlo, per la stessa ragione per cui `--rows` non si scrive a mano: se un
  * blocco scende, il numero segue.
  */
-const rowsFull = deriveRows(map).lg ?? 0;
+const rowsFull = deriveRows(map);
 const states = worksFilterStates(
   works.map((w) => ({ id: w.id, tags: w.data.tags })),
   WORK_TAGS,
@@ -69,7 +69,11 @@ const states = worksFilterStates(
 const cardStyle = (id: string) =>
   states
     .filter((st) => st.ids.includes(id))
-    .map((st) => `--row-${st.slug}:${worksCardRow(st.ids.indexOf(id))}`)
+    .flatMap((st) =>
+      (['base', 'md', 'lg'] as const).map(
+        (tier) => `--row-${st.slug}-${tier}:${worksCardRow(st.ids.indexOf(id), tier)}`,
+      ),
+    )
     .join(';');
 
 /**
@@ -85,21 +89,35 @@ const cardStyle = (id: string) =>
  * `grid-row-start: calc(20 - 8)` risolve a 12, cioe' che un `calc` e' accettato
  * dove sta un numero di linea.
  */
-const filterCss =
-  `.works-grid [data-flow]{--row:calc(var(--row-lg) - var(--shift, 0))}` +
+const perTier = (tier: 'base' | 'md' | 'lg') =>
+  `.works-grid [data-flow]{--row:calc(var(--row-${tier}) - var(--shift, 0))}` +
   states
     .map(
       (st) =>
-        `.works-grid[data-filter="${st.slug}"]{--rows:${st.rows};--shift:${st.shift}}` +
-        `.works-grid[data-filter="${st.slug}"] .works-card{--row:var(--row-${st.slug})}`,
+        `.works-grid[data-filter="${st.slug}"]{--rows:${st.rows[tier]};--shift:${st.shift[tier]}}` +
+        `.works-grid[data-filter="${st.slug}"] .works-card{--row:var(--row-${st.slug}-${tier})}`,
     )
     .join('');
+
+/*
+ * Una serie di regole per tier, dentro le stesse media query della griglia.
+ *
+ * Da quando /works ha anche un tier base, "quanto sale la pagina quando filtro"
+ * non e' piu' un numero solo: a mobile una card vale dodici righe e a desktop
+ * quattro. Scriverne uno solo vorrebbe dire pagina giusta a una larghezza e
+ * sbagliata all'altra, e per giunta in silenzio — la griglia resterebbe
+ * allineata, sarebbe solo alta il doppio del dovuto.
+ */
+const filterCss =
+  perTier('base') +
+  `@media (min-width:720px){${perTier('md')}}` +
+  `@media (min-width:1200px){${perTier('lg')}}`;
 ---
 
 <style set:html={filterCss}></style>
 
 <Base title="Works — Emanuele Giovanili" description="Progetti di branding, web design e product design.">
-  <Grid map={map} tiers={['lg']} class="works-grid" data-filter="all">
+  <Grid map={map} tiers={['base', 'md', 'lg']} class="works-grid" data-filter="all">
     <Header current="/works" />
 
     <Block at={worksBlocks.worksTitle} class="page-title" clip>
@@ -108,6 +126,39 @@ const filterCss =
 
     <Block at={worksBlocks.worksFlame} class="icon-cell" clip>
       <Icon name="flame" />
+    </Block>
+
+    {/*
+      I filtri esistono due volte, e non e' una svista.
+      
+      A desktop sono quattro blocchi della griglia (310:1507); a base il file li
+      mette in una riga larga 627 dentro 390 (397:389), cioe' dentro un
+      contenitore che scorre — e li' non possono essere blocchi, perche' un
+      blocco sta sulla griglia. E' la stessa scelta gia' fatta per la ricetta di
+      /about: due costruzioni, una per tier, e ognuna sparisce quando non e' la
+      sua (D133).
+      
+      Il JavaScript del filtro li trova tutti e due i gruppi e li tiene
+      allineati, perche' interroga per classe e non per posizione.
+    */}
+    <Block at={worksBlocks.worksFilterBar} surface="bare" class="filter-bar">
+      <div class="filter-bar__track">
+        {states.map((state, i) => (
+          <button
+            type="button"
+            class="work-filter filter-tab"
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            data-filter={state.slug}
+          >
+            <span class="work-filter__label">{state.label}</span>
+            <span class="work-filter__count">{state.ids.length}</span>
+            <span class="hover-fill" aria-hidden="true">
+              <span class="work-filter__label">{state.label}</span>
+              <span class="work-filter__count">{state.ids.length}</span>
+            </span>
+          </button>
+        ))}
+      </div>
     </Block>
 
     {
