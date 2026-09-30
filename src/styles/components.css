@@ -453,6 +453,7 @@
 .menu-social,
 .work-filter,
 .skill-card,
+.sector-card,
 .footer-brand,
 .footer-link,
 .visit-button {
@@ -528,6 +529,7 @@
  * Si potra' unire, ma non in un passaggio in cui non lo si misura.
  */
 .skill-card > .hover-fill,
+.sector-card > .hover-fill,
 .footer-brand > .hover-fill,
 .footer-link > .hover-fill,
 .visit-button > .hover-fill {
@@ -607,6 +609,7 @@
     .menu-social,
     .work-filter,
     .skill-card,
+    .sector-card,
     .footer-brand,
     .footer-link,
     .visit-button

@@ -15,36 +15,29 @@ import Footer from '../components/Footer.astro';
 import ContactSection from '../components/ContactSection.astro';
 import Icon from '../components/Icon.astro';
 import { headerMap } from '../lib/blocks/chrome';
-import { aboutBlocks, aboutFooter } from '../lib/blocks/pages';
-import { BIO, LOCATION, RECIPE, REMOTE, SPOTIFY } from '../data/about';
+import { aboutBlocks, aboutFooter, tagSlug } from '../lib/blocks/pages';
+import { WORK_TAGS } from '../content.config';
+import { BIO, LOCATION, RECIPE, REMOTE, SECTORS, WHAT_TITLE } from '../data/about';
 import portrait from '../assets/about/portrait.jpg';
-import desk from '../assets/about/desk.jpg';
-/*
- * La copertina si incorpora, non si linka.
- *
- * Dentro ci sono due archi che devono girare (`pages.css`), e a un `<img src>`
- * non si arriva dal CSS della pagina. E' la stessa ragione per cui le icone di
- * questo sito sono inline: un disegno su cui si deve intervenire non puo'
- * stare dietro a un indirizzo.
- */
-import spotifyCover from '../assets/about/spotify-cover.svg?raw';
-import { playlist } from '../lib/spotify';
 import '../styles/pages.css';
 
 const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
 
 /*
- * La playlist si legge qui, una volta, mentre la pagina si costruisce.
+ * Le tre schede degli ambiti, ognuna col proprio posto sulla griglia.
  *
- * Senza credenziali torna indietro quello che c'e' scritto in `about.ts`, quindi
- * in locale la pagina e' quella di sempre e nessuno deve avere un token per
- * lavorare. Vedi `src/lib/spotify.ts` per il perche' di tutto il resto.
+ * La guardia e' la stessa di home: `includes` non compila se un tag esce da
+ * `WORK_TAGS`, e se qualcuno allenta i tipi la build si ferma comunque qui. Una
+ * scheda che porta a un ambito che /works non conosce e' un link a una pagina
+ * vuota, e nessuno se ne accorgerebbe guardando la pagina.
  */
-const mix = await playlist(SPOTIFY.id, {
-  name: SPOTIFY.playlist,
-  count: SPOTIFY.count,
-  href: SPOTIFY.href,
-});
+const settori = [aboutBlocks.sectorOne, aboutBlocks.sectorTwo, aboutBlocks.sectorThree].map(
+  (at, i) => ({ at, ...SECTORS[i] }),
+);
+
+if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
+  throw new Error('/about: una scheda degli ambiti punta a un ambito che /works non conosce.');
+}
 ---
 
 <Base title="About — Emanuele Giovanili" description="Chi sono, come lavoro e cosa ascolto mentre lo faccio.">
@@ -114,6 +107,48 @@ const mix = await playlist(SPOTIFY.id, {
       esattamente. Lo scorrimento sta sul binario **dentro** al blocco:
       `overflow` su un blocco gli ritaglia i quattro fili (D103, D107).
     */}
+    {/*
+      "What I actually do": tre ambiti, e ognuno porta a /works gia' filtrato.
+
+      E' la stessa costruzione delle card del mix in home, e non per pigrizia:
+      il riempimento dell'hover e' una **copia** di quello che c'e' sotto, e
+      tenerne due varianti vuol dire tenerne allineate due per sempre. La
+      copia sta in `.hover-fill`, sale dal basso — `clip-path: inset(var(--hover) 0 0 0)`
+      con `--hover` da 100% a 0 — ed e' quello che il committente ha chiesto.
+
+      La freccia e' solo a base e md: nel file desktop non c'e' (397:936), a
+      mobile si' (400:996). Ha senso — su un telefono l'hover non esiste, e
+      senza freccia niente direbbe che la scheda porta da qualche parte.
+    */}
+    <Block at={aboutBlocks.whatTitle} class="section-title" clip>
+      <h2 class="t-display t-display--page what-title">{WHAT_TITLE}</h2>
+    </Block>
+
+    <Block at={aboutBlocks.whatIcon} class="icon-cell" clip>
+      <Icon name="cooking-pot" />
+    </Block>
+
+    {
+      settori.map((settore) => (
+        <Block at={settore.at} as="a" href={`/works?filter=${tagSlug(settore.tag)}`} class="sector-card" clip>
+          <span class="sector-card__head">
+            <Icon name={settore.icon} />
+            <Icon name="arrow-up-right" class="sector-card__arrow" />
+          </span>
+          <span class="sector-card__title">{settore.title}</span>
+          <span class="t-body sector-card__body">{settore.body}</span>
+          <span class="hover-fill" aria-hidden="true">
+            <span class="sector-card__head">
+              <Icon name={settore.icon} />
+              <Icon name="arrow-up-right" class="sector-card__arrow" />
+            </span>
+            <span class="sector-card__title">{settore.title}</span>
+            <span class="t-body sector-card__body">{settore.body}</span>
+          </span>
+        </Block>
+      ))
+    }
+
     <Block at={aboutBlocks.recipeSteps} surface="bare" class="recipe-steps">
       <div class="recipe-steps__track">
         {RECIPE.map((passo) => (
@@ -130,20 +165,18 @@ const mix = await playlist(SPOTIFY.id, {
       at={aboutBlocks.recipeOne}
       class="recipe-card"
       clip
+      data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
       <h3 class="recipe-card__title">{RECIPE[0].title}</h3>
       <p class="t-body recipe-card__lead">{RECIPE[0].lead}</p>
       <p class="t-body recipe-card__body">{RECIPE[0].body}</p>
     </Block>
 
-    <Block at={aboutBlocks.recipeBlender} class="icon-cell" clip>
-      <Icon name="blender" />
-    </Block>
-
     <Block
       at={aboutBlocks.recipeTwo}
       class="recipe-card"
       clip
+      data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
       <h3 class="recipe-card__title">{RECIPE[1].title}</h3>
       <p class="t-body recipe-card__lead">{RECIPE[1].lead}</p>
@@ -154,6 +187,7 @@ const mix = await playlist(SPOTIFY.id, {
       at={aboutBlocks.recipeThree}
       class="recipe-card"
       clip
+      data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
       <h3 class="recipe-card__title">{RECIPE[2].title}</h3>
       <p class="t-body recipe-card__lead">{RECIPE[2].lead}</p>
@@ -164,66 +198,6 @@ const mix = await playlist(SPOTIFY.id, {
     <ContactSection
       at={{ form: aboutBlocks.aboutForm, cta: aboutBlocks.aboutCta, send: aboutBlocks.aboutSend }}
     />
-
-    <Block
-      at={aboutBlocks.kitchenTitle}
-      class="section-title is-opaque is-over"
-      clip
-      data-known-overflow="300:354 — il blocco e' largo 3 colonne ma il testo ne chiede 438px: sfora di 78 nel file"
-    >
-      <h2 class="t-display t-display--page kitchen-title">In the <span class="accent">kitchen</span></h2>
-    </Block>
-
-    <Block at={aboutBlocks.kitchenPot} class="icon-cell" clip>
-      <Icon name="cooking-pot" />
-    </Block>
-
-    <Block at={aboutBlocks.kitchenPhoto} class="media-block" clip>
-      <Picture
-        data-reveal
-        src={desk}
-        alt="Emanuele alla scrivania, di spalle, davanti a due schermi"
-        widths={[960, 1400]}
-        sizes="(min-width: 1200px) 67vw, 100vw"
-        formats={['avif', 'webp']}
-        loading="lazy"
-      />
-    </Block>
-
-    <Block at={aboutBlocks.spotifyCover} class="spotify-cover is-opaque" clip>
-      {/* Decorativa: il titolo della playlist e' scritto accanto. */}
-      <Fragment set:html={spotifyCover} />
-    </Block>
-
-    <Block at={aboutBlocks.spotifyTitle} class="section-title is-opaque" clip>
-      <h2 class="t-display t-display--section">{SPOTIFY.heading}</h2>
-    </Block>
-
-    <Block at={aboutBlocks.spotifyDisc} class="icon-cell is-opaque" clip>
-      <Icon name="disc-3" />
-    </Block>
-
-    {/* "Play now on Spotify" adesso ci porta davvero: il blocco intero e' il
-        link, perche' e' quello che l'etichetta ha sempre promesso. */}
-    <Block
-      at={aboutBlocks.spotifyPlaylist}
-      as="a"
-      href={mix.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="playlist is-opaque"
-      clip
-      data-known-overflow="300:440 — tiene a 390 e a 1440; chiede qualche pixel in piu' alle larghezze in mezzo, dove la cella si stringe ma il corpo del testo ha un minimo"
-    >
-      <p class="playlist__row">
-        <span class="t-title">{mix.name}</span>
-        <span class="t-body playlist__count">{mix.count}</span>
-      </p>
-      <p class="playlist__row playlist__row--action">
-        <Icon name="audio-lines" />
-        <span class="t-body">{SPOTIFY.action}</span>
-      </p>
-    </Block>
 
     <Footer at={aboutFooter} current="/about" />
   </Grid>

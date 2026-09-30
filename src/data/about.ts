@@ -16,36 +16,87 @@ export const LOCATION = 'Based in San Benedetto del Tronto, Italy';
 export const REMOTE = 'Working remotely';
 
 /**
- * Le tre card del processo, riscritte dal committente.
+ * Il titolo della sezione nuova, e le tre schede degli ambiti.
  *
- * La struttura e' cambiata con il testo: prima era un numero grande, un titolo
- * e un paragrafo; ora sono un titolo, una **riga forte** e un corpo. Il numero
- * nel frame aggiornato non c'e' piu' (299:277, 299:314, 299:317), e la riga
- * forte non e' una prima frase in grassetto: e' la promessa del passaggio, e il
- * corpo spiega come si mantiene.
+ * Frame 274:1855, blocchi 397:936, 397:930, 397:942. Ognuna porta a /works gia'
+ * filtrata sul proprio ambito, come le card del mix in home: e' la richiesta
+ * del committente, ed e' anche la ragione per cui a mobile il file ci mette
+ * dentro una freccia (400:996) — su un telefono l'hover non esiste e senza
+ * freccia niente direbbe che si puo' toccare.
  *
- * Le posizioni delle tre schede non sono cambiate: restano sfalsate come prima.
+ * `tag` e' il tag del progetto, non l'etichetta. Il tipo lo tiene dentro
+ * `WORK_TAGS`, quindi una scheda che punta a un ambito inesistente non arriva
+ * alla build: la guardia sta in `about.astro`, come in home.
+ *
+ * "Product design" con la d minuscola e' quello che dice il file (397:933),
+ * mentre la card in home dice "Product Design". Non si uniforma: la copy non si
+ * corregge, si riproduce e si segnala (NOTES.md D143).
+ */
+export const WHAT_TITLE = 'What I actually do';
+
+export const SECTORS = [
+  {
+    icon: 'swatch-book',
+    title: 'Branding',
+    tag: 'Branding',
+    body: "Most businesses aren't forgotten because they're bad. They're forgotten because nothing about them sticks. What people remember is what you stand for when they have to choose. Branding, to me, is the work of making who you are visible and remarkable.",
+  },
+  {
+    icon: 'tablet-smartphone',
+    title: 'Product design',
+    tag: 'Product',
+    body: "I start from what users need, then map how the technology behind the product really works. That shapes the interface, so it follows the research, fits the brand and is easier to build. It's also why I love working with startups, where the system doesn't exist yet and I get to help build it.",
+  },
+  {
+    icon: 'app-window',
+    title: 'Web Design',
+    tag: 'Web Design',
+    body: "As with branding, being seen isn't enough. You need to be remembered, and your online presence speaks for you. I build in Webflow, no-code, when the project fits, and if it doesn't, I bring in a developer for guaranteed success.",
+  },
+] as const;
+
+/**
+ * Le tre card del processo, riscritte di nuovo dal committente.
+ *
+ * Titoli e testi vengono dal frame desktop aggiornato (301:1073, 301:1075,
+ * 301:1077): "Blend" e "Proof" diventano "Mix" e "Bake", e i corpi sono altri.
+ *
+ * **Il frame mobile e' rimasto indietro**: 356:627 dice ancora "Blend" col testo
+ * di prima. Qui la sorgente e' una sola e alimenta tutti e due i tier, quindi
+ * vale il desktop, che e' il frame rivisto. Segnalato in NOTES.md D143.
+ *
+ * La struttura resta quella: un titolo, una **riga forte** e un corpo. La riga
+ * forte e' la prima frase, che nel file e' in Poppins Bold.
  */
 export const RECIPE = [
   {
     title: 'Research',
     lead: 'Find the real problem before the budget goes into solving the wrong one.',
-    body: 'I gather what already exists, read the context, and talk to the people who are going to use it. I also ask what the business needs to happen, and which number will tell us it did. Most briefs arrive without that answer, and it is cheap to settle here.',
+    body: "I start by gathering what already exists and talking to the people who'll use what we're building. Then I ask you what the project needs to achieve, and which number will tell us it worked. Most briefs arrive without that answer, and settling it now costs very little.",
   },
   {
-    title: 'Blend',
-    lead: 'One person across brand, product and build, so nothing gets lost in between.',
-    body: 'I look at what the technology allows before committing to a direction, then work through the options against how people behave and what the business needs to earn. Brand, product and build move together, so the expensive decisions get caught while they are still being made.',
+    title: 'Mix',
+    lead: 'Many skills, one pair of hands.',
+    body: 'I trained in product design, started out in code and branding and spent years working on conversion and web design. So when I shape a solution, design, technology and business get weighed at the same time, by the same person.',
   },
   {
-    title: 'Proof',
-    lead: 'It ships, it works, and whoever builds it can actually build it.',
-    body: 'Components, documentation, and the build itself when the project fits no-code. When it outgrows that, I bring in a developer. Then it goes in front of real people, and I check the number we agreed on at the start.',
+    title: 'Bake',
+    lead: 'Built together, tested to the end.',
+    body: "This is where it gets made, and you're part of it. You see the work as it takes shape, and we make the important decisions together along the way. I stay on it through the build and the details, up to the final tests with real people. Then we check the result against the number we agreed on at the start.",
   },
 ];
 
 /**
- * Il blocco Spotify.
+ * Il blocco Spotify: **fuori dal disegno da D143**.
+ *
+ * Il frame aggiornato di /about non ha piu' ne' la fotografia della scrivania
+ * ne' la riga della playlist, ne' a desktop ne' a mobile. La pagina non legge
+ * piu' niente di tutto questo e `src/lib/spotify.ts` non viene piu' chiamato,
+ * quindi il deploy smette anche di loggare l'errore di B4.
+ *
+ * Il dato resta qui, e non per dimenticanza: se il committente rivuole la
+ * sezione, le sono rimasti i valori e il meccanismo, e si riaccende rimettendo
+ * i blocchi in pagina. Cancellarlo vorrebbe dire riscriverlo.
  *
  * `playlist` e `count` sono **ripieghi**: il valore vero lo legge la build da
  * Spotify (`src/lib/spotify.ts`), e questi due restano per quando le credenziali

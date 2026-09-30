@@ -14,7 +14,7 @@ import { footerMap } from './chrome';
 
 /* ---------- /about ---------- */
 
-export const ABOUT_FOOTER_ROWS = { base: 90, md: 90, lg: 35 };
+export const ABOUT_FOOTER_ROWS = { base: 104, md: 104, lg: 34 };
 
 /**
  * A md /about non ha un disegno suo, e prende quello di base.
@@ -44,75 +44,40 @@ export const aboutBlocks = mdComeBase({
   aboutLocation: { base: [4, 29, 6, 2], lg: [9, 8, 2, 1] },
   aboutRemote: { base: [8, 31, 2, 2], lg: [11, 9, 1, 1] },
 
-  recipeIcon: { base: [2, 35, 2, 2], lg: [2, 11, 1, 1] },
-  recipeTitle: { base: [2, 37, 7, 2], lg: [2, 12, 4, 1] },
-  recipeFlame: { lg: [11, 12, 1, 1] },
   /*
-   * Quattro righe, non tre.
+   * "What I actually do": la sezione nuova, fra la biografia e la ricetta.
    *
-   * Nel frame le schede sono 360x360 (299:277, 299:314, 299:317) e il testo
-   * nuovo dentro non ci sta: misurato, a 1440 ne chiede **13px** in piu' e a
-   * 1200 fino a 63, cioe' due righe e mezzo di corpo tagliate via. Nel file il
-   * problema c'e' lo stesso — la scheda ha `overflow-clip` e il testo e' ad
-   * altezza automatica — solo che li' non si vede.
+   * A desktop le tre schede sono sfalsate come quelle della ricetta — righe 13,
+   * 14 e 15 — e sono 3x3 e non 3x4 (397:936, 397:930, 397:942). A mobile stanno
+   * in colonna, larghe otto celle, e **non sono alte uguali**: sette, otto e
+   * sette righe (400:977, 400:980, 400:983). E' il file: la seconda ha un testo
+   * piu' lungo e il blocco cresce invece di stringere il corpo.
    *
-   * Una riga in piu' e non un corpo piu' piccolo: il testo e' del committente e
-   * non si tocca. E' la stessa decisione di D109 per la citazione di TAMA e di
-   * D127 per il case study. Non tocca nessuno degli altri blocchi: il frullino
-   * resta alla riga 13, dove la seconda scheda non arriva, e il form comincia
-   * dove la seconda scheda finisce.
+   * La pentola sta sotto al titolo a desktop e sopra a mobile. Anche questo e'
+   * il file, e non c'e' niente da dedurre: 310:1484 contro 400:968.
    */
-  /*
-   * A base le tre schede stanno in una riga sola, e la riga e' piu' larga
-   * della finestra: 21 colonne dentro a 10 (356:622, largo 818 in un frame da
-   * 390). E' il blocco che la contiene, alto nove righe come le schede.
-   *
-   * Tutta la larghezza della griglia, e il blocco e' `bare`.
-   *
-   * Nel file la riga e' tagliata dal frame a 390, non da un contenitore: e'
-   * il **bordo dello schermo** a tagliare le schede, da tutti e due i lati.
-   * Un blocco che si ferma alla nona colonna taglia a destra a 351, uno che si
-   * ferma alla seconda taglia a sinistra a 39. Quindi il blocco prende tutta
-   * la griglia e non disegna niente: il contorno e' delle schede, e il margine
-   * di pagina glielo danno le due colonne vuote del binario. Vedi NOTES.md
-   * D141.
-   */
-  recipeSteps: { base: [1, 39, 10, 9] },
-  recipeOne: { lg: [3, 13, 3, 4] },
-  recipeBlender: { lg: [6, 13, 1, 1] },
-  recipeThree: { lg: [9, 13, 3, 4] },
-  recipeTwo: { lg: [6, 14, 3, 4] },
+  whatIcon: { base: [2, 34, 2, 2], lg: [6, 12, 1, 1] },
+  whatTitle: { base: [2, 36, 7, 4], lg: [2, 11, 4, 2] },
+  sectorOne: { base: [2, 40, 8, 7], lg: [3, 13, 3, 3] },
+  sectorTwo: { base: [2, 47, 8, 8], lg: [6, 14, 3, 3] },
+  sectorThree: { base: [2, 55, 8, 7], lg: [9, 15, 3, 3] },
 
   /*
-   * La sezione di contatto, che prima su /about non c'era.
-   *
-   * Arriva con il frame aggiornato (382:3672, 382:3700, 382:3703) e usa lo
-   * stesso componente di home, works e contact: non e' un secondo form da
-   * mantenere.
+   * La ricetta scende di sette righe a desktop e di ventinove a mobile: sopra
+   * c'e' la sezione nuova. Le schede passano da 3x4 a 3x3 (299:277, 299:314,
+   * 299:317) e il frullino fra la prima e la seconda non c'e' piu'.
    */
-  aboutForm: { base: [2, 54, 8, 16], lg: [3, 18, 5, 6] },
-  aboutCta: { base: [2, 49, 7, 5], lg: [8, 19, 4, 3] },
-  aboutSend: { base: [5, 70, 5, 2], lg: [8, 22, 2, 1] },
+  recipeIcon: { base: [2, 64, 2, 2], lg: [2, 18, 1, 1] },
+  recipeTitle: { base: [2, 66, 7, 2], lg: [2, 19, 4, 1] },
+  recipeFlame: { lg: [11, 19, 1, 1] },
+  recipeSteps: { base: [1, 68, 10, 9] },
+  recipeOne: { lg: [3, 20, 3, 3] },
+  recipeTwo: { lg: [6, 21, 3, 3] },
+  recipeThree: { lg: [9, 20, 3, 3] },
 
-  /*
-   * Da qui in giu' tutto scende di **sette righe**, per far posto al contatto.
-   *
-   * Nel frame questi quattro stanno 26 pixel sopra la linea: 2974 invece di
-   * 3000, 3094 invece di 3120, 3574 invece di 3600, 3694 invece di 3720.
-   * Ventisei pixel identici su tutti e quattro, cioe' un gruppo trascinato a
-   * mano e non quattro posizioni scelte. Qui si torna sulla linea — la regola
-   * zero non ammette scostamenti — e la prova che il numero giusto e' sette e'
-   * che tutti e quattro tornano esatti con lo stesso spostamento, e la loro
-   * distanza reciproca resta quella di prima.
-   */
-  kitchenTitle: { base: [2, 74, 6, 2], lg: [2, 26, 3, 2] },
-  kitchenPot: { base: [8, 74, 2, 2], lg: [5, 26, 1, 1] },
-  kitchenPhoto: { base: [3, 76, 7, 6], lg: [3, 27, 8, 5] },
-
-  spotifyCover: { base: [2, 82, 2, 2], lg: [6, 31, 2, 2] },
-  spotifyTitle: { base: [4, 82, 5, 2], lg: [8, 31, 3, 1] },
-  spotifyDisc: { base: [8, 86, 2, 2], lg: [11, 31, 1, 1] },
-  spotifyPlaylist: { base: [2, 84, 8, 2], lg: [8, 32, 4, 1] },
+  aboutCta: { base: [2, 79, 7, 5], lg: [8, 27, 4, 3] },
+  aboutForm: { base: [2, 84, 8, 16], lg: [3, 26, 5, 6] },
+  aboutSend: { base: [5, 100, 5, 2], lg: [8, 30, 2, 1] },
 } as const satisfies LayoutMap);
 
 export const aboutFooter = footerMap(ABOUT_FOOTER_ROWS);

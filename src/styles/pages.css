@@ -168,8 +168,19 @@
   font-size: calc(var(--u) * 20);
 }
 
-.about-grid .kitchen-title {
-  /* 356:638 */
+/*
+ * 400:972 — il titolo della sezione degli ambiti.
+ *
+ * Il selettore e' piu' lungo del necessario a occhio, e non e' pignoleria:
+ * `.about-grid .section-title h2` qui sopra vale (0,2,1) e vincerebbe su
+ * `.about-grid .what-title`, che vale (0,2,0). Il titolo usciva a venti pixel
+ * invece che a trentadue, e a quaranta invece che a sessantaquattro, senza che
+ * niente segnalasse niente: la dichiarazione c'era, perdeva e basta.
+ *
+ * Lo stesso difetto ce l'aveva il titolo della cucina, da quando esiste.
+ * Nessuno l'ha mai misurato perche' guardarlo non bastava.
+ */
+.about-grid .section-title .what-title {
   font-size: calc(var(--u) * 32);
 }
 
@@ -254,7 +265,7 @@
 
 @media (min-width: 1200px) {
   .about-grid .page-title h1,
-  .about-grid .kitchen-title,
+  .about-grid .section-title .what-title,
   .about-grid .cta-section__title {
     font-size: calc(var(--u) * 64);
   }
@@ -437,10 +448,72 @@
   font-size: calc(var(--u) * 14);
 }
 
-/* 300:354 — "kitchen" e' viola. Il testo e' largo 438 dentro un blocco da 360:
-   sfora nel file, ed e' dichiarato con data-known-overflow sulla pagina. */
-.kitchen-title {
+/* 400:957 — il titolo della sezione degli ambiti. Ha preso il posto di "In the
+   kitchen", che dal frame aggiornato non c'e' piu' (D143). */
+.what-title {
   margin: 0;
+}
+
+/*
+ * Le tre schede degli ambiti.
+ *
+ * Misure dal file: 397:936 a desktop — padding 20 con 40 in basso, stacco 20,
+ * titolo Poppins Bold 24, corpo Medium 16 a interlinea 1,5 — e 400:977 a
+ * mobile, dove stacco e corpo si stringono e il titolo scende a 18.
+ *
+ * Il contorno e il fondo li da' il blocco: sono `line` come tutti gli altri.
+ * Quello che serve qui e' solo la disposizione interna, perche' il
+ * riempimento dell'hover la eredita (`components.css`).
+ */
+.sector-card {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 12);
+  padding: var(--pad);
+  color: inherit;
+  text-decoration: none;
+}
+
+/* La riga dell'icona: il segno dell'ambito a sinistra, la freccia a destra. */
+.sector-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sector-card__title {
+  font-weight: 700;
+  font-size: calc(var(--u) * 18);
+  line-height: 1.5;
+  text-box: trim-both cap alphabetic;
+}
+
+.sector-card__body {
+  font-size: max(12px, calc(var(--u) * 14));
+}
+
+@media (min-width: 1200px) {
+  .sector-card {
+    gap: var(--pad);
+    padding: var(--pad) var(--pad) var(--pad-lg);
+  }
+
+  .sector-card__title {
+    font-size: calc(var(--u) * 24);
+  }
+
+  .sector-card__body {
+    font-size: max(14px, calc(var(--u) * 16));
+  }
+
+  /*
+   * La freccia sparisce a desktop, ed e' il file a dirlo: 397:936 non ce l'ha,
+   * 400:977 si'. Ha senso — qui c'e' l'hover a dire che la scheda porta da
+   * qualche parte, su un telefono no.
+   */
+  .sector-card__arrow {
+    display: none;
+  }
 }
 
 /* 301:522 — la copertina gira su se stessa al passaggio del mouse. Qui e'
