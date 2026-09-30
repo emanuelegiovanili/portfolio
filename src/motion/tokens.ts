@@ -25,8 +25,15 @@ export const EASE = {
  * Inerzia dello smooth scroll, in secondi di ritardo.
  *
  * Sotto 0,6 non si sente, sopra 1,5 la pagina sembra scollegata dalla rotella.
+ * Da 0,9 a 1,2 su richiesta del committente: e' il ritardo con cui la pagina
+ * raggiunge la rotella, non la distanza che percorre a ogni scatto. Quella la
+ * cambierebbe `speed` su ScrollSmoother, che qui non e' impostata e resta a 1.
+ *
+ * Chi cambia questo numero tocca anche l'ancora interna: il fuoco arriva a
+ * `SMOOTH + 0.2` (motion.ts), e l'attesa della sonda in `verify:motion` deve
+ * restare piu' lunga di cosi'.
  */
-export const SMOOTH = 0.9;
+export const SMOOTH = 1.2;
 
 /**
  * L'entrata del megamenu.
