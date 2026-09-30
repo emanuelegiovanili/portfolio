@@ -14,6 +14,28 @@
       "Nora is a nutritionist and personal trainer who works with a wide range of clients, treating nutrition and exercise as one journey rather than two. Her business grew through word of mouth and Instagram, but she had no identity of her own and nowhere for people looking for her to land.",
       "The site was built as that first point of contact, and it follows the journey people actually take: working out who Nora is, recognising themselves in what she offers, then getting in touch without friction.",
       "The interface was designed in Figma and built responsive on WordPress, on a library of consistent components she can update on her own as the practice grows."
+    ],
+    "blocks": [
+      {
+        "src": "../../assets/works/noranutrizione/gallery-1.jpg",
+        "alt": "Un portatile mostra la sezione “Chi sono”, con il ritratto in bianco e nero su fondo scuro",
+        "shape": "half"
+      },
+      {
+        "src": "../../assets/works/noranutrizione/gallery-2.jpg",
+        "alt": "La pagina del test genetico del microbioma intestinale, con il pulsante in giallo acido",
+        "shape": "wide"
+      },
+      {
+        "src": "../../assets/works/noranutrizione/gallery-3.jpg",
+        "alt": "La pagina del piano di coaching, con l'elenco di cosa comprende e due foto di allenamento",
+        "shape": "wide"
+      },
+      {
+        "src": "../../assets/works/noranutrizione/gallery-4.jpg",
+        "alt": "Due smartphone affiancati: la home con il logotipo Nora e la schermata dei servizi",
+        "shape": "half"
+      }
     ]
   }
 }

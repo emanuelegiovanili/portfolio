@@ -7,10 +7,11 @@
  * cucita addosso a Seezy; cosi' la pagina regge un numero qualsiasi di
  * immagini, che e' quanto chiede pagine-interne §7.7.
  *
- * Tutti e tre i progetti hanno un testo; solo Seezy ha la galleria, perche' e'
- * l'unico di cui il file disegni la sequenza di immagini. Gli altri due hanno
- * in compenso un sito online, quindi la loro copertina porta il pulsante
- * "Visit" — che compare **solo** dove c'e' un indirizzo.
+ * Tutti e tre i progetti hanno testo e galleria. La sequenza di forme la
+ * disegna il file per il solo Seezy; gli altri due la riusano, perche' gli slot
+ * sono un insieme chiuso e non una fila cucita addosso a un progetto. TAMA e
+ * Noranutrizione hanno in piu' un sito online, quindi la loro copertina porta
+ * il pulsante "Visit" — che compare **solo** dove c'e' un indirizzo.
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { Picture } from 'astro:assets';

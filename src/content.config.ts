@@ -41,9 +41,10 @@ const works = defineCollection({
        * fornito dal committente ne ha tre o quattro a progetto, e un `<p>` con
        * dentro tutto perderebbe gli stacchi che l'autore ha scritto.
        *
-       * `blocks` ha un valore predefinito vuoto: due progetti su tre hanno il
-       * testo e non la galleria, e prima di questo erano costretti a non avere
-       * nemmeno il testo.
+       * `blocks` ha un valore predefinito vuoto. Oggi tutti e tre i progetti
+       * hanno la galleria, ma il valore resta: un progetto nuovo puo' arrivare
+       * col solo testo, e prima di questo default era costretto a non avere
+       * nemmeno quello.
        */
       caseStudy: z
         .object({
