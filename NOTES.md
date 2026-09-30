@@ -2799,6 +2799,110 @@ Non lo chiama il sipario, lo chiama lo scroll morbido, che porta al bersaglio
 passando per lo smoother (D122). La domanda giusta non era "chi ha fermato il
 click" ma "il sipario e' sceso?".
 
+### D143. /about rivista: gli ambiti entrano, la cucina esce
+
+Frame 274:1855 e 356:589 aggiornati. Tre cose insieme.
+
+**"What I actually do"**, fra la biografia e la ricetta: tre schede che portano
+a /works gia' filtrata sul proprio ambito. A desktop sono 3x3 sfalsate, a
+mobile in colonna e **non alte uguali** — sette, otto e sette righe — perche' la
+seconda ha un testo piu' lungo e il file fa crescere il blocco invece di
+stringere il corpo. L'hover e' quello delle card del mix, non uno nuovo: il
+riempimento e' una copia di quello che sta sotto e sale dal basso. La freccia
+in alto a destra e' solo mobile (400:996, e a desktop niente): dove l'hover non
+esiste, senza freccia niente direbbe che la scheda porta da qualche parte.
+
+**La cucina esce**: ne' la fotografia della scrivania ne' la riga della playlist
+sono piu' nel frame, a nessuna delle due larghezze. La pagina non chiama piu'
+`src/lib/spotify.ts`, quindi il deploy smette anche di loggare l'errore di B4.
+Il dato resta in `about.ts` con scritto come riaccendere la sezione.
+
+**La ricetta** cambia copy: "Blend" e "Proof" diventano "Mix" e "Bake".
+
+**Il titolo che usciva piccolo.** `.about-grid .section-title h2` vale (0,2,1) e
+vinceva su `.about-grid .what-title`, che vale (0,2,0): il titolo di sezione
+usciva a 20px invece di 32 e a 40 invece di 64. Lo stesso difetto ce l'aveva il
+titolo della cucina **da quando esiste**, e nessuno l'ha mai misurato perche'
+guardarlo non bastava: quaranta e sessantaquattro in un blocco stretto si
+somigliano. E' la stessa forma di D110 — una dichiarazione che perde e non lo
+dice a nessuno.
+
+**Due scostamenti dichiarati.** Il frame mobile della ricetta e' rimasto
+indietro: 356:627 dice ancora "Blend" col testo di prima, mentre il desktop dice
+"Mix". La sorgente e' una sola e alimenta tutti e due i tier, quindi vale il
+desktop, che e' il frame rivisto. E le schede della ricetta a 1440 ci stanno per
+**tre pixel**: fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo
+di 14px e smette di scalare, quindi la prima chiede 28px in piu' e la terza 7.
+E' B14, misurato e dichiarato con `data-known-overflow`.
+
+### D144. /works prende il tier mobile, e tre cose si rompono in silenzio
+
+Frame 397:55. Settantasei righe, tre card 8x12 impilate, i tag che tornano sulla
+card, e i filtri in una riga larga 627 dentro 390 — cioe' dentro un contenitore
+che scorre, con la costruzione di D141.
+
+I filtri esistono **due volte** nel markup, uno per tier, come la ricetta di
+/about: a desktop sono blocchi della griglia, dentro a un binario non possono
+esserlo. Il JavaScript li trova tutti e due i gruppi perche' interroga per
+classe.
+
+Poi tre difetti, e nessuno dei tre tocca la griglia — che infatti restava a
+zero virgola zero.
+
+**Il filtro nascondeva tutte le card.** `shownIn` chiedeva se il build avesse
+dato alla card una riga per quello stato, cercando `--row-<stato>`. Le righe
+adesso hanno il tier in coda, perche' a mobile una card ne vale dodici e a
+desktop quattro: la risposta era sempre "no". Griglia impeccabile, pagina vuota.
+
+**Le linee di bordo sono una per tier, e il filtro ne spostava una sola.**
+`lines.find(...)`, scritto quando /works aveva il solo disegno desktop e di
+linee di bordo ce n'era una. A md quella di md restava alla riga 72 dentro una
+griglia che il filtro aveva accorciato a 60: mancava la linea che chiude la
+pagina, e con lei il confine su cui il bordo basso del footer doveva cadere.
+Questa l'ha presa `verify:grid`, ed e' l'unica delle tre.
+
+**I tag andavano a capo solo per certi progetti.** Col `flex-wrap`, due tag da
+due celle piu' il titolo da sei sforano le otto della card e vanno a capo; un
+tag solo fa otto esatte e resta appaiato al titolo. Seezy in un modo e TAMA in
+un altro, e a deciderlo era quanti tag ha il progetto. Ora le due righe sono
+esplicite.
+
+E il titolo di pagina usciva col corpo di desktop: la regola era scoped a
+`.about-grid`, che fino a ieri era l'unica pagina con un tier mobile.
+
+### D145. La pagina progetto a mobile, e il comando che il file non finisce
+
+Frame 397:462. Ottantaquattro righe: copertina 8x12, titolo, due tag, il testo,
+cinque riquadri di galleria 8x8 uno ogni nove righe, footer. A base le forme
+`wide` e `half` non ci sono — su una colonna sola non vogliono dire niente.
+
+**Due cose il file non le dice, e stanno scritte come scostamenti.**
+
+Il bottone "Visit" a mobile non c'e' nel frame, ma quel frame e' di Seezy, che
+un sito online non ce l'ha: il file non dice ne' si' ne' no. Sta nell'angolo in
+basso a destra della copertina, che e' la regola di desktop applicata alla
+copertina di mobile, e misura 2x2 invece di 2x1 perche' sotto i 1200 tutti i
+comandi quadrati del sito sono 2x2. L'alternativa era togliere a chi sta sul
+telefono l'unico link al sito del progetto.
+
+**E "Keep reading".** Il file lo disegna — 397:747 troncato coi puntini, 397:762
+viola sotto — ma disegna solo lo stato chiuso. Farlo crescere sarebbe il gesto
+naturale, e rompe tutto: un blocco che cresce trascina giu' la galleria e il
+footer, allunga la pagina e chiede linee di griglia che nel markup non esistono,
+quindi la regola zero salterebbe in ogni fotogramma dell'apertura. Qui aperto il
+testo **si scorre dentro al blocco**: la pagina resta ferma, non si inventa
+nessun layout, e non e' un gesto estraneo — il carosello della ricetta e la
+barra dei filtri fanno gia' cosi'. Resta una decisione mia, da confermare.
+
+Il comando e' un `<details>`, non un bottone con del JavaScript: aprire e
+chiudere un testo e' quello che quell'elemento fa, e lo fa anche se lo script
+non arriva.
+
+**Una regressione presa per un pelo.** Annidando i paragrafi dentro al riassunto
+si e' perso lo stacco fra l'uno e l'altro, che stava sul blocco: a desktop il
+testo si e' accorciato di sessanta pixel senza che niente segnalasse niente.
+Lo stacco e' passato sul contenitore del testo.
+
 ---
 
 ## 5. Blocchi aperti
@@ -2806,7 +2910,7 @@ click" ma "il sipario e' sceso?".
 | # | Cosa manca | Conseguenza |
 |---|---|---|
 | B1 | **Accesso di rete a `figma.com`** da questa sessione | La policy di egress risponde 403 al CONNECT: nessun asset immagine scaricabile (vedi `README.md`). Dalla Fase 5 il server MCP di Figma legge il file — nodi, misure, variabili, anteprime — quindi le misure si verificano alla fonte; restano fuori portata solo gli URL degli asset |
-| B2 | Frame mobile e md per `/works`, `/works/[slug]` e `/contact` | Sotto 1200px quelle tre route non hanno disegno e restano un desktop rimpicciolito. **`/about` non e' piu' fra loro** (D133): ha il suo frame a 390 e lo usa anche a md. Il megamenu ce l'ha da sempre |
+| B2 | **Frame mobile per `/contact`** | Restava una route sola: `/works` e `/works/[slug]` hanno preso il loro tier base con D144 e D145, `/about` con D133. Sotto 1200px `/contact` e' ancora un desktop rimpicciolito |
 | B3 | Backend del form, stati di errore / invio / conferma, privacy policy | Il form non è inviabile |
 | B4 | Blocco Spotify: **chiuso, con il dato a mano** | Il meccanismo c'e' ed e' provato (D114, D116), ma il Web API vuole un account **Premium** come proprietario dell'app e quello del committente e' Free (D117). Decisione sua: non si prende Premium per questo. In pagina restano nome e conteggio scritti in `src/data/about.ts`, piu' il link alla playlist che ora funziona. Resta da fare una cosa sola, e non e' codice: **togliere i due secret Spotify da GitHub**, o ogni deploy continuera' a loggare un errore che sappiamo gia'. Il conteggio invecchia: quando cambia, si aggiorna li' |
 | B5 | Stati hover e focus per **tutto il resto** | I due bottoni ora sono disegnati (D63). Restano senza hover le voci del footer, quelle del megamenu, le card progetto e i filtri. Il focus da tastiera e' visibile solo dentro il megamenu |

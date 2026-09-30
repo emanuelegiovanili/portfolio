@@ -148,9 +148,11 @@
  * desktop. Prima di queste righe otto blocchi sforavano alla larghezza di
  * disegno: non e' una messa a punto estetica, e' testo tagliato.
  */
-/* 354:3552 per /about, 397:251 per /works: stesso corpo, 32, e stessa altezza
-   di riga nel file. Le due pagine hanno un tier base e questa e' la misura. */
-:is(.about-grid, .works-grid) .page-title h1 {
+/* 354:3552 per /about, 397:251 per /works, 397:734 per la pagina progetto:
+   stesso corpo, 32, e stessa altezza di riga nel file. Sono le tre pagine con
+   un tier base, e questa e' la misura. /contact non c'e' perche' un disegno
+   mobile non ce l'ha ancora (B2). */
+:is(.about-grid, .works-grid, .work-grid) .page-title h1 {
   font-size: calc(var(--u) * 32);
 }
 
@@ -265,7 +267,7 @@
 }
 
 @media (min-width: 1200px) {
-  :is(.about-grid, .works-grid) .page-title h1,
+  :is(.about-grid, .works-grid, .work-grid) .page-title h1,
   .about-grid .section-title .what-title,
   .about-grid .cta-section__title {
     font-size: calc(var(--u) * 64);
@@ -865,5 +867,101 @@
   .works-grid .works-card__title {
     grid-area: 2 / 1 / 3 / 4;
     width: auto;
+  }
+}
+
+/* ---------- /works/[slug] a base: il testo che si apre ---------- */
+
+/*
+ * A base il testo del case study non ci sta nel blocco, e il file lo dice:
+ * 397:747 e' troncato e sotto c'e' "Keep reading" in viola (397:762). A
+ * desktop il blocco e' alto sei righe, il testo ci sta intero, e il comando
+ * non serve: sparisce.
+ *
+ * Quello che il file **non** dice e' come sia lo stato aperto: disegna solo
+ * quello chiuso. Crescere di una misura qualsiasi romperebbe la regola zero,
+ * quindi il blocco cresce di celle intere e quello che sta sotto scende di
+ * altrettante — e' lo stesso meccanismo dei filtri di /works, con il conto
+ * fatto a runtime invece che al build. Scostamento dichiarato, NOTES.md D145.
+ */
+.work-body__more {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.work-body__summary {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 10);
+  min-height: 0;
+  height: 100%;
+  list-style: none;
+  cursor: pointer;
+}
+
+/* Il triangolino dell'elemento nativo non c'e' nel disegno. */
+.work-body__summary::-webkit-details-marker {
+  display: none;
+}
+
+/*
+ * Lo stacco fra i paragrafi sta qui e non sul blocco.
+ *
+ * Prima i `<p>` erano figli diretti di `.work-body`, che ha `gap: var(--pad)`.
+ * Annidandoli dentro al riassunto lo stacco si e' perso, e a desktop il testo
+ * si e' accorciato di sessanta pixel senza che niente segnalasse niente:
+ * misurato, 638 invece di 698.
+ */
+.work-body__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--pad);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.work-body__cue {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: calc(var(--u) * 12);
+  line-height: 1.5;
+  color: var(--purple);
+}
+
+/*
+ * Aperto, il testo si scorre **dentro** al blocco.
+ *
+ * Il file disegna solo lo stato chiuso, quindi come debba essere quello aperto
+ * e' una decisione, non una lettura. Farlo crescere sarebbe il gesto naturale,
+ * ma un blocco che cresce trascina giu' la galleria e il footer, allunga la
+ * pagina e chiede linee di griglia che nel markup non ci sono: la regola zero
+ * salterebbe in tutti i fotogrammi dell'apertura.
+ *
+ * Scorrere dentro al blocco tiene la pagina ferma, non inventa nessun layout e
+ * non e' un gesto estraneo a questo sito: il carosello della ricetta e la barra
+ * dei filtri fanno gia' cosi'. Resta una scelta mia, e va confermata — vedi
+ * NOTES.md D145.
+ */
+.work-body__more[open] .work-body__text {
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+/* A testo aperto il comando ha fatto il suo, e il file non ne disegna un altro. */
+.work-body__more[open] .work-body__cue {
+  display: none;
+}
+
+@media (min-width: 1200px) {
+  /* A desktop il testo ci sta: niente comando, e il riassunto non e' cliccabile. */
+  .work-body__summary {
+    cursor: auto;
+  }
+
+  .work-body__cue {
+    display: none;
   }
 }

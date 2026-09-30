@@ -201,14 +201,24 @@ export const worksFooter = footerMap(WORKS_FOOTER_ROWS);
 
 /* ---------- /works/[slug] ---------- */
 
-export const WORK_FOOTER_ROWS = { lg: 45 };
+export const WORK_FOOTER_ROWS = { base: 79, md: 79, lg: 45 };
 
-export const workBlocks = {
-  workCover: { lg: [2, 3, 10, 6] },
-  // Nell'angolo in basso a destra della copertina: le sue ultime due colonne,
-  // la sua ultima riga. Compare solo dove il progetto ha un `liveUrl`.
-  workVisit: { lg: [10, 8, 2, 1] },
-  workTitle: { lg: [2, 10, 5, 1] },
+export const workBlocks = mdComeBase({
+  workCover: { base: [2, 5, 8, 12], lg: [2, 3, 10, 6] },
+  /*
+   * Nell'angolo in basso a destra della copertina: le sue ultime due colonne,
+   * la sua ultima riga. Compare solo dove il progetto ha un `liveUrl`.
+   *
+   * A base il frame non lo disegna — 397:621 e' una copertina e basta — ma
+   * quel frame e' di Seezy, che un sito online non ce l'ha, quindi il file non
+   * dice ne' si' ne' no. Qui vale la stessa regola di desktop applicata alla
+   * copertina di mobile, e due celle per due invece di due per una: sotto i
+   * 1200 tutti i comandi quadrati del sito sono 2x2. Scostamento dichiarato in
+   * NOTES.md D145 — l'alternativa era togliere a chi sta sul telefono l'unico
+   * link al sito del progetto.
+   */
+  workVisit: { base: [8, 15, 2, 2], lg: [10, 8, 2, 1] },
+  workTitle: { base: [2, 18, 8, 2], lg: [2, 10, 5, 1] },
   /*
    * Sei righe, non cinque.
    *
@@ -223,17 +233,21 @@ export const workBlocks = {
    * 16 sono libere, perche' la galleria sta nelle colonne 2-6. E' la stessa
    * decisione presa per la citazione di TAMA in D109, che qui costa anche meno.
    */
-  workBody: { lg: [8, 10, 4, 6] },
+  workBody: { base: [2, 22, 8, 10], lg: [8, 10, 4, 6] },
   workRelatedTitle: { lg: [2, 37, 5, 2] },
   workRelatedFlame: { lg: [6, 37, 1, 1] },
   workRelatedOne: { lg: [7, 37, 5, 4] },
   workRelatedTwo: { lg: [2, 39, 5, 4] },
   workViewAll: { lg: [7, 41, 2, 1] },
-} as const satisfies LayoutMap;
+} as const satisfies LayoutMap);
 
 /** I due tag, celle 1x1 adiacenti a partire da col 8. */
 export function workTagAt(index: number): LayoutMap[string] {
-  return { lg: [8 + index, 9, 1, 1] };
+  return {
+    base: [6 + index * 2, 20, 2, 2],
+    md: [6 + index * 2, 20, 2, 2],
+    lg: [8 + index, 9, 1, 1],
+  };
 }
 
 /**
@@ -252,9 +266,17 @@ const GALLERY_SLOTS = [
   { shape: 'half', at: [7, 31, 5, 4] },
 ] as const;
 
+/*
+ * A base le forme non ci sono: cinque riquadri uguali, otto per otto, uno ogni
+ * nove righe dalla trentatreesima (397:765, 397:767, 397:769, 397:772,
+ * 397:776). Su una colonna sola `wide` e `half` non vogliono dire niente.
+ */
+const GALLERY_BASE = [33, 42, 51, 60, 69] as const;
+
 export function galleryAt(index: number): LayoutMap[string] {
-  const slot = GALLERY_SLOTS[Math.min(index, GALLERY_SLOTS.length - 1)];
-  return { lg: slot.at };
+  const i = Math.min(index, GALLERY_SLOTS.length - 1);
+  const riga = GALLERY_BASE[i];
+  return { base: [2, riga, 8, 8], md: [2, riga, 8, 8], lg: GALLERY_SLOTS[i].at };
 }
 
 export function gallerySlots(): readonly (typeof GALLERY_SLOTS)[number][] {

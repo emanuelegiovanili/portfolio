@@ -62,7 +62,7 @@ const map = {
 ---
 
 <Base title={`${work.data.title} — Emanuele Giovanili`} description={work.data.excerpt}>
-  <Grid map={map} tiers={['lg']}>
+  <Grid map={map} tiers={['base', 'md', 'lg']} class="work-grid">
     <Header current="/works" />
 
     <Block at={workBlocks.workCover} class="media-block" clip>
@@ -93,12 +93,31 @@ const map = {
       <h1 class="t-display t-display--page">{work.data.title}</h1>
     </Block>
 
+    {/*
+      A base il testo non ci sta, e il file lo dice: 397:747 e' troncato con i
+      puntini e sotto c'e' "Keep reading" in viola (397:762). A desktop il
+      blocco e' alto sei righe e il testo ci sta intero, quindi il comando non
+      serve e sparisce.
+
+      `<details>` e non un bottone con del JavaScript: aprire e chiudere un
+      testo e' esattamente quello che questo elemento fa, lo fa senza script e
+      lo fa anche se lo script non arriva. Il riassunto e' il comando, e il
+      testo troncato sta **dentro** al riassunto, cosi' quello che si legge da
+      chiuso e' gia' il testo vero e non un'anteprima scritta a parte.
+    */}
     {
       work.data.caseStudy && (
         <Block at={workBlocks.workBody} class="work-body" clip>
-          {work.data.caseStudy.body.map((paragrafo) => (
-            <p class="t-body">{paragrafo}</p>
-          ))}
+          <details class="work-body__more">
+            <summary class="work-body__summary">
+              <div class="work-body__text">
+                {work.data.caseStudy.body.map((paragrafo) => (
+                  <p class="t-body">{paragrafo}</p>
+                ))}
+              </div>
+              <span class="work-body__cue">Keep reading</span>
+            </summary>
+          </details>
         </Block>
       )
     }
