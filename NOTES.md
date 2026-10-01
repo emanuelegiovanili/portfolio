@@ -2903,6 +2903,35 @@ si e' perso lo stacco fra l'uno e l'altro, che stava sul blocco: a desktop il
 testo si e' accorciato di sessanta pixel senza che niente segnalasse niente.
 Lo stacco e' passato sul contenitore del testo.
 
+### D146. Tre deploy falliti che non ho guardato, e due difetti che solo la CI vede
+
+Il committente: "non vedo le modifiche online, github mi ha comunicato che ha
+fallito il deploy". Erano falliti **tutti e tre**, compreso il primo, e io avevo
+riferito tre volte "pushato" senza aprire nemmeno un run. La catena passava sulla
+mia macchina e questo mi e' bastato: non lo era.
+
+Due difetti, tutti e due invisibili in locale.
+
+**Il bordo dell'agente utente sui tab dei filtri.** A base i tab stanno dentro a
+un binario che scorre, quindi non sono `.block` e non prendono il bordo
+trasparente da un pixel che i blocchi hanno: si tengono quello del `<button>`,
+`2px outset`. `appearance: none` non lo toglie. Un `outset` nero Chromium lo
+dipinge schiarito sui lati alto e sinistro, e quel grigio cade **sopra** al filo
+basso dei blocchi della riga sopra, che e' la stessa linea su cui il tab poggia.
+In CI la rassegna leggeva `168,168,168` dove doveva esserci `80,77,92`; qui no,
+perche' lo stesso `outset` due versioni di Chromium lo schiariscono in modo
+diverso. La riga che lo risolve e' la stessa gia' scritta per il bottone di
+chiusura del megamenu, in grid.css: `border: 0`.
+
+**Le schede degli ambiti a 1200.** Qui avanzano dieci pixel, in CI ne mancano
+dodici: ventidue di differenza, e sono le metriche dei font del runner. E' lo
+stesso B14 delle schede della ricetta e si dichiara allo stesso modo, con la
+misura di tutte e due le macchine scritta dentro.
+
+**La lezione non e' sui due difetti.** E' che "la catena passa" senza dire su
+quale macchina non vuol dire niente, e che un push non e' un deploy. Da qui in
+avanti il run si guarda, sempre, prima di dire che una cosa e' online.
+
 ---
 
 ## 5. Blocchi aperti

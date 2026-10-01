@@ -806,8 +806,24 @@
   display: none;
 }
 
+/*
+ * `border: 0` esplicito, ed e' la seconda volta che serve in questo progetto.
+ *
+ * I tab dentro al binario sono `<button>` **senza** la classe `.block`, quindi
+ * non prendono il bordo trasparente che i blocchi hanno: si tengono quello
+ * dell'agente utente, `2px outset`. `appearance: none` non lo toglie.
+ *
+ * Un `outset` nero Chromium lo dipinge schiarito sui lati alto e sinistro, e
+ * quel grigio cadeva **sopra** al filo basso dei blocchi della riga sopra —
+ * titolo e fiamma — che e' la stessa linea su cui poggia il tab. In CI la
+ * rassegna leggeva 168,168,168 dove doveva esserci 80,77,92.
+ *
+ * La stessa riga sta su `.block[data-surface='bare']` in grid.css, scritta la
+ * prima volta per il bottone di chiusura del megamenu.
+ */
 .filter-tab {
   position: relative;
+  border: 0;
   background-color: var(--block-bg);
 }
 
