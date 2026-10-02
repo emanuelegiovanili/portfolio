@@ -171,7 +171,7 @@ if (SETTORI.some((settore) => !WORK_TAGS.includes(settore.tag))) {
           href={`${via('/works')}?filter=${tagSlug(settore.tag)}`}
           class="sector-card"
           clip
-          data-known-overflow="397:936, 397:930 e 397:942 — le schede sono 3x3 nel file e a 1440 il testo ci sta. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: su questa macchina avanzano 10px, in CI ne mancano 12. E' lo stesso B14 delle schede della ricetta, e la differenza fra le due misure sono le metriche dei font del runner."
+          data-known-overflow="397:936, 397:930 e 397:942 — le schede sono 3x3 nel file e a 1440 il testo ci sta nelle due lingue. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare, e in CI le metriche dei font del runner tolgono altri 22px rispetto a qui (D146). In italiano la sonda riporta numeri piu' alti che in inglese — fino a 45 contro 9 a 320, 33 contro 0 a 1200 — ma tre misure a pagina ferma dicono zero a 390 e a 1200, e lo scatto a 1200 mostra il testo tutto dentro: niente di tagliato, blocchi nella loro area. La differenza fra i due numeri non e' spiegata, ed e' annotata in NOTES.md D149. E' B14."
         >
           <span class="sector-card__head">
             <Icon name={settore.icon} />
