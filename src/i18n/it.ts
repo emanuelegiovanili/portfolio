@@ -14,9 +14,11 @@
  * - i testi dei progetti e la tabella dei comandi: il file md del committente;
  * - le citazioni dei testimonial: mandate dal committente in chat.
  *
- * Le righe con `daTradurre(...)` sono **inglese che si vede in pagina
- * italiana**, in attesa del testo. Non sono dimenticanze silenziose: passano
- * dal registro in `index.ts` e `npm run verify:i18n` le elenca.
+ * **Oggi non manca niente**: ogni stringa ha la sua versione italiana. Il
+ * meccanismo per dichiarare quello che manca resta — `daTradurre` in
+ * `index.ts`, usato da `src/lib/progetti.ts` — perche' il prossimo progetto
+ * puo' arrivare senza traduzione, e quel giorno deve finire in un elenco
+ * invece che in una pagina italiana scritta in inglese.
  * ---------------------------------------------------------------------------
  *
  * COSE CHE NON SI CORREGGONO (NOTES.md §3.5 e D148)
@@ -36,8 +38,7 @@
  * Sono differenze di contenuto fra le due lingue, riprodotte come stanno.
  */
 
-import { daTradurre } from './index';
-import { en, type Dizionario } from './en';
+import type { Dizionario } from './en';
 
 export const it = {
   comune: {
@@ -97,11 +98,16 @@ export const it = {
       visita: 'Visita',
       continua: 'Continua a leggere',
       /**
-       * Il frame 423:476 dice ancora "Related work", e il file md del
-       * committente non lo elenca. Resta inglese e **conta come non tradotto**,
-       * cosi' finisce nell'elenco invece di passare per una scelta.
+       * Il frame 423:476 dice ancora "Related work" e il file md non lo
+       * elencava: l'ha dato il committente in chat.
+       *
+       * Scritto con la maiuscola. Lui l'ha scritto "altri progetti", ma ogni
+       * altro titolo display italiano comincia per maiuscola — "Chi sono",
+       * "Il mio segreto", "Di cosa mi occupo" — e una minuscola in mezzo a
+       * quelli si legge come una svista, non come una scelta. Segnalato
+       * (NOTES.md D148): se era voluta, e' una lettera.
        */
-      correlati: daTradurre('comune.progetto.correlati', en.comune.progetto.correlati),
+      correlati: 'Altri progetti',
       /**
        * Qui frame e file md **non vanno d'accordo**: 423:493 dice "View all",
        * il file md dice "Vedi tutti i progetti". Vince il file md, che e' il

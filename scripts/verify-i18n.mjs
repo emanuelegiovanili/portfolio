@@ -70,8 +70,8 @@ const SPIE = {
     en: ['Let’s work together'],
   },
   '/works/seezy': {
-    it: ['Chi segnala una situazione pericolosa'],
-    en: ['Reporting a dangerous situation'],
+    it: ['Chi segnala una situazione pericolosa', 'Altri progetti', 'Continua a leggere', 'Vedi tutti i progetti'],
+    en: ['Reporting a dangerous situation', 'Related work', 'Keep reading'],
   },
 };
 
