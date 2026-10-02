@@ -25,7 +25,34 @@ import { chromium } from 'playwright';
 import { waitForServer, CHROMIUM } from './dev-server.mjs';
 
 /** Le route pubbliche: le stesse che la build produce, meno quelle di debug. */
-const ROUTES = ['/', '/about', '/works', '/works/seezy', '/works/noranutrizione', '/works/tama-caffe', '/contact'];
+/*
+ * Le rotte misurate, **nelle due lingue**.
+ *
+ * Per un giro c'erano solo le sette inglesi, e in CI meta' sito non veniva
+ * misurato affatto: la griglia, i fili, la barra fissa e il sipario li vedeva
+ * solo chi apriva /about, mai /it/about. Che l'italiano abbia la stessa
+ * geometria e' il disegno, non un fatto — i blocchi stanno alle stesse celle,
+ * ma il testo dentro e' piu' lungo e lo spazio utile e' quello di prima.
+ *
+ * Raddoppia il tempo della catena, e vale: una verifica che copre meta' delle
+ * pagine dichiara verde l'altra meta' senza averla guardata.
+ */
+const ROUTES = [
+  '/',
+  '/about',
+  '/works',
+  '/works/seezy',
+  '/works/noranutrizione',
+  '/works/tama-caffe',
+  '/contact',
+  '/it',
+  '/it/about',
+  '/it/works',
+  '/it/works/seezy',
+  '/it/works/noranutrizione',
+  '/it/works/tama-caffe',
+  '/it/contact',
+];
 /** Deve rispondere 404: se un giorno risponde 200, la route di debug e' finita online. */
 const MUST_404 = ['/grid', '/grid/components'];
 const WIDTHS = [390, 768, 1440];
