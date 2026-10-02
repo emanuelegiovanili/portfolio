@@ -81,6 +81,7 @@ Nel codice `--rows` non è scritto a mano: è derivato dalla mappa di layout com
 - Marquee `250:196`: l'etichetta **"Teacher"**. L'insegnamento è finito a settembre 2026. **Riprodotta com'è.**
 - `274:2065` bio su `/about`: *"I also teach interface design"*, al presente. Stesso problema. **Riprodotta com'è.**
 - Il testo del consenso rimanda a una privacy policy che non esiste.
+- `303:1080`, prima scheda della ricetta: *"…how the system comes together. then I look at…"*, punto fermo e poi la minuscola. **Riprodotta com'è.**
 
 ### 3.6 Difetti di contenimento
 - `300:354` su `/about`: blocco largo 360px (3 colonne) con dentro un testo largo 438px. Sfora di 78px.
@@ -2931,6 +2932,37 @@ misura di tutte e due le macchine scritta dentro.
 **La lezione non e' sui due difetti.** E' che "la catena passa" senza dire su
 quale macchina non vuol dire niente, e che un push non e' un deploy. Da qui in
 avanti il run si guarda, sempre, prima di dire che una cosa e' online.
+
+### D147. La ricetta perde i titoli brevi, e un settore cambia una frase
+
+Frame 274:1855 rivisto di nuovo. Due modifiche di copy, di peso diverso.
+
+**Le tre schede della ricetta cambiano struttura, non solo testo.** Prima erano
+titolo breve, riga forte, corpo: Research / Mix / Bake, poi la promessa, poi la
+spiegazione. Ora il titolo breve non c'e' piu' e la scheda si apre direttamente
+con la frase, in Poppins Bold 24 su 1.5 (415:2939, 301:1075, 301:1077), col
+corpo in Medium 16 sotto. Quindi la riga forte e il titolo sono diventati la
+stessa cosa: `.recipe-card__lead` sparisce dal CSS e `heading` nei dati e' una
+frase, non un'etichetta. Il contenitore non si muove — `gap` 20, padding 20 in
+alto e ai lati, 40 in basso — quindi la geometria non cambia e le tre schede
+restano dove erano.
+
+La terza scheda perde anche la frase finale sul numero concordato all'inizio, e
+la prima e' riscritta da capo.
+
+**Un settore su tre.** 397:936 (Branding) e 397:930 (Product design) sono
+identici parola per parola; 397:942 (Web Design) cambia una frase: *"I build in
+Webflow, no-code, when the project fits"* diventa *"I build in Webflow through
+no-code when the project fits"*. Il confronto l'ho fatto a macchina, parola per
+parola, non a occhio: a occhio quei tre testi si somigliano abbastanza da
+lasciar passare la differenza.
+
+**Il frame mobile e' rimasto indietro un'altra volta.** 356:622 ha ancora
+"Step title" con la struttura di prima, come in D143 aveva ancora "Blend". La
+sorgente e' una sola e alimenta tutti e due i tier, quindi vale il desktop, che
+e' il frame rivisto. A base la frase prende le misure che il frame mobile dava
+al titolo breve, 18, e il corpo resta a 14: non sono misure nuove inventate, sono
+le sue applicate alla scheda nuova.
 
 ---
 

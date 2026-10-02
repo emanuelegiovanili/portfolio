@@ -160,8 +160,7 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       <div class="recipe-steps__track">
         {RECIPE.map((passo) => (
           <article class="recipe-steps__card">
-            <h3 class="recipe-card__title">{passo.title}</h3>
-            <p class="t-body recipe-card__lead">{passo.lead}</p>
+            <h3 class="recipe-card__title">{passo.heading}</h3>
             <p class="t-body recipe-card__body">{passo.body}</p>
           </article>
         ))}
@@ -174,8 +173,7 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       clip
       data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
-      <h3 class="recipe-card__title">{RECIPE[0].title}</h3>
-      <p class="t-body recipe-card__lead">{RECIPE[0].lead}</p>
+      <h3 class="recipe-card__title">{RECIPE[0].heading}</h3>
       <p class="t-body recipe-card__body">{RECIPE[0].body}</p>
     </Block>
 
@@ -185,8 +183,7 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       clip
       data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
-      <h3 class="recipe-card__title">{RECIPE[1].title}</h3>
-      <p class="t-body recipe-card__lead">{RECIPE[1].lead}</p>
+      <h3 class="recipe-card__title">{RECIPE[1].heading}</h3>
       <p class="t-body recipe-card__body">{RECIPE[1].body}</p>
     </Block>
 
@@ -196,8 +193,7 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       clip
       data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
-      <h3 class="recipe-card__title">{RECIPE[2].title}</h3>
-      <p class="t-body recipe-card__lead">{RECIPE[2].lead}</p>
+      <h3 class="recipe-card__title">{RECIPE[2].heading}</h3>
       <p class="t-body recipe-card__body">{RECIPE[2].body}</p>
     </Block>
 

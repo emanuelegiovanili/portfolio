@@ -51,38 +51,42 @@ export const SECTORS = [
     icon: 'app-window',
     title: 'Web Design',
     tag: 'Web Design',
-    body: "As with branding, being seen isn't enough. You need to be remembered, and your online presence speaks for you. I build in Webflow, no-code, when the project fits, and if it doesn't, I bring in a developer for guaranteed success.",
+    body: "As with branding, being seen isn't enough. You need to be remembered, and your online presence speaks for you. I build in Webflow through no-code when the project fits, and if it doesn't, I bring in a developer for guaranteed success.",
   },
 ] as const;
 
 /**
  * Le tre card del processo, riscritte di nuovo dal committente.
  *
- * Titoli e testi vengono dal frame desktop aggiornato (301:1073, 301:1075,
- * 301:1077): "Blend" e "Proof" diventano "Mix" e "Bake", e i corpi sono altri.
+ * **La struttura e' cambiata.** Prima c'era un titolo breve (Research / Mix /
+ * Bake), poi una riga forte, poi il corpo. Nel frame aggiornato i titoli brevi
+ * non ci sono piu': la scheda si apre direttamente con la frase, in Poppins
+ * Bold 24 (415:2939, 301:1075, 301:1077), e sotto c'e' il corpo in Medium 16.
+ * Quindi qui `heading` e' una frase, non un'etichetta, e la pagina la rende in
+ * `<h3>`: e' il titolo della scheda a tutti gli effetti.
  *
- * **Il frame mobile e' rimasto indietro**: 356:627 dice ancora "Blend" col testo
- * di prima. Qui la sorgente e' una sola e alimenta tutti e due i tier, quindi
- * vale il desktop, che e' il frame rivisto. Segnalato in NOTES.md D143.
+ * **Il frame mobile e' rimasto indietro, di nuovo**: 356:622 ha ancora
+ * "Step title" col testo di prima. La sorgente e' una sola e alimenta tutti e
+ * due i tier, quindi vale il desktop, che e' il frame rivisto. A base restano
+ * le proporzioni del frame mobile (18 per la frase, 14 per il corpo) applicate
+ * alla struttura nuova. Segnalato in NOTES.md D143.
  *
- * La struttura resta quella: un titolo, una **riga forte** e un corpo. La riga
- * forte e' la prima frase, che nel file e' in Poppins Bold.
+ * Un problema di copy, riprodotto e segnalato (NOTES.md §3.5): la prima scheda
+ * dice "comes together. then I look at" — punto fermo e poi la minuscola. La
+ * copy non si corregge, si riproduce.
  */
 export const RECIPE = [
   {
-    title: 'Research',
-    lead: 'Find the real problem before the budget goes into solving the wrong one.',
-    body: "I start by gathering what already exists and talking to the people who'll use what we're building. Then I ask you what the project needs to achieve, and which number will tell us it worked. Most briefs arrive without that answer, and settling it now costs very little.",
+    heading: 'Find real problems for real people.',
+    body: "I start by understanding the people who'll use what we're building, then work out which technology we'll use and how the system comes together. then I look at what the business needs to achieve, and which number will tell us it worked.",
   },
   {
-    title: 'Mix',
-    lead: 'Many skills, one pair of hands.',
+    heading: 'Many skills, one pair of hands.',
     body: 'I trained in product design, started out in code and branding and spent years working on conversion and web design. So when I shape a solution, design, technology and business get weighed at the same time, by the same person.',
   },
   {
-    title: 'Bake',
-    lead: 'Built together, tested to the end.',
-    body: "This is where it gets made, and you're part of it. You see the work as it takes shape, and we make the important decisions together along the way. I stay on it through the build and the details, up to the final tests with real people. Then we check the result against the number we agreed on at the start.",
+    heading: 'Built together, tested to the end.',
+    body: "This is where it gets made, and you're part of it. You see the work as it takes shape, and we make the important decisions together along the way. I stay on it through the build and the details, up to the final tests with real people.",
   },
 ];
 

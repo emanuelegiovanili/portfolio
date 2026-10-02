@@ -109,25 +109,19 @@
   padding: var(--pad) var(--pad) var(--pad-lg);
 }
 
+/*
+ * Il titolo della scheda, che nel frame aggiornato e' una frase intera: il
+ * titolo breve (Research / Mix / Bake) non c'e' piu', e con lui e' sparita la
+ * riga forte che stava in mezzo. Resta la misura del file, Poppins Bold 24 su
+ * 1.5 (415:2939), e `text-box` perche' una frase su due righe deve attaccare
+ * alla maiuscola, non all'ascendente del font.
+ */
 .recipe-card__title {
   margin: 0;
   font-weight: 700;
   font-size: calc(var(--u) * 24);
   line-height: 1.5;
   text-box: trim-both cap alphabetic;
-}
-
-/*
- * La riga forte sopra al corpo.
- *
- * Nel frame aggiornato la scheda non ha piu' il numero grande: ha il titolo,
- * questa riga, e il corpo. Non e' una prima frase in grassetto — e' la promessa
- * del passaggio, e il corpo spiega come si mantiene. Stesso corpo del testo di
- * lettura, solo piu' pesante: e' il grassetto di Poppins che il file usa.
- */
-.recipe-card__lead {
-  margin: 0;
-  font-weight: 700;
 }
 
 .recipe-card__body {
@@ -443,12 +437,18 @@
     var(--line) 100%;
 }
 
-/* Le misure del frame mobile: titolo 18, testo 14 (356:625, 356:626). */
+/*
+ * Le misure del frame mobile: titolo 18, testo 14 (356:625, 356:626).
+ *
+ * Quel frame e' fermo alla struttura di prima (D143), quindi qui non ci sono
+ * due misure nuove da leggere: restano le sue, applicate alla scheda nuova. La
+ * frase prende il posto del titolo breve, il corpo resta il corpo.
+ */
 .recipe-steps__card .recipe-card__title {
   font-size: calc(var(--u) * 18);
 }
 
-.recipe-steps__card :is(.recipe-card__lead, .recipe-card__body) {
+.recipe-steps__card .recipe-card__body {
   font-size: calc(var(--u) * 14);
 }
 
