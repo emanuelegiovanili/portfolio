@@ -92,7 +92,7 @@ const map = {
     {/* Solo dove il progetto ha un sito online. Seezy non ce l'ha, e la sua
         copertina resta quella del frame. */}
     {work.data.liveUrl && (
-      <VisitButton at={workBlocks.workVisit} href={work.data.liveUrl} label={work.data.title} />
+      <VisitButton at={workBlocks.workVisit} href={work.data.liveUrl} label={work.data.title} locale={locale} />
     )}
 
     {work.data.tags.map((tag) => (

@@ -103,6 +103,14 @@ export const en = {
 
     progetto: {
       visita: 'Visit',
+      /**
+       * Quello che un lettore di schermo pronuncia al posto di "Visit".
+       *
+       * `{nome}` e' il nome del progetto. "Visit" da solo non dice dove si va,
+       * e la scheda che si apre e' nuova: chi non vede lo schermo deve saperlo
+       * prima di premere, non dopo. Era scritta in italiano **anche qui**.
+       */
+      visitaVoce: 'Visit {nome}, opens in a new tab',
       continua: 'Keep reading',
       correlati: 'Related work',
       vediTutti: 'View all',

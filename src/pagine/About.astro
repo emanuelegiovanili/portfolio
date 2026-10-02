@@ -240,6 +240,7 @@ if (SETTORI.some((settore) => !WORK_TAGS.includes(settore.tag))) {
     {/* Stessa sezione di home, works e contact: un solo form nel sito. */}
     <ContactSection
       at={{ form: aboutBlocks.aboutForm, cta: aboutBlocks.aboutCta, send: aboutBlocks.aboutSend }}
+      locale={locale}
     />
 
     <Footer at={aboutFooter} current="/about" locale={locale} />

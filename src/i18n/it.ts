@@ -96,6 +96,7 @@ export const it = {
 
     progetto: {
       visita: 'Visita',
+      visitaVoce: 'Visita {nome}, si apre in una nuova scheda',
       continua: 'Continua a leggere',
       /**
        * Il frame 423:476 dice ancora "Related work" e il file md non lo

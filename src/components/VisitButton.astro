@@ -23,16 +23,20 @@
 import Block from './Block.astro';
 import Icon from './Icon.astro';
 import type { BlockPlacements } from '../lib/layout';
+import { DEFAULT_LOCALE, type Locale } from '../i18n';
+import { dizionario } from '../i18n/dizionario';
 
 interface Props {
   at: BlockPlacements;
   /** L'indirizzo del sito. Il chiamante monta il componente solo se c'e'. */
   href: string;
-  /** Per dire a voce dove si va: "Visit" da solo non lo direbbe. */
+  /** Il nome del progetto: entra nell'etichetta a voce. */
   label: string;
+  locale?: Locale;
 }
 
-const { at, href, label } = Astro.props;
+const { at, href, label, locale = DEFAULT_LOCALE } = Astro.props;
+const t = dizionario(locale);
 ---
 
 <Block
@@ -42,13 +46,13 @@ const { at, href, label } = Astro.props;
   target="_blank"
   rel="noopener noreferrer"
   class="visit-button is-opaque"
-  aria-label={`Visita ${label}, si apre in una nuova scheda`}
+  aria-label={t.comune.progetto.visitaVoce.replace('{nome}', label)}
   clip
 >
-  <span class="visit-button__label">Visit</span>
+  <span class="visit-button__label">{t.comune.progetto.visita}</span>
   <Icon name="arrow-up-right" />
   <span class="hover-fill" aria-hidden="true">
-    <span class="visit-button__label">Visit</span>
+    <span class="visit-button__label">{t.comune.progetto.visita}</span>
     <Icon name="arrow-up-right" />
   </span>
 </Block>
