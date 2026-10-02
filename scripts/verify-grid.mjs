@@ -159,7 +159,20 @@ try {
       }, where);
 
       const result = await page.evaluate(() => window.__probeGrid?.() ?? null);
-      if (!result) throw new Error(`nessuna griglia trovata a ${width}px`);
+      /*
+       * L'errore dice **dove**, non solo cosa.
+       *
+       * Diceva "nessuna griglia trovata a 320px" e basta: con dodici rotte in
+       * sequenza quel messaggio non permette di sapere quale pagina abbia
+       * fallito, e le righe si stampano alla fine, quindi il crollo si porta
+       * via anche le misure gia' fatte. Due ore buttate per una stringa.
+       */
+      if (!result) {
+        throw new Error(
+          `nessuna griglia trovata su ${route} a ${width}px (scroll: ${where}). ` +
+            `Titolo pagina: "${await page.title()}", indirizzo: ${page.url()}`,
+        );
+      }
 
       // Sotto la larghezza minima disegnata, o sotto i 1200 su una pagina che
       // esiste solo a desktop, lo sforo si misura e si stampa: non c'e' un
