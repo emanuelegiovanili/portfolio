@@ -1,5 +1,13 @@
 ---
 /**
+ * Il corpo di questa pagina, scritto una volta per tutte e due le lingue.
+ *
+ * **Non e' una rotta.** Le rotte sono i file sottili in `src/pages/` e
+ * `src/pages/it/`, che montano questo passandogli `locale`. Il perche' sta in
+ * `src/i18n/index.ts`: il parametro di rotta goloso rompeva il server di
+ * sviluppo, e con lui tutte le sonde.
+ */
+/**
  * /works/[slug] — frame 310:1614. Solo desktop.
  *
  * La galleria si compone su un insieme chiuso di due forme, `wide` (10x6) e
@@ -13,43 +21,24 @@
  * Noranutrizione hanno in piu' un sito online, quindi la loro copertina porta
  * il pulsante "Visit" — che compare **solo** dove c'e' un indirizzo.
  */
-import { getCollection, type CollectionEntry } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import { Picture } from 'astro:assets';
-import Base from '../../../layouts/Base.astro';
-import Grid from '../../../components/Grid.astro';
-import Block from '../../../components/Block.astro';
-import Header from '../../../components/Header.astro';
-import Footer from '../../../components/Footer.astro';
-import Icon from '../../../components/Icon.astro';
-import WorkCard from '../../../components/WorkCard.astro';
-import VisitButton from '../../../components/VisitButton.astro';
-import PrimaryButton from '../../../components/PrimaryButton.astro';
-import { headerMap } from '../../../lib/blocks/chrome';
-import { galleryAt, workBlocks, workFooter, workTagAt } from '../../../lib/blocks/pages';
-import { DEFAULT_LOCALE, LOCALES, pathFor, type Locale } from '../../../i18n';
-import { dizionario } from '../../../i18n/dizionario';
-import { contenutoProgetto } from '../../../lib/progetti';
-import '../../../styles/pages.css';
-import '../../../styles/home.css';
-
-/*
- * Le rotte sono il **prodotto** di lingue per progetti.
- *
- * Tre progetti in due lingue fanno sei pagine, e lo slug non cambia: il file
- * md del committente da' gli stessi slug nelle due lingue, quindi /works/seezy
- * e /it/works/seezy sono la stessa pagina in due lingue, non due indirizzi
- * diversi. E' anche quello che rende possibile il comando della lingua: da una
- * si arriva all'altra senza una tabella di corrispondenze.
- */
-export async function getStaticPaths() {
-  const works = await getCollection('works');
-  return LOCALES.flatMap((locale) =>
-    works.map((work) => ({
-      params: { lang: locale === DEFAULT_LOCALE ? undefined : locale, slug: work.id },
-      props: { work, all: works, locale },
-    })),
-  );
-}
+import Base from '../layouts/Base.astro';
+import Grid from '../components/Grid.astro';
+import Block from '../components/Block.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Icon from '../components/Icon.astro';
+import WorkCard from '../components/WorkCard.astro';
+import VisitButton from '../components/VisitButton.astro';
+import PrimaryButton from '../components/PrimaryButton.astro';
+import { headerMap } from '../lib/blocks/chrome';
+import { galleryAt, workBlocks, workFooter, workTagAt } from '../lib/blocks/pages';
+import { pathFor, type Locale } from '../i18n';
+import { dizionario } from '../i18n/dizionario';
+import { contenutoProgetto } from '../lib/progetti';
+import '../styles/pages.css';
+import '../styles/home.css';
 
 interface Props {
   work: CollectionEntry<'works'>;

@@ -1,0 +1,22 @@
+---
+/**
+ * La pagina di un progetto, in italiano.
+ *
+ * Il corpo sta in `src/pagine/Progetto.astro`, scritto una volta per tutte e
+ * due le lingue: qui c'e' solo la rotta. Gli slug non cambiano fra le lingue —
+ * il file md del committente li da' uguali — quindi /works/seezy e
+ * /it/works/seezy sono la stessa pagina in due lingue, ed e' anche quello che
+ * rende possibile il comando della lingua senza una tabella di corrispondenze.
+ */
+import { getCollection } from 'astro:content';
+import Progetto from '../../../pagine/Progetto.astro';
+
+export async function getStaticPaths() {
+  const works = await getCollection('works');
+  return works.map((work) => ({ params: { slug: work.id }, props: { work, all: works } }));
+}
+
+const { work, all } = Astro.props;
+---
+
+<Progetto work={work} all={all} locale="it" />

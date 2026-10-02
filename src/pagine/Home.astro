@@ -1,5 +1,13 @@
 ---
 /**
+ * Il corpo di questa pagina, scritto una volta per tutte e due le lingue.
+ *
+ * **Non e' una rotta.** Le rotte sono i file sottili in `src/pages/` e
+ * `src/pages/it/`, che montano questo passandogli `locale`. Il perche' sta in
+ * `src/i18n/index.ts`: il parametro di rotta goloso rompeva il server di
+ * sviluppo, e con lui tutte le sonde.
+ */
+/**
  * Home.
  *
  * L'unica pagina con tutti e tre i tier. Le posizioni vengono da
@@ -7,29 +15,30 @@
  * contenuto e la struttura.
  */
 import { getCollection } from 'astro:content';
-import Base from '../../layouts/Base.astro';
-import Grid from '../../components/Grid.astro';
-import Block from '../../components/Block.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import Icon from '../../components/Icon.astro';
-import Righe from '../../components/Righe.astro';
-import SquareButton from '../../components/SquareButton.astro';
-import PrimaryButton from '../../components/PrimaryButton.astro';
-import ContactSection from '../../components/ContactSection.astro';
-import WorksCarousel from '../../components/home/WorksCarousel.astro';
-import Testimonials from '../../components/home/Testimonials.astro';
-import { headerMap } from '../../lib/blocks/chrome';
-import { homeBlocks, homeFooter } from '../../lib/blocks/home';
-import { tagSlug } from '../../lib/blocks/pages';
-import { WORK_TAGS } from '../../content.config';
-import { testimonialCompleti } from '../../data/testimonials';
-import { localeRoutes, pathFor } from '../../i18n';
-import { dizionario } from '../../i18n/dizionario';
-import '../../styles/home.css';
+import Base from '../layouts/Base.astro';
+import Grid from '../components/Grid.astro';
+import Block from '../components/Block.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Icon from '../components/Icon.astro';
+import Righe from '../components/Righe.astro';
+import SquareButton from '../components/SquareButton.astro';
+import PrimaryButton from '../components/PrimaryButton.astro';
+import ContactSection from '../components/ContactSection.astro';
+import WorksCarousel from '../components/home/WorksCarousel.astro';
+import Testimonials from '../components/home/Testimonials.astro';
+import { headerMap } from '../lib/blocks/chrome';
+import { homeBlocks, homeFooter } from '../lib/blocks/home';
+import { tagSlug } from '../lib/blocks/pages';
+import { WORK_TAGS } from '../content.config';
+import { testimonialCompleti } from '../data/testimonials';
+import { pathFor, type Locale } from '../i18n';
+import { dizionario } from '../i18n/dizionario';
+import '../styles/home.css';
 
-export function getStaticPaths() {
-  return localeRoutes;
+
+interface Props {
+  locale: Locale;
 }
 
 const { locale } = Astro.props;

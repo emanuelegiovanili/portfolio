@@ -10,12 +10,25 @@
  * tutto: niente `/en/about`, che sarebbe un secondo indirizzo per la stessa
  * pagina e un regalo ai motori di ricerca sbagliato.
  *
- * In pratica ogni pagina sta sotto `src/pages/[...lang]/`. Il parametro di
- * rotta e' **facoltativo**: `{ lang: undefined }` genera `/about`,
- * `{ lang: 'it' }` genera `/it/about`. Un solo file per pagina, due uscite.
- * L'alternativa — `src/pages/` e `src/pages/it/` con i file duplicati — vuol
- * dire mantenere due copie dello stesso markup, e il giorno che una delle due
- * si dimentica una modifica non lo dice nessuno.
+ * In pratica: le rotte sono **statiche**, in `src/pages/` e `src/pages/it/`,
+ * e sono file di cinque righe che montano il corpo da `src/pagine/` passandogli
+ * `locale`. Il markup resta scritto una volta sola; a raddoppiare e' solo la
+ * dichiarazione della rotta.
+ *
+ * **Prima c'era un parametro di rotta solo, `src/pages/[...lang]/`, e non ha
+ * funzionato.** Un parametro rest e' goloso: `/it/works` combacia sia con
+ * `[...lang]/works/index.astro` (lang = "it") sia con `[...lang]/index.astro`
+ * (lang = "it/works"). La build risolve l'ambiguita' generando le pagine dagli
+ * `getStaticPaths` e usciva giusta — sedici pagine, tutte verificate — ma il
+ * server di sviluppo risolve per corrispondenza al volo, e sceglieva a caso:
+ * misurato, `/it/works` rispondeva 200 alla prima richiesta e 404 alla
+ * seconda, e `/about` e `/works` rispondevano 404. Siccome ogni sonda del
+ * progetto gira contro il dev, l'intera verifica diventava inutilizzabile —
+ * e il modo in cui e' venuto fuori e' che `verify:grid` cadeva con "nessuna
+ * griglia trovata" senza dire su quale rotta.
+ *
+ * Due file sottili per pagina costano dieci righe. Un'ambiguita' di routing
+ * costa una catena di verifica che non si puo' far girare.
  * ---------------------------------------------------------------------------
  *
  * **Nessun rinvio automatico sulla lingua del browser.** Chi arriva da un
@@ -33,23 +46,6 @@ export const DEFAULT_LOCALE: Locale = 'en';
 
 /** Il valore dell'attributo `lang` su `<html>`, e di `hreflang`. */
 export const HTML_LANG: Record<Locale, string> = { en: 'en', it: 'it' };
-
-/**
- * I parametri per `getStaticPaths`, uno per lingua.
- *
- * `undefined` e non `''`: Astro tratta un parametro rest indefinito come
- * segmento assente, mentre la stringa vuota lascerebbe una barra doppia.
- */
-export const localeRoutes = LOCALES.map((locale) => ({
-  params: { lang: locale === DEFAULT_LOCALE ? undefined : locale },
-  props: { locale },
-}));
-
-/** Dal segmento di rotta alla lingua, con la radice che vale inglese. */
-export function localeFrom(lang: string | undefined): Locale {
-  const trovata = LOCALES.find((l) => l === lang);
-  return trovata ?? DEFAULT_LOCALE;
-}
 
 /**
  * L'indirizzo di una pagina interna nella lingua data.

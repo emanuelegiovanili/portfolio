@@ -1,0 +1,12 @@
+---
+/**
+ * / in inglese.
+ *
+ * Il corpo sta in `src/pagine/Home.astro`, scritto una volta per tutte e
+ * due le lingue: qui c'e' solo la rotta. Due file sottili invece di un
+ * parametro di rotta goloso — vedi `src/i18n/index.ts`.
+ */
+import Home from '../pagine/Home.astro';
+---
+
+<Home locale="en" />
