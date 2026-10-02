@@ -301,13 +301,15 @@ export const CONTACT_FOOTER_ROWS = { lg: 12 };
 
 export const contactBlocks = {
   contactTitle: { lg: [2, 3, 4, 2] },
-  contactIcon: { lg: [5, 5, 1, 1] },
   /*
-   * Telefono e indirizzo, 423:147. Tre celle e non quattro: nel file ne occupa
-   * quattro e si sovrappone all'icona a colonna 5. Vedi il commento in
-   * contact.astro e NOTES.md D148.
+   * Telefono e indirizzo, 423:147.
+   *
+   * Quattro celle, la larghezza che il file gli da'. Per un giro ne ha avute
+   * tre, perche' l'icona `send` occupava la colonna 5 della stessa riga e due
+   * blocchi bordati sulla stessa cella rompono la regola zero. Il committente
+   * ha tolto l'icona: la sovrapposizione non c'e' piu'.
    */
-  contactDetails: { lg: [2, 5, 3, 1] },
+  contactDetails: { lg: [2, 5, 4, 1] },
 
   /*
    * Il form perde una riga, e non e' una scelta di layout: il committente ha

@@ -1390,7 +1390,7 @@ lascia a te. Chi non ha un client configurato non va da nessuna parte, e nessuno
 sapra' mai che ci ha provato: la risposta vera resta un endpoint che riceve il
 POST (B3).
 
-L'indirizzo e' `hello@emanuelegiovanili.it`, scelto dal committente. **Il
+L'indirizzo e' `hello@emanuelegiovanili.com`, scelto dal committente. **Il
 dominio non e' ancora registrato** (B21), e l'indirizzo sta in chiaro nel
 sorgente pubblico: e' una conseguenza di `mailto:`, e se diventasse un problema
 la risposta e' un backend, non offuscare la stringa.
@@ -2983,6 +2983,80 @@ non scende sotto la scatola e l'avanzo diventava +0. L'altezza naturale si legge
 sganciando il flex (`flex: none`) e rimettendolo. Due letture plausibili e tutte
 e due senza senso, prima di una vera.
 
+### D148. Il multilingua, e tre difetti che non c'entravano con le lingue
+
+Inglese alla radice, italiano sotto `/it/`, come chiesto dal committente. Un
+corpo di pagina per volta in `src/pagine/`, montato da rotte statiche in
+`src/pages/` e `src/pages/it/`.
+
+**Geometria identica.** I cinque frame italiani mettono i blocchi alle stesse
+celle dell'inglese: zero span da cambiare. La copy e' stata **adattata**, non
+tradotta alla lettera, ed e' la ragione per cui ci sta.
+
+**Il parametro di rotta goloso.** La prima forma era `src/pages/[...lang]/`.
+Un parametro rest cattura piu' segmenti: `/it/works` combacia sia con
+`[...lang]/works/index.astro` (lang = "it") sia con `[...lang]/index.astro`
+(lang = "it/works"). La build risolveva l'ambiguita' dagli `getStaticPaths` e
+usciva giusta, ma il dev risolve al volo e sceglieva a caso — misurato,
+`/it/works` 200 alla prima richiesta e 404 alla seconda, `/about` e `/works`
+404. Siccome ogni sonda gira contro il dev, l'intera verifica era
+inutilizzabile, **con la build verde**. Dieci file sottili costano dieci righe;
+un'ambiguita' di routing costa una catena che non si puo' far girare.
+
+**Le pagine inglesi servivano italiano**, in tre punti che non si vedono
+guardando la pagina: le `description`, le etichette dei comandi quadrati, e
+tutti i testi alternativi delle immagini. Per chi usa un lettore di schermo,
+la versione inglese era in italiano.
+
+**Il titolo del CTA sta in tre pezzi.** In inglese la parola viola e' in mezzo
+("Let's **bake** something together"), in italiano in testa ("**Costruiamo**
+qualcosa insieme"). Con due pezzi l'inglese avrebbe perso il viola su "bake".
+
+**Il font display non ha gli accenti.** Misurato con fontTools:
+`getai-black.woff2` ha 124 glifi e gli mancano `a' e' e' i' o' u' A' E'`.
+"Cosa c'e' dentro?" a 64px e "Scopri di piu'" sul bottone cadono in Poppins per
+quella lettera. E' B26, che in inglese riguardava un titolo solo e in italiano
+diventa strutturale. Serve un export dal fornitore.
+
+### D149. Una sonda che passa non vuol dire un lavoro giusto
+
+`verify:i18n` passava **99 controlli** mentre /it/about e /it/works servivano
+form e CTA tutti in inglese, e "Add some details" col suo segnaposto era
+inglese su ogni pagina. Li ha trovati il committente, a occhio, dopo che avevo
+dichiarato il lavoro online.
+
+Controllava **spie scelte a mano**: una frase per pagina. Nessuna nominava il
+form. Una sonda a elenco trova solo cio' che a chi la scrive e' venuto in mente
+di elencare, e quello che dimentica **lo dichiara verde** — peggio che non
+averla, perche' smette di far guardare.
+
+Ora legge il **dizionario intero**: le stringhe in cui inglese e italiano
+differiscono, e per ognuna pretende che l'inglese non compaia in nessuna pagina
+italiana e che l'italiano compaia in almeno una. Il secondo controllo prende il
+caso che il primo non vede — una chiave tradotta e mai usata, che e' esattamente
+com'era `form.dettagli`. Il pagliaio e' il testo visibile piu' gli attributi che
+portano copy, perche' un segnaposto inglese in pagina italiana e' un difetto
+quanto un titolo.
+
+Scrivendola sono usciti **tre difetti della sonda stessa**: decodificava
+`&amp;` ma non `&#38;`; faceva combaciare "Product Design" dentro "Product
+Designer"; pretendeva un confine di parola anche dove la frase comincia per
+virgola. Un falso allarme costa quanto un difetto taciuto, perche' insegna a
+non fidarsi delle righe rosse.
+
+E un numero che resta inspiegato: sulle schede settore di /about la sonda della
+griglia riporta per l'italiano sfori piu' alti che per l'inglese (45 contro 9 a
+320px, 33 contro 0 a 1200). Tre misure a pagina ferma danno zero a 390 e a 1200,
+e lo scatto a 1200 mostra il testo tutto dentro. Nessun difetto visibile, sforo
+comunque dichiarato — ma la differenza fra i due numeri non e' spiegata.
+
+### D150. "Raccontami la tua idea", che nel Figma non c'e'
+
+Il frame 416:3284 dice "Raccontami il progetto". Il committente l'ha cambiata a
+voce, e qui vince la richiesta. Ma le due cose ora divergono: il Figma andrebbe
+allineato, o la prossima lettura del file rimettera' la versione vecchia
+credendo di correggere.
+
 ---
 
 ## 5. Blocchi aperti
@@ -3006,7 +3080,7 @@ e due senza senso, prima di una vera.
 | ~~B18~~ | ~~Il ramo di produzione non esiste~~ | **Chiuso.** `main` creato. Resta da renderlo il ramo predefinito del repository, che e' un'impostazione e non cambia il funzionamento del deploy |
 | ~~B19~~ | ~~I secret Cloudflare non sono impostati~~ | **Chiuso.** Entrambi nei secret del repository. Il token passato in chat durante la messa a punto va revocato |
 | B20 | **Il sottodominio `workers.dev` e' quello generato da Cloudflare** | `emanuelegiovanili.emanuele-giovanili-ap.workers.dev` ripete il nome. Si cambia dal pannello (Workers & Pages, scheda Domains) o si mette un dominio proprio |
-| B21 | **`emanuelegiovanili.it` non e' registrato** | Il form apre un `mailto:` verso `hello@emanuelegiovanili.it` (D90). Finche' il dominio non c'e', quelle mail non arrivano da nessuna parte |
+| B21 | **Il dominio di `hello@emanuelegiovanili.com` va verificato** | Il committente ha chiesto il passaggio da `.it` a `.com`. L'indirizzo e' sia quello mostrato su /contact sia quello a cui il form apre il `mailto:` (D90), e sta scritto in un posto solo (`src/lib/site.ts`). **Resta da confermare che `.com` sia registrato e che la casella esista**: se non lo e', quelle mail non arrivano da nessuna parte e adesso l'indirizzo e' pure stampato in pagina |
 | B22 | **Il megamenu lascia piu' nero vuoto in fondo** | Conseguenza dei social alti una cella (D89): il pannello e' ancorato in alto e si e' accorciato di una riga. A base finisce a meta' schermo. Se non piace, si redistribuisce, ma quella e' una decisione di disegno |
 | B26 | **Il font display non ha i glifi accentati** | `getai-black.woff2` e' un sottoinsieme senza `U+00C0-U+00FF`: "TAMA caffe'" e' l'unico titolo che ne abbia bisogno oggi, e la sua "e" esce in Poppins Bold per il ripiego di D129. Serve al committente un export dal fornitore che includa almeno il latino esteso; poi si sostituisce il `.woff2`, si toglie `Poppins` da `--font-display`, si rimette il `unicode-range` del fallback a tutto e si svuota `GLIFI_NOTI` in `verify-type.mjs`. Tre righe |
 | B28 | **Una sberla molto decisa puo' saltare la seconda scheda di /about** | `scroll-snap-stop: always` e' dichiarato, ma sul percorso della rotellina Chromium non lo applica e da qui il percorso del dito non si misura (D138). Le schede sono tre e il salto possibile e' uno solo, quindi il danno massimo e' leggere il terzo passaggio senza il secondo. Si chiude con un test su un telefono vero, o rinunciando al nativo e scrivendo lo scorrimento a mano, che e' peggio |

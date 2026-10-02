@@ -38,6 +38,7 @@
  * Sono differenze di contenuto fra le due lingue, riprodotte come stanno.
  */
 
+import { CONTACT_EMAIL } from '../lib/site';
 import type { Dizionario } from './en';
 
 export const it = {
@@ -82,7 +83,12 @@ export const it = {
       aziendaSegnaposto: 'Dove lavori?',
       email: 'La tua email',
       emailSegnaposto: 'esempio@mail.com',
-      dettagli: 'Raccontami il progetto',
+      /*
+       * Il frame 416:3284 dice "Raccontami il progetto": il committente l'ha
+       * cambiata in chat. Qui vince la richiesta, non il file — ma le due cose
+       * ora divergono, e il Figma andrebbe allineato (NOTES.md D150).
+       */
+      dettagli: 'Raccontami la tua idea',
       dettagliSegnaposto: 'Aiutami a capire di cosa hai bisogno',
       invia: 'Invia',
     },
@@ -225,6 +231,8 @@ export const it = {
     descrizione: 'Scrivimi: raccontami cosa hai in mente.',
     titolo: 'Lavoriamo insieme',
     telefono: '+39 3313521295',
-    email: 'hello@emanuelegiovanili.it',
+    /* Uno solo, da `site.ts`: e' anche l'indirizzo a cui il form spedisce, e
+       due copie possono divergere senza che si veda. */
+    email: CONTACT_EMAIL,
   },
 } satisfies Dizionario;

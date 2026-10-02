@@ -15,7 +15,6 @@ import Grid from '../components/Grid.astro';
 import Block from '../components/Block.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import Icon from '../components/Icon.astro';
 import ContactSection from '../components/ContactSection.astro';
 import { headerMap } from '../lib/blocks/chrome';
 import { contactBlocks, contactFooter } from '../lib/blocks/pages';
@@ -43,19 +42,16 @@ const map = { ...headerMap, ...contactBlocks, ...contactFooter };
       <h1 class="t-display t-display--page">{t.contatti.titolo}</h1>
     </Block>
 
-    <Block at={contactBlocks.contactIcon} class="icon-cell" clip>
-      <Icon name="send" />
-    </Block>
-
     {/*
       Telefono e indirizzo, 423:147.
 
-      **Tre celle, non quattro.** Nel file questo blocco e' largo 480 (colonne
-      2-5) e l'icona `send` sta a colonna 5, riga 5: due blocchi bordati sulla
-      stessa cella, cioe' due fili sulla stessa linea e la regola zero rotta in
-      quel punto. E' uno scostamento della famiglia di §3.3, e si risolve come
-      gli altri — riportando sulla griglia — con il blocco a tre celle e
-      l'icona che resta dov'era gia' nel disegno inglese.
+      **Quattro celle, come il file lo disegna.** Per un giro ne ha avute tre:
+      nel frame il blocco e' largo 480 (colonne 2-5) ma l'icona `send` stava
+      anche lei a colonna 5, riga 5 — due blocchi bordati sulla stessa cella,
+      cioe' due fili sulla stessa linea. Si era risolto stringendo il blocco e
+      lasciando l'icona dov'era. Ora il committente l'icona l'ha tolta, la
+      sovrapposizione non esiste piu', e il blocco torna alla larghezza che il
+      file gli dava: senza, resterebbe una cella vuota orfana a colonna 5.
 
       Sono due link, non due righe di testo: su un telefono il numero si tocca
       e parte la chiamata, e l'indirizzo apre il programma di posta. Scriverli

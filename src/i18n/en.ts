@@ -35,6 +35,8 @@
  * dove il disegno manda a capo, il capo e' un dato, non markup.
  */
 
+import { CONTACT_EMAIL } from '../lib/site';
+
 export const en = {
   comune: {
     marchio: 'Emanuele Giovanili',
@@ -233,7 +235,9 @@ export const en = {
      * a spargerli per il sito senza una decisione.
      */
     telefono: '+39 3313521295',
-    email: 'hello@emanuelegiovanili.it',
+    /* Uno solo, da `site.ts`: e' anche l'indirizzo a cui il form spedisce, e
+       due copie possono divergere senza che si veda. */
+    email: CONTACT_EMAIL,
   },
 };
 
