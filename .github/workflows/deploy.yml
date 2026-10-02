@@ -89,6 +89,16 @@ jobs:
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: npm run verify:build
 
+      # Le due lingue, lette dal `dist/` appena costruito e verificato.
+      #
+      # Sta dopo e non dentro `verify:build` perche' non apre un browser: qui
+      # non si misurano pixel, si leggono attributi e testi. E sta in CI e non
+      # solo in locale perche' una verifica che gira sulla sola macchina di chi
+      # scrive non e' una verifica — e' esattamente l'errore che ha fatto
+      # passare tre deploy rossi (D146).
+      - name: Verifica le due lingue
+        run: npm run verify:i18n
+
       - name: Pubblica
         run: npx wrangler deploy
         env:
