@@ -167,11 +167,18 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       </div>
     </Block>
 
+    {/*
+      Le tre schede a desktop. Fino al testo precedente sforavano fra 1200 e
+      1279 ed erano dichiarate con `data-known-overflow`: col testo nuovo, che
+      perde il titolo breve e una riga, avanzano +42,2px a 1200 e +59,1px a
+      1440, cioe' due righe di corpo. La dichiarazione e' stata tolta di
+      proposito: lasciarla direbbe il falso, e tolta e' `verify:grid` che
+      urla se un domani il testo cresce di nuovo. Misura in D147.
+    */}
     <Block
       at={aboutBlocks.recipeOne}
       class="recipe-card"
       clip
-      data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
       <h3 class="recipe-card__title">{RECIPE[0].heading}</h3>
       <p class="t-body recipe-card__body">{RECIPE[0].body}</p>
@@ -181,7 +188,6 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       at={aboutBlocks.recipeTwo}
       class="recipe-card"
       clip
-      data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
       <h3 class="recipe-card__title">{RECIPE[1].heading}</h3>
       <p class="t-body recipe-card__body">{RECIPE[1].body}</p>
@@ -191,7 +197,6 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       at={aboutBlocks.recipeThree}
       class="recipe-card"
       clip
-      data-known-overflow="299:277, 299:314 e 299:317 — le schede sono 3x3 nel file e a 1440 il testo nuovo ci sta per tre pixel. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: la prima chiede 28px in piu' e la terza 7. E' B14, misurato."
     >
       <h3 class="recipe-card__title">{RECIPE[2].heading}</h3>
       <p class="t-body recipe-card__body">{RECIPE[2].body}</p>

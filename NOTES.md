@@ -2964,6 +2964,25 @@ e' il frame rivisto. A base la frase prende le misure che il frame mobile dava
 al titolo breve, 18, e il corpo resta a 14: non sono misure nuove inventate, sono
 le sue applicate alla scheda nuova.
 
+**Lo sforo delle schede e' sparito, e la dichiarazione va via con lui.** Col
+testo precedente le tre schede sforavano fra 1200 e 1279 (la prima di 28px, la
+terza di 7) ed erano dichiarate con `data-known-overflow`. Il testo nuovo e'
+piu' corto e perde una riga di titolo: misurato, il titolo sta su due righe
+(44,1px a 1200 col `text-box`, non 2x l'interlinea), il corpo su sette, e
+avanzano **+42,2px a 1200** — la larghezza peggiore di lg — e +59,1px a 1440,
+cioe' due righe di corpo. `verify:grid` conferma: le schede non compaiono piu'
+nell'elenco degli sfori. I tre attributi sono stati rimossi, non riscritti:
+lasciarli direbbe il falso, e toltili e' la sonda a urlare se un domani il
+testo cresce di nuovo.
+
+La sonda che ha dato quel numero ha sbagliato due volte prima di darlo, nello
+stesso modo di D38: il corpo ha `flex: 1 0 0`, quindi sommare i rettangoli dei
+figli faceva inseguire "chiesto" a "utile" e l'avanzo usciva +2px a ogni
+larghezza; passare a `scrollHeight` non e' andato meglio, perche' `scrollHeight`
+non scende sotto la scatola e l'avanzo diventava +0. L'altezza naturale si legge
+sganciando il flex (`flex: none`) e rimettendolo. Due letture plausibili e tutte
+e due senza senso, prima di una vera.
+
 ---
 
 ## 5. Blocchi aperti
@@ -2978,7 +2997,7 @@ le sue applicate alla scheda nuova.
 | B6 | Insieme chiuso di blocchi per i case study | Il layout di `/works/[slug]` è su misura per Seezy |
 | B7 | Incoerenza menu (2 voci) / footer (3 voci), e `/contact` orfana | Vedi D12 |
 | B9 | Immagini di progetto tutte 16:9 e sotto il 2x sui blocchi larghi, `about/desk.jpg` a 1x | Vedi `src/assets/README.md` |
-| B14 | **`/about` si stringe fra 1200 e 1365** | Quattro blocchi di testo tengono a 1440 e chiedono fino a 17px in piu' a 1200. Dichiarati con `data-known-overflow`. Si risolve allargando qualche span o alzando il confine lg: e' una decisione di disegno |
+| B14 | **`/about` si stringe fra 1200 e 1365** | Restano la biografia (274:2063, 12px a 1200) e le schede degli ambiti (9px), dichiarate con `data-known-overflow`. Le tre schede della ricetta ne sono uscite con D147: col testo nuovo avanzano 42px. Si risolve allargando qualche span o alzando il confine lg: e' una decisione di disegno |
 | B13 | **Due testimonial su quattro non hanno un testo** | Noranutrizione e Aggrego: su richiesta del committente da oggi **non compaiono affatto** in pagina (D110). Restano in `src/data/testimonials.ts`: scrivere la citazione li' e la scheda torna nel giro da sola. Seezy e TAMA caffe' sono complete | Il Figma mostra quattro nomi nella riga (`266:1148`) ma una sola citazione, quella attiva. Non ne ho inventata nessuna |
 | B12 | **Il form di contatto a md non sta nel proprio span, nemmeno nel Figma** | `321:2861` e' alto 633 contro i 616 di otto righe, e il contenuto ne chiede 606 piu' 40 di padding contro i 613 disponibili. Non e' un errore di trascrizione: e' il file. Serve decidere se il blocco diventa 9 righe o se cambiano spaziature e altezza della textarea |
 | B15 | **Megamenu a base e md: proposta in attesa di conferma** | Composizione derivata dalle regole del file, non disegnata (D66). Se il committente la conferma, B15 si chiude; se preferisce altro, cambia una tabella in `chrome.ts` |
