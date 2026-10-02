@@ -1,4 +1,6 @@
 ---
+import { DEFAULT_LOCALE, type Locale } from '../i18n';
+import { dizionario } from '../i18n/dizionario';
 /**
  * La sezione contatto: form, CTA opzionale, bottone di invio.
  *
@@ -26,18 +28,18 @@ interface Props {
    * l'attributo non c'e' e non cambia niente.
    */
   flow?: boolean;
+  locale?: Locale;
 }
 
-const { at, flow = false } = Astro.props;
+const { at, flow = false, locale = DEFAULT_LOCALE } = Astro.props;
 const flowAttr = flow ? '' : undefined;
+const t = dizionario(locale);
 
 const FIELDS = [
-  { id: 'name', label: 'Your name', placeholder: 'How can I call you?', required: true, type: 'text', autocomplete: 'name', width: 'half' },
-  { id: 'company', label: 'Your company name', placeholder: 'Where do you work?', required: false, type: 'text', autocomplete: 'organization', width: 'half' },
-  { id: 'email', label: 'Your email address', placeholder: 'example@mail.com', required: true, type: 'email', autocomplete: 'email', width: 'full' },
+  { id: 'name', label: t.comune.form.nome, placeholder: t.comune.form.nomeSegnaposto, required: true, type: 'text', autocomplete: 'name', width: 'half' },
+  { id: 'company', label: t.comune.form.azienda, placeholder: t.comune.form.aziendaSegnaposto, required: false, type: 'text', autocomplete: 'organization', width: 'half' },
+  { id: 'email', label: t.comune.form.email, placeholder: t.comune.form.emailSegnaposto, required: true, type: 'email', autocomplete: 'email', width: 'full' },
 ] as const;
-
-const CONSENT = 'I agree with the processing my personal data';
 ---
 
 <Block
@@ -115,10 +117,19 @@ const CONSENT = 'I agree with the processing my personal data';
         required></textarea>
     </p>
 
-    <p class="consent-row">
-      <input class="consent-row__box" id="cf-consent" name="consent" type="checkbox" required />
-      <label class="t-meta" for="cf-consent">{CONSENT}</label>
-    </p>
+    {/*
+      La riga del consenso non c'e' piu'.
+
+      Richiesta del committente, su tutte le pagine: i frame nuovi (423:602,
+      423:510, 416:3263) il check non ce l'hanno. Se ne va anche la stringa
+      "I agree with the processing my personal data", quella a cui mancava una
+      preposizione e che §3.5 teneva segnalata — il difetto si chiude perche'
+      sparisce il testo, non perche' l'abbiamo corretto.
+
+      Resta aperto B3: senza backend il form non si invia, e un modulo che
+      raccoglie dati personali avra' bisogno comunque di un'informativa il
+      giorno che parte davvero.
+    */}
   </form>
 </Block>
 
@@ -131,9 +142,9 @@ const CONSENT = 'I agree with the processing my personal data';
       clip
       data-known-overflow="314:2402 — a base lead e titolo chiedono 156px dentro 155 di spazio utile"
     >
-      <p class="t-title cta-section__lead">Don’t let your ideas sit and simmer for too long</p>
+      <p class="t-title cta-section__lead">{t.comune.cta.lead}</p>
       <p class="t-display t-display--page cta-section__title">
-        Let’s <span class="cta-section__accent">bake</span> something together
+        {t.comune.cta.titoloPrima}<span class="cta-section__accent">{t.comune.cta.titoloAccento}</span>{t.comune.cta.titoloDopo}
       </p>
     </Block>
   )
@@ -141,7 +152,7 @@ const CONSENT = 'I agree with the processing my personal data';
 
 <PrimaryButton
   at={at.send}
-  label="Send"
+  label={t.comune.form.invia}
   type="submit"
   form="contact-form"
   disabled

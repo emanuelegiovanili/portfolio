@@ -22,6 +22,40 @@ import Icon from './Icon.astro';
 import SquareButton from './SquareButton.astro';
 import PrimaryButton from './PrimaryButton.astro';
 import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
+import { DEFAULT_LOCALE, LOCALES, pathFor, type Locale } from '../i18n';
+import { dizionario } from '../i18n/dizionario';
+
+interface Props {
+  locale?: Locale;
+  /** Il percorso **inglese** della pagina, per restare sulla stessa cambiando lingua. */
+  percorso?: string;
+}
+
+const { locale = DEFAULT_LOCALE, percorso } = Astro.props;
+const t = dizionario(locale);
+const via = (p: string) => pathFor(locale, p);
+
+/*
+ * I due comandi della lingua.
+ *
+ * Portano alla **stessa pagina** nell'altra lingua, non alla home: cambiare
+ * lingua da /about e ritrovarsi sulla home e' il modo piu' rapido di far
+ * perdere il segno a chi stava leggendo. Dove il percorso non lo sappiamo —
+ * le route di debug — il comando non si disegna affatto, perche' un comando
+ * che porta altrove e' peggio di nessun comando.
+ *
+ * Sono `<a>`, non bottoni: cambiano indirizzo. Chi apre in una scheda nuova,
+ * chi copia il link, chi naviga da tastiera si aspetta un link e lo trova.
+ */
+const comandiLingua = percorso
+  ? LOCALES.map((l) => ({
+      locale: l,
+      href: pathFor(l, percorso),
+      etichetta: l === 'it' ? t.comune.lingua.it : t.comune.lingua.en,
+      attiva: l === locale,
+      at: l === 'it' ? megamenuMap.menuLangIt : megamenuMap.menuLangEn,
+    }))
+  : [];
 ---
 
 <div
@@ -29,7 +63,7 @@ import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
   class="megamenu"
   role="dialog"
   aria-modal="true"
-  aria-label="Menu"
+  aria-label={t.comune.intestazione.menu}
   aria-hidden="true"
   inert
 >
@@ -39,13 +73,13 @@ import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
         {/* Nel file e' un frame di testo, non un link. Qui porta a casa: il menu
             non ha una voce "Home" e un logo muto dentro una navigazione a tutto
             schermo e' un vicolo cieco. Vedi NOTES.md D48. */}
-        <Block at={megamenuMap.menuLogo} as="a" href="/" class="logo menu-logo" clip>
+        <Block at={megamenuMap.menuLogo} as="a" href={via('/')} class="logo menu-logo" clip>
           <span class="t-display logo__text">
             <span class="logo__word">Emanuele</span> <span class="logo__word">Giovanili</span>
           </span>
         </Block>
 
-        <PrimaryButton at={megamenuMap.menuCta} label="Let’s work together" href="/contact" />
+        <PrimaryButton at={megamenuMap.menuCta} label={t.comune.menu.lavoriamo} href={via('/contact')} />
 
         {/*
           L'icona e' `menu`, non `x`.
@@ -68,7 +102,7 @@ import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
         <SquareButton
           at={megamenuMap.menuClose}
           icon="menu"
-          label="Chiudi il menu"
+          label={t.comune.intestazione.chiudiMenu}
           class="menu-close"
           id="menu-close"
           aria-controls="megamenu"
@@ -76,14 +110,36 @@ import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
 
         {
           MENU_LINKS.map((link) => (
-            <Block at={megamenuMap[link.key]} as="a" class="menu-voice" href={link.href} clip>
-              <span class="t-display t-display--page">{link.label}</span>
+            <Block at={megamenuMap[link.key]} as="a" class="menu-voice" href={via(link.href)} clip>
+              <span class="t-display t-display--page">{t.comune.menu[link.voce]}</span>
               {/* La copia nel colore d'arrivo, come sui bottoni: e' lo strato che
                   sale a ritagliare se stesso e la propria scritta, cosi' il
                   testo cambia colore dove passa il bordo del riempimento. */}
               <span class="hover-fill" aria-hidden="true">
-                <span class="t-display t-display--page">{link.label}</span>
+                <span class="t-display t-display--page">{t.comune.menu[link.voce]}</span>
               </span>
+            </Block>
+          ))
+        }
+
+        {
+          comandiLingua.map((lingua) => (
+            <Block
+              at={lingua.at}
+              as="a"
+              class="menu-lang"
+              href={lingua.href}
+              hreflang={lingua.locale}
+              lang={lingua.locale}
+              aria-current={lingua.attiva ? 'true' : undefined}
+              data-attiva={lingua.attiva ? '' : undefined}
+              clip
+            >
+              <span class="menu-lang__label">{lingua.etichetta}</span>
+              {/* Il fondo viola dice quale lingua e' attiva, e il colore da solo
+                  non lo dice a chi non lo vede: `aria-current` lo dice, e questo
+                  lo pronuncia. */}
+              {lingua.attiva && <span class="visually-hidden">, {t.comune.lingua.attiva}</span>}
             </Block>
           ))
         }
@@ -99,10 +155,10 @@ import { megamenuMap, MENU_LINKS, MENU_SOCIALS } from '../lib/blocks/chrome';
               rel="noopener noreferrer"
               clip
             >
-              <span class="t-link">{social.label}</span>
+              <span class="t-link">{t.comune.menu[social.voce]}</span>
               <Icon name="arrow-up-right" />
               <span class="hover-fill" aria-hidden="true">
-                <span class="t-link">{social.label}</span>
+                <span class="t-link">{t.comune.menu[social.voce]}</span>
                 <Icon name="arrow-up-right" />
               </span>
             </Block>

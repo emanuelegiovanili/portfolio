@@ -8,15 +8,15 @@
  * tre progetti reali. E' "All" a essere rimasto indietro, vedi NOTES.md §3.1.
  */
 import { getCollection } from 'astro:content';
-import Base from '../../layouts/Base.astro';
-import Grid from '../../components/Grid.astro';
-import Block from '../../components/Block.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import Icon from '../../components/Icon.astro';
-import WorkCard from '../../components/WorkCard.astro';
-import ContactSection from '../../components/ContactSection.astro';
-import { headerMap } from '../../lib/blocks/chrome';
+import Base from '../../../layouts/Base.astro';
+import Grid from '../../../components/Grid.astro';
+import Block from '../../../components/Block.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import Icon from '../../../components/Icon.astro';
+import WorkCard from '../../../components/WorkCard.astro';
+import ContactSection from '../../../components/ContactSection.astro';
+import { headerMap } from '../../../lib/blocks/chrome';
 import {
   worksBlocks,
   worksCardAt,
@@ -24,11 +24,22 @@ import {
   worksFilterAt,
   worksFilterStates,
   worksFooter,
-} from '../../lib/blocks/pages';
-import { deriveRows } from '../../lib/layout';
-import { WORK_TAGS } from '../../content.config';
-import '../../styles/pages.css';
-import '../../styles/home.css';
+} from '../../../lib/blocks/pages';
+import { deriveRows } from '../../../lib/layout';
+import { WORK_TAGS } from '../../../content.config';
+import '../../../styles/pages.css';
+import '../../../styles/home.css';
+
+import { localeRoutes, pathFor } from '../../../i18n';
+import { dizionario } from '../../../i18n/dizionario';
+
+export function getStaticPaths() {
+  return localeRoutes;
+}
+
+const { locale } = Astro.props;
+const t = dizionario(locale);
+const via = (p: string) => pathFor(locale, p);
 
 const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
 
@@ -57,6 +68,7 @@ const states = worksFilterStates(
   works.map((w) => ({ id: w.id, tags: w.data.tags })),
   WORK_TAGS,
   rowsFull,
+  t.works.tutti,
 );
 
 /**
@@ -116,12 +128,12 @@ const filterCss =
 
 <style set:html={filterCss}></style>
 
-<Base title="Works — Emanuele Giovanili" description="Progetti di branding, web design e product design.">
+<Base locale={locale} percorso="/works" title={t.works.titoloPagina} description={t.works.descrizione}>
   <Grid map={map} tiers={['base', 'md', 'lg']} class="works-grid" data-filter="all">
-    <Header current="/works" />
+    <Header current="/works" locale={locale} />
 
     <Block at={worksBlocks.worksTitle} class="page-title" clip>
-      <h1 class="t-display t-display--page">My work</h1>
+      <h1 class="t-display t-display--page">{t.works.titolo}</h1>
     </Block>
 
     <Block at={worksBlocks.worksFlame} class="icon-cell" clip>
@@ -189,13 +201,13 @@ const filterCss =
         <Block
           at={cardAt[work.id]}
           as="a"
-          href={`/works/${work.id}`}
+          href={via(`/works/${work.id}`)}
           class="works-card"
           data-card={work.id}
           style={cardStyle(work.id)}
           clip
         >
-          <WorkCard work={work} eager={i === 0} />
+          <WorkCard work={work} eager={i === 0} locale={locale} />
         </Block>
       ))
     }
@@ -209,12 +221,12 @@ const filterCss =
       flow
     />
 
-    <Footer at={worksFooter} current="/works" flow />
+    <Footer at={worksFooter} current="/works" locale={locale} flow />
   </Grid>
 </Base>
 
 <script>
-  import { startWorksFilter } from '../../scripts/works-filter';
+  import { startWorksFilter } from '../../../scripts/works-filter';
 
   startWorksFilter();
 </script>

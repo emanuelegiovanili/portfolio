@@ -179,6 +179,7 @@ export function worksFilterStates(
   works: { id: string; tags: readonly string[] }[],
   tags: readonly string[],
   rowsFull: Partial<Record<Tier, number>>,
+  etichettaTutti: string,
 ): WorksFilterState[] {
   const build = (slug: string, label: string, tag: string | null): WorksFilterState => {
     const ids = works.filter((w) => tag === null || w.tags.includes(tag)).map((w) => w.id);
@@ -194,7 +195,16 @@ export function worksFilterStates(
     return { slug, label, tag, ids, shift, rows };
   };
 
-  return [build('all', 'All', null), ...tags.map((tag) => build(tagSlug(tag), tag, tag))];
+  /*
+   * L'etichetta di "All" arriva da fuori perche' e' copy, e la copy sta nei
+   * dizionari. Nei fatti dice "All" in tutte e due le lingue — lo mostra il
+   * frame italiano 423:313, come i tag — ma la differenza fra "e' uguale" e
+   * "e' scritto in un posto solo" si vede il giorno che smette di esserlo.
+   *
+   * I tag invece restano come sono: "Branding", "Product", "Web Design" sono i
+   * valori su cui la pagina filtra, non parole da tradurre.
+   */
+  return [build('all', etichettaTutti, null), ...tags.map((tag) => build(tagSlug(tag), tag, tag))];
 }
 
 export const worksFooter = footerMap(WORKS_FOOTER_ROWS);
@@ -292,8 +302,28 @@ export const CONTACT_FOOTER_ROWS = { lg: 12 };
 export const contactBlocks = {
   contactTitle: { lg: [2, 3, 4, 2] },
   contactIcon: { lg: [5, 5, 1, 1] },
-  contactForm: { lg: [7, 3, 5, 6] },
-  contactSend: { lg: [7, 9, 2, 1] },
+  /*
+   * Telefono e indirizzo, 423:147. Tre celle e non quattro: nel file ne occupa
+   * quattro e si sovrappone all'icona a colonna 5. Vedi il commento in
+   * contact.astro e NOTES.md D148.
+   */
+  contactDetails: { lg: [2, 5, 3, 1] },
+
+  /*
+   * Il form perde una riga, e non e' una scelta di layout: il committente ha
+   * tolto il check del consenso da tutte le pagine, e qui il frame nuovo
+   * (423:602) lo mostra alto 600 invece di 719. Cinque righe, non sei, e il
+   * bottone sale di conseguenza.
+   *
+   * **Solo qui.** Su home, /about e /works i frame italiani mostrano il form
+   * ancora alto sei righe (416:3263, 423:510): li' il contenuto ha una riga di
+   * respiro in piu' e il blocco non si muove. Stringere anche quelli vorrebbe
+   * dire spostare CTA, bottone e footer di tre pagine senza un disegno con cui
+   * verificare il risultato, che e' esattamente il modo in cui la regola zero
+   * si rompe senza accorgersene.
+   */
+  contactForm: { lg: [7, 3, 5, 5] },
+  contactSend: { lg: [7, 8, 2, 1] },
 } as const satisfies LayoutMap;
 
 export const contactFooter = footerMap(CONTACT_FOOTER_ROWS);

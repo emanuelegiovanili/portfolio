@@ -7,24 +7,34 @@
  * contenuto e la struttura.
  */
 import { getCollection } from 'astro:content';
-import Base from '../layouts/Base.astro';
-import Grid from '../components/Grid.astro';
-import Block from '../components/Block.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import Icon from '../components/Icon.astro';
-import SquareButton from '../components/SquareButton.astro';
-import PrimaryButton from '../components/PrimaryButton.astro';
-import ContactSection from '../components/ContactSection.astro';
-import WorksCarousel from '../components/home/WorksCarousel.astro';
-import Testimonials from '../components/home/Testimonials.astro';
-import { headerMap } from '../lib/blocks/chrome';
-import { homeBlocks, homeFooter } from '../lib/blocks/home';
-import { tagSlug } from '../lib/blocks/pages';
-import { WORK_TAGS } from '../content.config';
-import { SERVICES } from '../data/services';
-import { COMPLETE_TESTIMONIALS } from '../data/testimonials';
-import '../styles/home.css';
+import Base from '../../layouts/Base.astro';
+import Grid from '../../components/Grid.astro';
+import Block from '../../components/Block.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Icon from '../../components/Icon.astro';
+import Righe from '../../components/Righe.astro';
+import SquareButton from '../../components/SquareButton.astro';
+import PrimaryButton from '../../components/PrimaryButton.astro';
+import ContactSection from '../../components/ContactSection.astro';
+import WorksCarousel from '../../components/home/WorksCarousel.astro';
+import Testimonials from '../../components/home/Testimonials.astro';
+import { headerMap } from '../../lib/blocks/chrome';
+import { homeBlocks, homeFooter } from '../../lib/blocks/home';
+import { tagSlug } from '../../lib/blocks/pages';
+import { WORK_TAGS } from '../../content.config';
+import { testimonialCompleti } from '../../data/testimonials';
+import { localeRoutes, pathFor } from '../../i18n';
+import { dizionario } from '../../i18n/dizionario';
+import '../../styles/home.css';
+
+export function getStaticPaths() {
+  return localeRoutes;
+}
+
+const { locale } = Astro.props;
+const t = dizionario(locale);
+const via = (percorso: string) => pathFor(locale, percorso);
 
 const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
 
@@ -42,9 +52,9 @@ const map = { ...headerMap, ...homeBlocks, ...homeFooter };
  * alla build.
  */
 const SKILLS = [
-  { at: homeBlocks.skillProduct, icon: 'tablet-smartphone', label: 'Product Design', tag: 'Product' },
-  { at: homeBlocks.skillWeb, icon: 'app-window', label: 'Web Design', tag: 'Web Design' },
-  { at: homeBlocks.skillBranding, icon: 'swatch-book', label: 'Branding', tag: 'Branding' },
+  { at: homeBlocks.skillProduct, icon: 'tablet-smartphone', label: t.home.skillProduct, tag: 'Product' },
+  { at: homeBlocks.skillWeb, icon: 'app-window', label: t.home.skillWeb, tag: 'Web Design' },
+  { at: homeBlocks.skillBranding, icon: 'swatch-book', label: t.home.skillBranding, tag: 'Branding' },
 ] as const;
 
 // La guardia e' doppia: `includes` non compila se un tag esce da WORK_TAGS, e se
@@ -54,12 +64,9 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
 }
 ---
 
-<Base
-  title="Emanuele Giovanili — Baking Ideas"
-  description="UX/UI & Product Designer. Creo esperienze digitali e le porto in vita."
->
+<Base locale={locale} percorso="/" title={t.home.titoloPagina} description={t.home.descrizione}>
   <Grid map={map}>
-    <Header current="/" />
+    <Header current="/" locale={locale} />
 
     <Block
       at={homeBlocks.heroText}
@@ -67,30 +74,29 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
       clip
       data-known-overflow="314:2437 — a base il titolo a 72px chiede 125px dentro 116 di spazio utile"
     >
-      <h1 class="t-display hero-text__title">Baking<br />Ideas</h1>
+      <h1 class="t-display hero-text__title"><Righe testo={t.home.heroTitolo} /></h1>
     </Block>
 
     <Block at={homeBlocks.heroDescription} class="hero-desc" clip>
       <div class="hero-desc__copy">
-        <p class="hero-desc__lead">Never tasteless<br />digital experiences</p>
-        <p class="t-body hero-desc__body">
-          I’m a UX/UI &amp; Product Designer, creating digital experiences and bringing them to life.
-        </p>
+        <p class="hero-desc__lead"><Righe testo={t.home.heroLead} /></p>
+        <p class="t-body hero-desc__body">{t.home.heroCorpo}</p>
       </div>
 
-      <p class="t-meta hero-desc__location">
-        Based in San Benedetto del Tronto, Italy<br />Working remotely
-      </p>
+      {/* Due righe in inglese, una sola in italiano: il frame italiano non
+          dice "Working remotely". E' una differenza di contenuto, non una
+          traduzione mancata, e qui la regge l'array. */}
+      <p class="t-meta hero-desc__location"><Righe testo={t.home.heroLuogo} /></p>
 
     </Block>
 
-    <SquareButton at={homeBlocks.heroProfile} variant="profile" label="Scopri chi sono" href="/about" />
-    <PrimaryButton at={homeBlocks.heroDiscover} label="Discover more" href="#about" />
+    <SquareButton at={homeBlocks.heroProfile} variant="profile" label={t.home.heroProfilo} href={via('/about')} />
+    <PrimaryButton at={homeBlocks.heroDiscover} label={t.home.heroScopri} href="#about" />
 
     <Block at={homeBlocks.marquee} surface="bare" class="marquee" data-bleed>
       <div class="marquee__bleed">
         <ul class="marquee__track">
-          {SERVICES.map((service) => <li class="marquee__item">{service}</li>)}
+          {t.home.servizi.map((servizio) => <li class="marquee__item">{servizio}</li>)}
         </ul>
       </div>
     </Block>
@@ -102,12 +108,8 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
       clip
       data-known-overflow="314:2325 — sotto i 390 il corpo del testo guadagna righe che il blocco non ha"
     >
-      <h2 class="t-display about-section__title">What’s<br />in the mix</h2>
-      <p class="t-body about-section__body">
-        To me, design is about making people happy about what they are looking at, using or
-        experiencing. Whether it is a product, a website or a brand, I find purpose in design when it
-        makes a real impact on people’s daily lives.
-      </p>
+      <h2 class="t-display about-section__title"><Righe testo={t.home.aboutTitolo} /></h2>
+      <p class="t-body about-section__body">{t.home.aboutCorpo}</p>
     </Block>
 
     {
@@ -115,7 +117,7 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
         <Block
           at={skill.at}
           as="a"
-          href={`/works?filter=${tagSlug(skill.tag)}`}
+          href={`${via('/works')}?filter=${tagSlug(skill.tag)}`}
           class="skill-card"
           clip
         >
@@ -139,11 +141,12 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
       clip
       data-known-overflow="314:2336 — a base titolo piu' didascalia chiedono 57px dentro 38 di spazio utile"
     >
-      <h2 class="t-display works-section__title">Selected Works</h2>
-      <p class="works-section__caption">Ideas that got baked</p>
+      <h2 class="t-display works-section__title"><Righe testo={t.home.lavoriTitolo} /></h2>
+      {/* Il frame italiano non ha didascalia: stringa vuota, blocco assente. */}
+      {t.home.lavoriDidascalia && <p class="works-section__caption">{t.home.lavoriDidascalia}</p>}
     </Block>
 
-    <PrimaryButton at={homeBlocks.worksViewAll} label="View all my work" href="/works" />
+    <PrimaryButton at={homeBlocks.worksViewAll} label={t.home.lavoriVediTutti} href={via('/works')} />
 
     <WorksCarousel
       at={{
@@ -153,6 +156,7 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
         next: homeBlocks.worksNext,
       }}
       works={works}
+      locale={locale}
     />
 
     <Block
@@ -161,12 +165,12 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
       clip
       data-known-overflow="314:2372 — a base il titolo va su tre righe: 88px dentro 77 di spazio utile"
     >
-      <h2 class="t-display testimonials-section__title">People with good taste</h2>
+      <h2 class="t-display testimonials-section__title"><Righe testo={t.home.testimonialTitolo} /></h2>
     </Block>
 
     <Block at={homeBlocks.testimonialsIcon} class="wink" clip>
       <span aria-hidden="true">;)</span>
-      <span class="visually-hidden">Un occhiolino</span>
+      <span class="visually-hidden">{t.home.occhiolino}</span>
     </Block>
 
     <Testimonials
@@ -176,7 +180,8 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
         prev: homeBlocks.testimonialsPrev,
         next: homeBlocks.testimonialsNext,
       }}
-      items={COMPLETE_TESTIMONIALS}
+      items={testimonialCompleti(locale)}
+      locale={locale}
     />
 
     <ContactSection
@@ -185,8 +190,9 @@ if (SKILLS.some((skill) => !WORK_TAGS.includes(skill.tag))) {
         cta: homeBlocks.contactCta,
         send: homeBlocks.contactSend,
       }}
+      locale={locale}
     />
 
-    <Footer at={homeFooter} current="/" />
+    <Footer at={homeFooter} current="/" locale={locale} />
   </Grid>
 </Base>

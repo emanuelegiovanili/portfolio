@@ -60,6 +60,48 @@ const works = defineCollection({
             .default([]),
         })
         .optional(),
+
+      /**
+       * La traduzione italiana del progetto.
+       *
+       * **Un file per progetto, non due.** La copertina, la galleria, i tag e
+       * l'ordine sono gli stessi nelle due lingue: duplicare il JSON vorrebbe
+       * dire duplicare anche quelli, e il giorno che si cambia un'immagine in
+       * uno dei due il disallineamento non lo segnala nessuno. Qui cambia solo
+       * cio' che e' fatto di parole.
+       *
+       * `blockAlts` sono i testi alternativi della galleria, nello **stesso
+       * ordine** di `caseStudy.blocks`. Il controllo qui sotto pretende che
+       * siano tanti quanti i blocchi: un alt in meno e' un'immagine che a chi
+       * usa un lettore di schermo non dice niente, ed e' il genere di buco che
+       * non si vede guardando la pagina.
+       */
+      it: z
+        .object({
+          excerpt: z.string(),
+          coverAlt: z.string(),
+          body: z.array(z.string()).min(1),
+          blockAlts: z.array(z.string()).default([]),
+        })
+        .optional(),
+    })
+    .superRefine((dato, ctx) => {
+      if (!dato.it) return;
+      const blocchi = dato.caseStudy?.blocks?.length ?? 0;
+      if (dato.it.blockAlts.length !== blocchi) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['it', 'blockAlts'],
+          message: `servono ${blocchi} testi alternativi quanti i blocchi della galleria, ne ho ${dato.it.blockAlts.length}`,
+        });
+      }
+      if (dato.caseStudy && dato.it.body.length !== dato.caseStudy.body.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['it', 'body'],
+          message: `il case study ha ${dato.caseStudy.body.length} paragrafi, l'italiano ne ha ${dato.it.body.length}`,
+        });
+      }
     }),
 });
 

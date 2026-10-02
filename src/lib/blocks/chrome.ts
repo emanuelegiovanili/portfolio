@@ -92,11 +92,11 @@ export function footerMap(rows: FooterRows): LayoutMap {
  * a un profilo sbagliato e' un bug che va online. Vedi NOTES.md B10.
  */
 export const FOOTER_LINKS = [
-  { key: 'footerHome', label: 'Home', href: '/', external: false },
-  { key: 'footerAbout', label: 'About', href: '/about', external: false },
-  { key: 'footerWorks', label: 'Works', href: '/works', external: false },
-  { key: 'footerLinkedin', label: 'LinkedIn', href: SOCIAL.linkedin, external: true },
-  { key: 'footerInstagram', label: 'Instagram', href: SOCIAL.instagram, external: true },
+  { key: 'footerHome', voce: 'home', href: '/', external: false },
+  { key: 'footerAbout', voce: 'about', href: '/about', external: false },
+  { key: 'footerWorks', voce: 'works', href: '/works', external: false },
+  { key: 'footerLinkedin', voce: 'linkedin', href: SOCIAL.linkedin, external: true },
+  { key: 'footerInstagram', voce: 'instagram', href: SOCIAL.instagram, external: true },
 ] as const;
 
 /* ---------- Megamenu ---------- */
@@ -152,6 +152,27 @@ export const megamenuMap = {
    */
   menuLinkedin: { base: [2, 12, 4, 2], md: [4, 9, 3, 1], lg: [8, 6, 2, 1] },
   menuInstagram: { base: [6, 12, 4, 2], md: [7, 9, 3, 1], lg: [10, 6, 2, 1] },
+
+  /*
+   * Il comando della lingua, 412:1020 e 412:1024.
+   *
+   * A lg viene dal file: due celle 1x1 in basso a sinistra, riga 6, cioe' la
+   * **stessa riga dei social** all'altro capo del pannello. Quella simmetria e'
+   * la regola, e a md la si applica tale e quale: riga 9, colonne 2 e 3, con i
+   * social da 4 in poi. La misura e' 1x1 come il bottone di chiusura, che a md
+   * e' 1x1 anche lui.
+   *
+   * A base non c'e' spazio sulla riga dei social — occupano le colonne 2-9 —
+   * quindi il comando scende alla riga sotto, ed e' 2x2 perche' a base tutti i
+   * comandi quadrati del sito sono 2x2 (il bottone di chiusura compreso).
+   *
+   * Base e md il file **non li disegna**: sono derivati dalla regola di lg, con
+   * lo stesso ragionamento con cui ci sono le frecce dei testimonial a base e
+   * md (NOTES.md D5). L'alternativa era un cambio lingua che esiste solo da
+   * desktop, cioe' una funzione rotta su un telefono.
+   */
+  menuLangIt: { base: [2, 14, 2, 2], md: [2, 9, 1, 1], lg: [2, 6, 1, 1] },
+  menuLangEn: { base: [4, 14, 2, 2], md: [3, 9, 1, 1], lg: [3, 6, 1, 1] },
 } as const satisfies LayoutMap;
 
 /**
@@ -162,12 +183,12 @@ export const megamenuMap = {
  * Manca "Home": non la aggiungo, il logo in alto a sinistra porta li'.
  */
 export const MENU_LINKS = [
-  { key: 'menuWork', label: 'Work', href: '/works' },
-  { key: 'menuAbout', label: 'About', href: '/about' },
+  { key: 'menuWork', voce: 'work', href: '/works' },
+  { key: 'menuAbout', voce: 'about', href: '/about' },
 ] as const;
 
 /** I due social del megamenu, nell'ordine del file. */
 export const MENU_SOCIALS = [
-  { key: 'menuLinkedin', label: 'LinkedIn', href: SOCIAL.linkedin },
-  { key: 'menuInstagram', label: 'Instagram', href: SOCIAL.instagram },
+  { key: 'menuLinkedin', voce: 'linkedin', href: SOCIAL.linkedin },
+  { key: 'menuInstagram', voce: 'instagram', href: SOCIAL.instagram },
 ] as const;

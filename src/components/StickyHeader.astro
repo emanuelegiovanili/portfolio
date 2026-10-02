@@ -41,6 +41,17 @@
 import Grid from './Grid.astro';
 import SquareButton from './SquareButton.astro';
 import { stickyHeaderMap } from '../lib/blocks/chrome';
+import { DEFAULT_LOCALE, pathFor, type Locale } from '../i18n';
+import { dizionario } from '../i18n/dizionario';
+
+interface PropsLingua {
+  locale?: Locale;
+}
+
+const { locale = DEFAULT_LOCALE } = Astro.props as PropsLingua;
+const t = dizionario(locale);
+const via = (p: string) => pathFor(locale, p);
+
 ---
 
 <div id="sticky-header" class="sticky-header" data-sticky-header>
@@ -48,8 +59,8 @@ import { stickyHeaderMap } from '../lib/blocks/chrome';
     <SquareButton
       at={stickyHeaderMap.headerContact}
       variant="mail"
-      label="Scrivimi"
-      href="/contact"
+      label={t.comune.intestazione.scrivimi}
+      href={via("/contact")}
     />
 
     {/*
@@ -65,7 +76,7 @@ import { stickyHeaderMap } from '../lib/blocks/chrome';
     <SquareButton
       at={stickyHeaderMap.headerMenu}
       variant="menu"
-      label="Apri il menu"
+      label={t.comune.intestazione.apriMenu}
       data-menu-toggle
       aria-expanded="false"
       aria-controls="megamenu"

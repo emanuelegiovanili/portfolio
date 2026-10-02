@@ -7,19 +7,31 @@
  * `get_design_context`.
  */
 import { Picture } from 'astro:assets';
-import Base from '../layouts/Base.astro';
-import Grid from '../components/Grid.astro';
-import Block from '../components/Block.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import ContactSection from '../components/ContactSection.astro';
-import Icon from '../components/Icon.astro';
-import { headerMap } from '../lib/blocks/chrome';
-import { aboutBlocks, aboutFooter, tagSlug } from '../lib/blocks/pages';
-import { WORK_TAGS } from '../content.config';
-import { BIO, LOCATION, RECIPE, REMOTE, SECTORS, WHAT_TITLE } from '../data/about';
-import portrait from '../assets/about/portrait.jpg';
-import '../styles/pages.css';
+import Base from '../../layouts/Base.astro';
+import Grid from '../../components/Grid.astro';
+import Block from '../../components/Block.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ContactSection from '../../components/ContactSection.astro';
+import Icon from '../../components/Icon.astro';
+import { headerMap } from '../../lib/blocks/chrome';
+import { aboutBlocks, aboutFooter, tagSlug } from '../../lib/blocks/pages';
+import { SETTORI } from '../../data/about';
+import { WORK_TAGS } from '../../content.config';
+import portrait from '../../assets/about/portrait.jpg';
+import '../../styles/pages.css';
+
+import { localeRoutes, pathFor } from '../../i18n';
+import { dizionario } from '../../i18n/dizionario';
+import Righe from '../../components/Righe.astro';
+
+export function getStaticPaths() {
+  return localeRoutes;
+}
+
+const { locale } = Astro.props;
+const t = dizionario(locale);
+const via = (p: string) => pathFor(locale, p);
 
 const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
 
@@ -32,31 +44,45 @@ const map = { ...headerMap, ...aboutBlocks, ...aboutFooter };
  * vuota, e nessuno se ne accorgerebbe guardando la pagina.
  */
 const settori = [aboutBlocks.sectorOne, aboutBlocks.sectorTwo, aboutBlocks.sectorThree].map(
-  (at, i) => ({ at, ...SECTORS[i] }),
+  (at, i) => ({ at, ...SETTORI[i], ...t.about.settori[i] }),
 );
 
-if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
+/*
+ * Due guardie, non una.
+ *
+ * La prima e' quella di sempre: una scheda non puo' puntare a un ambito che
+ * /works non conosce. La seconda e' nuova e serve ai dizionari: struttura e
+ * copy stanno in due file diversi e si accoppiano per **posizione**, quindi
+ * se una delle due liste cambia lunghezza le schede si disallineano in
+ * silenzio — l'icona di Branding sopra il testo di Web Design. Meglio una
+ * build che si ferma.
+ */
+if (SETTORI.length !== t.about.settori.length) {
+  throw new Error('about: i settori nel dizionario non sono quanti quelli in SETTORI.');
+}
+
+if (SETTORI.some((settore) => !WORK_TAGS.includes(settore.tag))) {
   throw new Error('/about: una scheda degli ambiti punta a un ambito che /works non conosce.');
 }
 ---
 
-<Base title="About — Emanuele Giovanili" description="Chi sono, come lavoro e cosa ascolto mentre lo faccio.">
+<Base locale={locale} percorso="/about" title={t.about.titoloPagina} description={t.about.descrizione}>
   <Grid map={map} tiers={["base", "md", "lg"]} class="about-grid">
-    <Header current="/about" />
+    <Header current="/about" locale={locale} />
 
     <Block at={aboutBlocks.aboutTitle} class="page-title is-over" clip>
-      <h1 class="t-display t-display--page">About</h1>
+      <h1 class="t-display t-display--page">{t.about.titolo}</h1>
     </Block>
 
     <Block at={aboutBlocks.aboutBioLabel} class="label-cell" clip>
-      <span class="t-title">Bio</span>
+      <span class="t-title">{t.about.bioEtichetta}</span>
     </Block>
 
     <Block at={aboutBlocks.aboutPortrait} surface="bare" class="media-block" clip>
       <Picture
         data-reveal
         src={portrait}
-        alt="Ritratto di Emanuele Giovanili, maglione viola, seduto"
+        alt={t.about.ritrattoAlt}
         widths={[480, 960]}
         sizes="(min-width: 1200px) 33vw, 100vw"
         formats={['avif', 'webp']}
@@ -70,7 +96,7 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       clip
       data-known-overflow="274:2063 — misurato: 22px di avanzo a 1440, 12 di sforo a 1200, dove le colonne si stringono e il testo guadagna una riga"
     >
-      {BIO.map((paragraph) => <p class="t-body">{paragraph}</p>)}
+      {t.about.bio.map((paragrafo) => <p class="t-body">{paragrafo}</p>)}
     </Block>
 
     <Block at={aboutBlocks.aboutPin} class="icon-cell" clip>
@@ -78,11 +104,11 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
     </Block>
 
     <Block at={aboutBlocks.aboutLocation} class="text-cell" clip>
-      <p class="t-body">{LOCATION}</p>
+      <p class="t-body">{t.about.luogo}</p>
     </Block>
 
     <Block at={aboutBlocks.aboutRemote} class="text-cell text-cell--center" clip>
-      <p class="t-meta">{REMOTE}</p>
+      <p class="t-meta">{t.about.remoto}</p>
     </Block>
 
     <Block at={aboutBlocks.recipeIcon} class="icon-cell" clip>
@@ -90,7 +116,7 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
     </Block>
 
     <Block at={aboutBlocks.recipeTitle} class="section-title" clip>
-      <h2 class="t-display t-display--section">My secret recipe</h2>
+      <h2 class="t-display t-display--section"><Righe testo={t.about.ricettaTitolo} /></h2>
     </Block>
 
     <Block at={aboutBlocks.recipeFlame} class="icon-cell" clip>
@@ -121,7 +147,7 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       senza freccia niente direbbe che la scheda porta da qualche parte.
     */}
     <Block at={aboutBlocks.whatTitle} class="section-title" clip>
-      <h2 class="t-display t-display--page what-title">{WHAT_TITLE}</h2>
+      <h2 class="t-display t-display--page what-title"><Righe testo={t.about.cosaTitolo} /></h2>
     </Block>
 
     <Block at={aboutBlocks.whatIcon} class="icon-cell" clip>
@@ -133,7 +159,7 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
         <Block
           at={settore.at}
           as="a"
-          href={`/works?filter=${tagSlug(settore.tag)}`}
+          href={`${via('/works')}?filter=${tagSlug(settore.tag)}`}
           class="sector-card"
           clip
           data-known-overflow="397:936, 397:930 e 397:942 — le schede sono 3x3 nel file e a 1440 il testo ci sta. Fra 1200 e 1279 la cella si stringe ma il corpo tocca il minimo di 14px e smette di scalare: su questa macchina avanzano 10px, in CI ne mancano 12. E' lo stesso B14 delle schede della ricetta, e la differenza fra le due misure sono le metriche dei font del runner."
@@ -142,15 +168,15 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
             <Icon name={settore.icon} />
             <Icon name="arrow-up-right" class="sector-card__arrow" />
           </span>
-          <span class="sector-card__title">{settore.title}</span>
-          <span class="t-body sector-card__body">{settore.body}</span>
+          <span class="sector-card__title">{settore.titolo}</span>
+          <span class="t-body sector-card__body">{settore.corpo}</span>
           <span class="hover-fill" aria-hidden="true">
             <span class="sector-card__head">
               <Icon name={settore.icon} />
               <Icon name="arrow-up-right" class="sector-card__arrow" />
             </span>
-            <span class="sector-card__title">{settore.title}</span>
-            <span class="t-body sector-card__body">{settore.body}</span>
+            <span class="sector-card__title">{settore.titolo}</span>
+            <span class="t-body sector-card__body">{settore.corpo}</span>
           </span>
         </Block>
       ))
@@ -158,10 +184,10 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
 
     <Block at={aboutBlocks.recipeSteps} surface="bare" class="recipe-steps">
       <div class="recipe-steps__track">
-        {RECIPE.map((passo) => (
+        {t.about.ricetta.map((passo) => (
           <article class="recipe-steps__card">
             <h3 class="recipe-card__title">{passo.heading}</h3>
-            <p class="t-body recipe-card__body">{passo.body}</p>
+            <p class="t-body recipe-card__body">{passo.corpo}</p>
           </article>
         ))}
       </div>
@@ -180,8 +206,8 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       class="recipe-card"
       clip
     >
-      <h3 class="recipe-card__title">{RECIPE[0].heading}</h3>
-      <p class="t-body recipe-card__body">{RECIPE[0].body}</p>
+      <h3 class="recipe-card__title">{t.about.ricetta[0].heading}</h3>
+      <p class="t-body recipe-card__body">{t.about.ricetta[0].corpo}</p>
     </Block>
 
     <Block
@@ -189,8 +215,8 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       class="recipe-card"
       clip
     >
-      <h3 class="recipe-card__title">{RECIPE[1].heading}</h3>
-      <p class="t-body recipe-card__body">{RECIPE[1].body}</p>
+      <h3 class="recipe-card__title">{t.about.ricetta[1].heading}</h3>
+      <p class="t-body recipe-card__body">{t.about.ricetta[1].corpo}</p>
     </Block>
 
     <Block
@@ -198,8 +224,8 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       class="recipe-card"
       clip
     >
-      <h3 class="recipe-card__title">{RECIPE[2].heading}</h3>
-      <p class="t-body recipe-card__body">{RECIPE[2].body}</p>
+      <h3 class="recipe-card__title">{t.about.ricetta[2].heading}</h3>
+      <p class="t-body recipe-card__body">{t.about.ricetta[2].corpo}</p>
     </Block>
 
     {/* Stessa sezione di home, works e contact: un solo form nel sito. */}
@@ -207,6 +233,6 @@ if (SECTORS.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       at={{ form: aboutBlocks.aboutForm, cta: aboutBlocks.aboutCta, send: aboutBlocks.aboutSend }}
     />
 
-    <Footer at={aboutFooter} current="/about" />
+    <Footer at={aboutFooter} current="/about" locale={locale} />
   </Grid>
 </Base>

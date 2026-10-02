@@ -15,34 +15,52 @@
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { Picture } from 'astro:assets';
-import Base from '../../layouts/Base.astro';
-import Grid from '../../components/Grid.astro';
-import Block from '../../components/Block.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import Icon from '../../components/Icon.astro';
-import WorkCard from '../../components/WorkCard.astro';
-import VisitButton from '../../components/VisitButton.astro';
-import PrimaryButton from '../../components/PrimaryButton.astro';
-import { headerMap } from '../../lib/blocks/chrome';
-import { galleryAt, workBlocks, workFooter, workTagAt } from '../../lib/blocks/pages';
-import '../../styles/pages.css';
-import '../../styles/home.css';
+import Base from '../../../layouts/Base.astro';
+import Grid from '../../../components/Grid.astro';
+import Block from '../../../components/Block.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import Icon from '../../../components/Icon.astro';
+import WorkCard from '../../../components/WorkCard.astro';
+import VisitButton from '../../../components/VisitButton.astro';
+import PrimaryButton from '../../../components/PrimaryButton.astro';
+import { headerMap } from '../../../lib/blocks/chrome';
+import { galleryAt, workBlocks, workFooter, workTagAt } from '../../../lib/blocks/pages';
+import { DEFAULT_LOCALE, LOCALES, pathFor, type Locale } from '../../../i18n';
+import { dizionario } from '../../../i18n/dizionario';
+import { contenutoProgetto } from '../../../lib/progetti';
+import '../../../styles/pages.css';
+import '../../../styles/home.css';
 
+/*
+ * Le rotte sono il **prodotto** di lingue per progetti.
+ *
+ * Tre progetti in due lingue fanno sei pagine, e lo slug non cambia: il file
+ * md del committente da' gli stessi slug nelle due lingue, quindi /works/seezy
+ * e /it/works/seezy sono la stessa pagina in due lingue, non due indirizzi
+ * diversi. E' anche quello che rende possibile il comando della lingua: da una
+ * si arriva all'altra senza una tabella di corrispondenze.
+ */
 export async function getStaticPaths() {
   const works = await getCollection('works');
-  return works.map((work) => ({
-    params: { slug: work.id },
-    props: { work, all: works },
-  }));
+  return LOCALES.flatMap((locale) =>
+    works.map((work) => ({
+      params: { lang: locale === DEFAULT_LOCALE ? undefined : locale, slug: work.id },
+      props: { work, all: works, locale },
+    })),
+  );
 }
 
 interface Props {
   work: CollectionEntry<'works'>;
   all: CollectionEntry<'works'>[];
+  locale: Locale;
 }
 
-const { work, all } = Astro.props;
+const { work, all, locale } = Astro.props;
+const t = dizionario(locale);
+const via = (p: string) => pathFor(locale, p);
+const testo = contenutoProgetto(work, locale);
 
 const related = all.filter((w) => w.id !== work.id).sort((a, b) => a.data.order - b.data.order).slice(0, 2);
 const blocks = work.data.caseStudy?.blocks ?? [];
@@ -61,15 +79,20 @@ const map = {
 };
 ---
 
-<Base title={`${work.data.title} — Emanuele Giovanili`} description={work.data.excerpt}>
+<Base
+  locale={locale}
+  percorso={`/works/${work.id}`}
+  title={`${work.data.title} — Emanuele Giovanili`}
+  description={testo.excerpt}
+>
   <Grid map={map} tiers={['base', 'md', 'lg']} class="work-grid">
-    <Header current="/works" />
+    <Header current="/works" locale={locale} />
 
     <Block at={workBlocks.workCover} class="media-block" clip>
       <Picture
         data-reveal
         src={work.data.cover}
-        alt={work.data.coverAlt}
+        alt={testo.coverAlt}
         widths={[960, 1400, 1920]}
         sizes="(min-width: 1200px) 83vw, 100vw"
         formats={['avif', 'webp']}
@@ -111,11 +134,11 @@ const map = {
           <details class="work-body__more">
             <summary class="work-body__summary">
               <div class="work-body__text">
-                {work.data.caseStudy.body.map((paragrafo) => (
+                {testo.body.map((paragrafo) => (
                   <p class="t-body">{paragrafo}</p>
                 ))}
               </div>
-              <span class="work-body__cue">Keep reading</span>
+              <span class="work-body__cue">{t.comune.progetto.continua}</span>
             </summary>
           </details>
         </Block>
@@ -128,7 +151,7 @@ const map = {
           <Picture
             data-reveal
             src={image.src}
-            alt={image.alt}
+            alt={testo.blockAlts[i] ?? image.alt}
             widths={[640, 960, 1400, 1920]}
             sizes="(min-width: 1200px) 83vw, 100vw"
             formats={['avif', 'webp']}
@@ -139,7 +162,7 @@ const map = {
     }
 
     <Block at={workBlocks.workRelatedTitle} class="related-title" clip>
-      <h2 class="t-display t-display--page">Related work</h2>
+      <h2 class="t-display t-display--page">{t.comune.progetto.correlati}</h2>
     </Block>
 
     <Block at={workBlocks.workRelatedFlame} class="icon-cell" clip>
@@ -151,17 +174,17 @@ const map = {
         <Block
           at={relatedAt[i]}
           as="a"
-          href={`/works/${item.id}`}
+          href={via(`/works/${item.id}`)}
           class="works-card"
           clip
         >
-          <WorkCard work={item} sizes="(min-width: 1200px) 42vw, 100vw" />
+          <WorkCard work={item} sizes="(min-width: 1200px) 42vw, 100vw" locale={locale} />
         </Block>
       ))
     }
 
-    <PrimaryButton at={workBlocks.workViewAll} label="View all" href="/works" />
+    <PrimaryButton at={workBlocks.workViewAll} label={t.comune.progetto.vediTutti} href={via('/works')} />
 
-    <Footer at={workFooter} current="/works" />
+    <Footer at={workFooter} current="/works" locale={locale} />
   </Grid>
 </Base>

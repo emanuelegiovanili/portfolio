@@ -34,7 +34,8 @@ const WIDTHS = [320, 390, 430, 719, 720, 768, 1024, 1199, 1200, 1280, 1440, 1680
  * L'allineamento alle linee resta un errore ovunque, a qualunque larghezza:
  * qui si allenta solo la misura dello sforo del contenuto.
  */
-const isDesktopOnly = (route) => route !== '/' && !route.startsWith('/grid');
+const senzaLingua = (route) => route.replace(/^\/it(?=\/|$)/, '') || '/';
+const isDesktopOnly = (route) => senzaLingua(route) !== '/' && !route.startsWith('/grid');
 
 /**
  * Il frame piu' piccolo del Figma e' a 390.
@@ -58,7 +59,33 @@ const MENU_ROUTE = '/';
  */
 const FILTER_ROUTE = '/works';
 const FILTER_STATES = ['branding', 'product', 'web-design'];
-const DEFAULT_PATHS = ['/grid', '/grid/components', '/', '/about', '/works', '/works/seezy', '/contact'];
+/*
+ * Le rotte misurate, **nelle due lingue**.
+ *
+ * Che l'italiano abbia la stessa geometria dell'inglese e' il disegno, non un
+ * fatto: i blocchi stanno alle stesse celle in tutti e cinque i frame
+ * italiani, ma il testo dentro e' piu' lungo in piu' punti e lo spazio utile
+ * e' quello di prima. Un blocco sfora o non sfora per il contenuto, non per la
+ * posizione, quindi l'italiano va misurato come una pagina nuova — perche' per
+ * questa sonda lo e'.
+ *
+ * Raddoppia il tempo della catena, e vale: l'alternativa e' pubblicare meta'
+ * sito senza averlo mai misurato.
+ */
+const DEFAULT_PATHS = [
+  '/grid',
+  '/grid/components',
+  '/',
+  '/about',
+  '/works',
+  '/works/seezy',
+  '/contact',
+  '/it',
+  '/it/about',
+  '/it/works',
+  '/it/works/seezy',
+  '/it/contact',
+];
 const SHOT_DIR = '.verify';
 
 const args = process.argv.slice(2);

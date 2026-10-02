@@ -5,8 +5,8 @@
     "Web Design"
   ],
   "cover": "../../assets/works/tama-caffe/cover.jpg",
-  "coverAlt": "Il sito di TAMA caffè aperto su un portatile, su un tavolo di legno",
-  "excerpt": "Un e-commerce di caffè speciality che non somiglia a un e-commerce.",
+  "coverAlt": "The TAMA caffè site open on a laptop, on a wooden table",
+  "excerpt": "A specialty coffee ecommerce that doesn’t feel like one.",
   "liveUrl": "https://tamacaffe.com",
   "caseStudy": {
     "body": [
@@ -17,24 +17,39 @@
     "blocks": [
       {
         "src": "../../assets/works/tama-caffe/gallery-1.jpg",
-        "alt": "Un portatile mostra l'apertura del sito: “We make ordinary extraordinary” su una foto della tostatrice",
+        "alt": "A laptop shows the site opening: “We make ordinary extraordinary” over a photo of the roaster",
         "shape": "half"
       },
       {
         "src": "../../assets/works/tama-caffe/gallery-2.jpg",
-        "alt": "La scheda prodotto di El Rancho Red Bourbon, con il sacchetto, il prezzo e la scelta della macinatura",
+        "alt": "The El Rancho Red Bourbon product page, with the bag, the price and the grind selector",
         "shape": "wide"
       },
       {
         "src": "../../assets/works/tama-caffe/gallery-3.jpg",
-        "alt": "La sezione “I nostri specialty coffee”, fra immagini di estrazione e il passaggio dedicato ai locali",
+        "alt": "The “Our specialty coffees” section, between brewing images and the passage for cafés",
         "shape": "wide"
       },
       {
         "src": "../../assets/works/tama-caffe/gallery-4.jpg",
-        "alt": "La guida pratica: freschezza, macinatura e acqua in tre colonne, e sotto i metodi di estrazione",
+        "alt": "The practical guide: freshness, grind and water in three columns, with brewing methods below",
         "shape": "half"
       }
+    ]
+  },
+  "it": {
+    "excerpt": "Un e-commerce di caffè specialty che non somiglia a un e-commerce.",
+    "coverAlt": "Il sito di TAMA caffè aperto su un portatile, su un tavolo di legno",
+    "body": [
+      "TAMA è una torrefazione artigianale conosciuta in tutta Italia, ma il suo vecchio e-commerce non era all'altezza: navigazione datata, un catalogo difficile da esplorare e un gestionale che rallentava ogni attività di marketing.",
+      "Il redesign parte dal punto in cui le persone si bloccavano di più: trovare il prodotto giusto. Quattro famiglie di prodotto con logiche d'acquisto diverse, dagli specialty monorigine alle capsule compatibili, chiedevano percorsi distinti e una scheda prodotto capace di dare tutte le informazioni tecniche senza allontanare la decisione d'acquisto. Sotto l'interfaccia c'è una struttura dati pensata perché il team possa aggiornare contenuti e prodotti in autonomia: il sito diventa uno strumento di lavoro, non qualcosa da cui dipendere.",
+      "A dodici mesi dal lancio, le vendite sono cresciute del 200%."
+    ],
+    "blockAlts": [
+      "Un portatile mostra l’apertura del sito: “We make ordinary extraordinary” su una foto della tostatrice",
+      "La scheda prodotto di El Rancho Red Bourbon, con il sacchetto, il prezzo e la scelta della macinatura",
+      "La sezione “I nostri specialty coffee”, fra immagini di estrazione e il passaggio dedicato ai locali",
+      "La guida pratica: freschezza, macinatura e acqua in tre colonne, e sotto i metodi di estrazione"
     ]
   }
 }

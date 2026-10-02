@@ -18,9 +18,16 @@ import type { CollectionEntry } from 'astro:content';
 interface Props {
   at: { card: BlockPlacements; pagination: BlockPlacements; prev: BlockPlacements; next: BlockPlacements };
   works: CollectionEntry<'works'>[];
+  locale?: Locale;
 }
 
-const { at, works } = Astro.props;
+const { at, works, locale = DEFAULT_LOCALE } = Astro.props;
+import { DEFAULT_LOCALE, pathFor, type Locale } from '../../i18n';
+import { dizionario } from '../../i18n/dizionario';
+
+const t = dizionario(locale);
+const via = (p: string) => pathFor(locale, p);
+
 ---
 
 <Block at={at.card} class="works-card" data-carousel="works" clip>
@@ -36,13 +43,13 @@ const { at, works } = Astro.props;
       works.map((work, i) => (
         <a
           class="works-card__slide"
-          href={`/works/${work.id}`}
+          href={via(`/works/${work.id}`)}
           data-slide={i}
           hidden={i > 0}
           aria-hidden={i > 0 ? 'true' : undefined}
           tabindex={i > 0 ? -1 : undefined}
         >
-          <WorkCard work={work} eager={i === 0} />
+          <WorkCard work={work} eager={i === 0} locale={locale} />
         </a>
       ))
     }
@@ -56,8 +63,8 @@ const { at, works } = Astro.props;
 <SquareButton
   at={at.prev}
   icon="chevron-left"
-  label="Progetto precedente"
+  label={t.home.lavoriPrecedente}
   class="works-arrow"
   data-carousel-prev
 />
-<SquareButton at={at.next} icon="chevron-right" label="Progetto successivo" class="works-arrow" data-carousel-next />
+<SquareButton at={at.next} icon="chevron-right" label={t.home.lavoriSuccessivo} class="works-arrow" data-carousel-next />

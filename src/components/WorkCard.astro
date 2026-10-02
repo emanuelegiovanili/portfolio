@@ -12,22 +12,35 @@
  */
 import { Picture } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
+import { DEFAULT_LOCALE, type Locale } from '../i18n';
+import { contenutoProgetto } from '../lib/progetti';
 
 interface Props {
   work: CollectionEntry<'works'>;
   /** La prima card di una pagina si carica subito, le altre no. */
   eager?: boolean;
   sizes?: string;
+  locale?: Locale;
 }
 
-const { work, eager = false, sizes = '(min-width: 1200px) 67vw, 90vw' } = Astro.props;
+const {
+  work,
+  eager = false,
+  sizes = '(min-width: 1200px) 67vw, 90vw',
+  locale = DEFAULT_LOCALE,
+} = Astro.props;
+
+/* Il testo alternativo segue la lingua: e' quello che un lettore di schermo
+   pronuncia, e in una pagina italiana deve essere italiano. */
+const testo = contenutoProgetto(work, locale);
+
 ---
 
 <Picture
   class="works-card__media"
   data-reveal
   src={work.data.cover}
-  alt={work.data.coverAlt}
+  alt={testo.coverAlt}
   widths={[640, 960, 1400, 1920]}
   sizes={sizes}
   formats={['avif', 'webp']}

@@ -6,8 +6,8 @@
     "Branding"
   ],
   "cover": "../../assets/works/noranutrizione/cover.jpg",
-  "coverAlt": "La home di Noranutrizione su un portatile, con il logotipo in giallo acido",
-  "excerpt": "Identita' e sito per una nutrizionista che lavora sui dati.",
+  "coverAlt": "The Noranutrizione home page on a laptop, with the logotype in acid yellow",
+  "excerpt": "Identity and website for a data-driven nutritionist.",
   "liveUrl": "https://noranutrizione.it",
   "caseStudy": {
     "body": [
@@ -18,24 +18,39 @@
     "blocks": [
       {
         "src": "../../assets/works/noranutrizione/gallery-1.jpg",
-        "alt": "Un portatile mostra la sezione “Chi sono”, con il ritratto in bianco e nero su fondo scuro",
+        "alt": "A laptop shows the “About” section, with the black and white portrait on a dark background",
         "shape": "half"
       },
       {
         "src": "../../assets/works/noranutrizione/gallery-2.jpg",
-        "alt": "La pagina del test genetico del microbioma intestinale, con il pulsante in giallo acido",
+        "alt": "The gut microbiome genetic test page, with the button in acid yellow",
         "shape": "wide"
       },
       {
         "src": "../../assets/works/noranutrizione/gallery-3.jpg",
-        "alt": "La pagina del piano di coaching, con l'elenco di cosa comprende e due foto di allenamento",
+        "alt": "The coaching plan page, with the list of what it includes and two training photos",
         "shape": "wide"
       },
       {
         "src": "../../assets/works/noranutrizione/gallery-4.jpg",
-        "alt": "Due smartphone affiancati: la home con il logotipo Nora e la schermata dei servizi",
+        "alt": "Two smartphones side by side: the home with the Nora logotype and the services screen",
         "shape": "half"
       }
+    ]
+  },
+  "it": {
+    "excerpt": "Identità e sito per una nutrizionista che lavora sui dati.",
+    "coverAlt": "La home di Noranutrizione su un portatile, con il logotipo in giallo acido",
+    "body": [
+      "Nora è nutrizionista e personal trainer, e segue clienti molto diversi tra loro trattando alimentazione e allenamento come un unico percorso. La sua attività era cresciuta con il passaparola e Instagram, ma le mancavano un'identità riconoscibile e un posto dove chi la cercava potesse trovarla.",
+      "Il sito nasce come primo punto di contatto e segue il percorso che le persone fanno davvero: capire chi è Nora, riconoscersi in quello che offre e poi contattarla senza ostacoli.",
+      "L'interfaccia è stata progettata in Figma e sviluppata in WordPress, responsive, su una libreria di componenti coerenti che Nora può aggiornare da sola man mano che il suo lavoro si allarga."
+    ],
+    "blockAlts": [
+      "Un portatile mostra la sezione “Chi sono”, con il ritratto in bianco e nero su fondo scuro",
+      "La pagina del test genetico del microbioma intestinale, con il pulsante in giallo acido",
+      "La pagina del piano di coaching, con l'elenco di cosa comprende e due foto di allenamento",
+      "Due smartphone affiancati: la home con il logotipo Nora e la schermata dei servizi"
     ]
   }
 }

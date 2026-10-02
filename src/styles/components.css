@@ -458,6 +458,7 @@
 .primary-button,
 .menu-voice,
 .menu-social,
+.menu-lang,
 .work-filter,
 .skill-card,
 .sector-card,
@@ -786,7 +787,7 @@
  * Il CTA e' gia' viola e va dall'altra parte da se': la regola dei blocchi
  * `accent` gli da' gia' questi due valori.
  */
-.megamenu :is(.square-button, .primary-button, .menu-voice, .menu-social) {
+.megamenu :is(.square-button, .primary-button, .menu-voice, .menu-social, .menu-lang) {
   --hover-bg: var(--off-white);
   --hover-fg: var(--black);
 }
@@ -885,4 +886,46 @@ html[data-sipario='entra'] .sipario {
   .sipario {
     display: none;
   }
+}
+
+
+/*
+ * Il comando della lingua, 412:1020 e 412:1024.
+ *
+ * Due celle gemelle: quella attiva ha il fondo viola, l'altra il fondo del
+ * pannello. Il filo e il testo sono off-white come tutto il resto qui dentro,
+ * e l'etichetta e' Poppins Bold 16 (non display: nel file e' la stessa misura
+ * delle voci social).
+ *
+ * Il viola **non e' l'unica cosa** che dice quale lingua e' attiva: il link
+ * porta `aria-current` e una frase nascosta ("lingua attiva"). Un colore da
+ * solo non e' informazione per chi non lo distingue, e qui l'informazione e'
+ * "in che lingua stai leggendo".
+ */
+.menu-lang {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+  color: var(--off-white);
+  font-weight: 700;
+  font-size: calc(var(--u) * 16);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.menu-lang[data-attiva] {
+  background-color: var(--purple);
+}
+
+/*
+ * La lingua attiva non si riempie al passaggio del puntatore.
+ *
+ * E' gia' dove porta: un riempimento direbbe "vai qui" di un posto in cui sei
+ * gia'. Resta un link e resta raggiungibile da tastiera — toglierlo del tutto
+ * vorrebbe dire che chi naviga a tabulazioni perde il punto di riferimento di
+ * quale sia la lingua corrente.
+ */
+.menu-lang[data-attiva] > .hover-fill {
+  display: none;
 }

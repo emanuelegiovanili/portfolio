@@ -1,0 +1,31 @@
+---
+/**
+ * Un titolo che va a capo dove lo manda il disegno.
+ *
+ * Nel Figma i display sono su piu' righe e il capo e' una **decisione di
+ * disegno**, non il risultato della larghezza: "Baking / Ideas" va a capo li'
+ * anche quando ci starebbe su una riga sola. Prima era un `<br />` scritto nel
+ * markup, e con due lingue non poteva restarci: in italiano quel titolo ha un
+ * numero di righe diverso ("Cosa c'e' dentro?" ne ha una dove l'inglese ne ha
+ * due).
+ *
+ * Quindi il capo e' un dato — un array di righe nel dizionario — e questo
+ * componente lo rimette in pagina. Niente `set:html` con un join: il testo
+ * arriverebbe come markup, e il giorno che una stringa contiene una `&` o un
+ * `<` lo scopriremmo dalla pagina rotta.
+ */
+interface Props {
+  testo: readonly string[];
+}
+
+const { testo } = Astro.props;
+---
+
+{
+  testo.map((riga, i) => (
+    <>
+      {i > 0 && <br />}
+      {riga}
+    </>
+  ))
+}

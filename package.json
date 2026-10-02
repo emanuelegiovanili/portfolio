@@ -19,7 +19,8 @@
     "verify:rules": "node scripts/verify-rules.mjs",
     "verify:webkit": "node scripts/verify-edges.mjs --senza-clip-margin --width 1440",
     "verify:sticky": "node scripts/verify-sticky.mjs",
-    "verify:transition": "node scripts/verify-transition.mjs"
+    "verify:transition": "node scripts/verify-transition.mjs",
+    "verify:i18n": "node scripts/verify-i18n.mjs"
   },
   "dependencies": {
     "astro": "^5.14.1",

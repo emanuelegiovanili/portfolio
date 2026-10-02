@@ -6,8 +6,8 @@
     "Product"
   ],
   "cover": "../../assets/works/seezy/cover.jpg",
-  "coverAlt": "Una mano tiene uno smartphone con la mappa di Seezy, su fondo blu forato",
-  "excerpt": "Una mappa della citta' costruita da chi la attraversa.",
+  "coverAlt": "A hand holds a smartphone showing the Seezy map, on a perforated blue background",
+  "excerpt": "A map of the city, built by the people who walk it.",
   "caseStudy": {
     "body": [
       "Reporting a dangerous situation happens in the worst possible conditions: in a hurry, one-handed, often while still shaken. Any friction in that moment means the report never exists. In Milan, 40% of crimes already go unreported.",
@@ -18,24 +18,40 @@
     "blocks": [
       {
         "src": "../../assets/works/seezy/gallery-1.jpg",
-        "alt": "Due schermate dell'app sospese su fondo bianco",
+        "alt": "Two app screens floating on a white background",
         "shape": "half"
       },
       {
         "src": "../../assets/works/seezy/gallery-2.png",
-        "alt": "Tre schermate in fila: onboarding, mappa della metropolitana e invito a collaborare",
+        "alt": "Three screens in a row: onboarding, the metro map and an invitation to contribute",
         "shape": "wide"
       },
       {
         "src": "../../assets/works/seezy/gallery-3.jpg",
-        "alt": "Due mani tengono lo smartphone con la schermata delle categorie di segnalazione",
+        "alt": "Two hands hold the smartphone showing the report category screen",
         "shape": "wide"
       },
       {
         "src": "../../assets/works/seezy/gallery-4.jpg",
-        "alt": "La mappa dell'app con le segnalazioni attive, vista ravvicinata",
+        "alt": "The app map with active reports, seen close up",
         "shape": "half"
       }
+    ]
+  },
+  "it": {
+    "excerpt": "Una mappa della città costruita da chi la attraversa.",
+    "coverAlt": "Una mano tiene uno smartphone con la mappa di Seezy, su fondo blu forato",
+    "body": [
+      "Chi segnala una situazione pericolosa lo fa quasi sempre nelle condizioni peggiori: di fretta, con una mano sola, spesso ancora scosso. Se in quel momento qualcosa si inceppa, la segnalazione non arriva mai. E a Milano, già oggi, il 40% dei reati non viene denunciato.",
+      "Seezy trasforma quei dati mancanti in una risorsa condivisa: una mappa in tempo reale costruita da chi la città la attraversa ogni giorno. L'MVP ha impostato l'architettura dell'informazione su due letture diverse dello stesso spazio urbano: le strade, dove il rischio si percepisce per zona, e la metropolitana, dove si percepisce per fermata. Due modelli mentali, un solo prodotto.",
+      "Il flusso di segnalazione si riduce a poche categorie predefinite e a qualche tocco, con l'anonimato come impostazione di partenza: lo sforzo richiesto resta proporzionato al momento in cui serve.",
+      "L'MVP ha posto le basi del sistema di componenti su cui oggi il prodotto cresce, e ha portato Seezy da un'idea a qualcosa che gli investitori potevano davvero usare."
+    ],
+    "blockAlts": [
+      "Due schermate dell'app sospese su fondo bianco",
+      "Tre schermate in fila: onboarding, mappa della metropolitana e invito a collaborare",
+      "Due mani tengono lo smartphone con la schermata delle categorie di segnalazione",
+      "La mappa dell'app con le segnalazioni attive, vista ravvicinata"
     ]
   }
 }

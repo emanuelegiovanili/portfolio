@@ -16,6 +16,8 @@ import PrimaryButton from './PrimaryButton.astro';
 import { FOOTER_LINKS } from '../lib/blocks/chrome';
 import { SITE_NAME, isPlaceholder } from '../lib/site';
 import type { LayoutMap } from '../lib/layout';
+import { DEFAULT_LOCALE, pathFor, type Locale } from '../i18n';
+import { dizionario } from '../i18n/dizionario';
 
 interface Props {
   /** La mappa restituita da footerMap(), gia' fusa in quella della pagina. */
@@ -31,24 +33,25 @@ interface Props {
    * l'attributo non c'e' e non cambia niente.
    */
   flow?: boolean;
+  locale?: Locale;
 }
 
-const { at, current, flow = false } = Astro.props;
+const { at, current, flow = false, locale = DEFAULT_LOCALE } = Astro.props;
 const flowAttr = flow ? '' : undefined;
-
-const WORK_TOGETHER = "Let’s work together";
+const t = dizionario(locale);
+const via = (p: string) => pathFor(locale, p);
 ---
 
 {/* Porta a casa. Un nome grande a fondo pagina che non fa niente e' un vicolo
     cieco: e' la stessa scelta gia' presa per il logo in testa (NOTES.md D48). */}
-<Block at={at.footerBrand!} as="a" href="/" class="footer-brand" data-flow={flowAttr} clip>
+<Block at={at.footerBrand!} as="a" href={via('/')} class="footer-brand" data-flow={flowAttr} clip>
   <span class="t-display footer-brand__text">{SITE_NAME}</span>
   <span class="hover-fill" aria-hidden="true">
     <span class="t-display footer-brand__text">{SITE_NAME}</span>
   </span>
 </Block>
 
-{at.footerWorkTogether && <PrimaryButton at={at.footerWorkTogether} label={WORK_TOGETHER} href="/contact" data-flow={flowAttr} />}
+{at.footerWorkTogether && <PrimaryButton at={at.footerWorkTogether} label={t.comune.footer.lavoriamo} href={via('/contact')} data-flow={flowAttr} />}
 
 {
   FOOTER_LINKS.map((link) => {
@@ -60,7 +63,7 @@ const WORK_TOGETHER = "Let’s work together";
         at={placement}
         as="a"
         class:list={['footer-link', isCurrent && 'is-current']}
-        href={link.href}
+        href={link.external ? link.href : via(link.href)}
         aria-current={isCurrent ? 'page' : undefined}
         target={link.external ? '_blank' : undefined}
         rel={link.external ? 'noopener noreferrer' : undefined}
@@ -69,7 +72,7 @@ const WORK_TOGETHER = "Let’s work together";
         clip
       >
         {link.external && <Icon name="arrow-up-right" class="footer-link__arrow" />}
-        <span class="footer-link__label">{link.label}</span>
+        <span class="footer-link__label">{t.comune.footer[link.voce]}</span>
         {isCurrent && <span class="footer-link__indicator" aria-hidden="true" />}
         {/* Lo strato copre anche la barra della pagina corrente, ed e' giusto:
             mentre punti una voce, quello che stai per fare conta piu' di dove
@@ -77,11 +80,11 @@ const WORK_TOGETHER = "Let’s work together";
             dell'hover esclude `aria-disabled`. */}
         <span class="hover-fill" aria-hidden="true">
           {link.external && <Icon name="arrow-up-right" class="footer-link__arrow" />}
-          <span class="footer-link__label">{link.label}</span>
+          <span class="footer-link__label">{t.comune.footer[link.voce]}</span>
         </span>
       </Block>
     );
   })
 }
 
-{at.footerCta && <PrimaryButton at={at.footerCta} label={WORK_TOGETHER} href="/contact" data-flow={flowAttr} />}
+{at.footerCta && <PrimaryButton at={at.footerCta} label={t.comune.footer.lavoriamo} href={via('/contact')} data-flow={flowAttr} />}

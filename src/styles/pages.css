@@ -981,3 +981,31 @@
     display: none;
   }
 }
+
+/* ---------- /contact ---------- */
+
+/*
+ * Telefono e indirizzo, 423:147.
+ *
+ * Due righe in Poppins Bold 16 con 20px di stacco, allineate a sinistra e
+ * centrate in verticale nel blocco. Sono link: `tel:` e `mailto:`.
+ *
+ * `overflow-wrap` perche' l'indirizzo e' una parola sola lunga 26 caratteri e
+ * la cella e' larga tre colonne: sotto una certa larghezza deve poter andare a
+ * capo invece di sfondare il blocco. Non e' un caso teorico, e' la stessa
+ * classe di difetto di §3.6.
+ */
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--pad);
+  padding: var(--pad);
+}
+
+.contact-details__link {
+  font-weight: 700;
+  font-size: calc(var(--u) * 16);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

@@ -33,11 +33,12 @@ import type { Testimonial } from '../../data/testimonials';
 interface Props {
   at: { row: BlockPlacements; details: BlockPlacements; prev?: BlockPlacements; next?: BlockPlacements };
   items: Testimonial[];
+  locale?: Locale;
 }
 
-const { at, items } = Astro.props;
+const { at, items, locale = DEFAULT_LOCALE } = Astro.props;
 
-const firstComplete = items.findIndex((t) => t.quote);
+const firstComplete = items.findIndex((t) => t.quote?.[locale]);
 const active = firstComplete >= 0 ? firstComplete : 0;
 const shown = items[active];
 
@@ -61,13 +62,18 @@ if (at.row.base && rowsBase !== tabs) {
 }
 
 const tabSpan = tabCols / tabs;
+import { DEFAULT_LOCALE, type Locale } from '../../i18n';
+import { dizionario } from '../../i18n/dizionario';
+
+const t = dizionario(locale);
+
 ---
 
 <Block
   at={at.row}
   class="testimonial-row"
   role="tablist"
-  aria-label="Clienti"
+  aria-label={t.home.testimonialClienti}
   surface="bare"
   style={`--tab-cols:${tabCols};--tab-rows:${rowsBase}`}
 >
@@ -85,7 +91,7 @@ const tabSpan = tabCols / tabs;
           style={`--tab-row-base:${i + 1};--tab-col-md:${i * tabSpan + 1};--tab-span-md:${tabSpan}`}
           tabindex={i === active ? 0 : -1}
           data-testimonial={i}
-          data-quote={item.quote}
+          data-quote={item.quote?.[locale]}
           data-author={item.author}
           data-role={item.role}
         >
@@ -102,7 +108,7 @@ const tabSpan = tabCols / tabs;
 
 <Block at={at.details} class="testimonials" clip>
   <div class="testimonial-details" id="testimonial-panel" role="tabpanel" aria-labelledby={`tt-${active}`}>
-    <p class="testimonial-quote" data-testimonial-quote>{shown.quote}</p>
+    <p class="testimonial-quote" data-testimonial-quote>{shown.quote?.[locale]}</p>
     <p class="testimonial-author">
       <span class="testimonial-author__name" data-testimonial-author>{shown.author}</span>
       <span class="testimonial-author__role" data-testimonial-role>{shown.role}</span>
@@ -110,5 +116,5 @@ const tabSpan = tabCols / tabs;
   </div>
 </Block>
 
-{at.prev && <SquareButton at={at.prev} icon="chevron-left" label="Testimonianza precedente" data-testimonial-prev />}
-{at.next && <SquareButton at={at.next} icon="chevron-right" label="Testimonianza successiva" data-testimonial-next />}
+{at.prev && <SquareButton at={at.prev} icon="chevron-left" label={t.home.testimonialPrecedente} data-testimonial-prev />}
+{at.next && <SquareButton at={at.next} icon="chevron-right" label={t.home.testimonialSuccessivo} data-testimonial-next />}

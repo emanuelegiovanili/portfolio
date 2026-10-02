@@ -5,25 +5,56 @@ import '../styles/grid.css';
 import '../styles/components.css';
 import MegaMenu from '../components/MegaMenu.astro';
 import StickyHeader from '../components/StickyHeader.astro';
+import { DEFAULT_LOCALE, HTML_LANG, alternates, type Locale } from '../i18n';
 
 interface Props {
   title: string;
   description?: string;
   /** Tiene la pagina fuori dagli indici. Serve alle route di debug. */
   noindex?: boolean;
+  locale?: Locale;
+  /**
+   * L'indirizzo **inglese** di questa pagina, con la barra iniziale.
+   *
+   * Da qui escono i due `hreflang`. Serve il percorso inglese e non quello
+   * corrente perche' `pathFor` sa costruire l'altro da quello, non viceversa:
+   * da `/it/about` si dovrebbe indovinare quanto togliere.
+   */
+  percorso?: string;
 }
 
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, locale = DEFAULT_LOCALE, percorso } = Astro.props;
+
+/*
+ * I due indirizzi della stessa pagina, piu' `x-default`.
+ *
+ * Senza questi, un motore di ricerca vede due pagine che dicono la stessa cosa
+ * in lingue diverse e non sa che sono la stessa: o le considera copie, o ne
+ * mostra una a chi cercava l'altra. `x-default` punta all'inglese perche' e'
+ * la lingua principale — la richiesta del committente — e perche' e' quella
+ * senza prefisso.
+ *
+ * Le pagine di debug non passano `percorso` e restano senza: non devono
+ * finire in nessun indice.
+ */
+const lingueAlternative = percorso ? alternates(percorso) : [];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={HTML_LANG[locale]}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    {
+      lingueAlternative.map((alt) => (
+        <link rel="alternate" hreflang={HTML_LANG[alt.locale]} href={alt.href} />
+      ))
+    }
+    {percorso && <link rel="alternate" hreflang="x-default" href={percorso} />}
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" sizes="32x32" />
@@ -89,8 +120,8 @@ const { title, description, noindex = false } = Astro.props;
       </div>
     </div>
 
-    <MegaMenu />
-    <StickyHeader />
+    <MegaMenu locale={locale} percorso={percorso} />
+    <StickyHeader locale={locale} />
     <slot name="fixed" />
 
     <script>
