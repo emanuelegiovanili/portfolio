@@ -1,2 +1,7 @@
 User-agent: *
 Disallow: /grid
+
+# La sitemap dice quali pagine esistono e in quali lingue. Qui e' dichiarata
+# perche' un crawler che arriva senza passare da Search Console la trovi lo
+# stesso: robots.txt e' il primo file che chiede.
+Sitemap: https://emanuelegiovanili.com/sitemap-index.xml

@@ -319,6 +319,77 @@ for (const chiave of diverse) {
 }
 
 /*
+ * ---------------------------------------------------------------------------
+ * LA SITEMAP DICE LE STESSE COSE DELLE PAGINE?
+ *
+ * E' l'unico pezzo del sito che un essere umano non apre mai, quindi e' quello
+ * che puo' divergere piu' a lungo senza che nessuno se ne accorga. E diverge
+ * facile: l'integrazione segue il formato della build e scrive `/about/` con
+ * la barra, mentre le pagine dichiarano canonico `/about` senza — due versioni
+ * dello stesso indirizzo date in pasto a un motore di ricerca.
+ *
+ * Quindi non si controlla che la sitemap "esista": si controlla che ogni suo
+ * indirizzo sia **identico** al canonical della pagina corrispondente, e che
+ * le pagine elencate siano esattamente quelle che esistono.
+ * ---------------------------------------------------------------------------
+ */
+sezione('La sitemap dice le stesse cose delle pagine?');
+
+const sitemapFile = `${DIST}/sitemap-0.xml`;
+const indiceFile = `${DIST}/sitemap-index.xml`;
+esito(existsSync(indiceFile), 'sitemap-index.xml esiste');
+esito(existsSync(sitemapFile), 'sitemap-0.xml esiste');
+
+if (existsSync(sitemapFile) && existsSync(indiceFile)) {
+  const xml = await readFile(sitemapFile, 'utf8');
+  const indice = await readFile(indiceFile, 'utf8');
+  esito(indice.includes('sitemap-0.xml'), 'l’indice rimanda alla sitemap');
+
+  const voci = [...xml.matchAll(/<url><loc>([^<]+)<\/loc>(.*?)<\/url>/g)].map((m) => ({
+    loc: m[1],
+    corpo: m[2],
+  }));
+
+  /* Tante voci quante le pagine: ROTTE per due lingue. */
+  esito(
+    voci.length === ROTTE.length * 2,
+    `elenca ${voci.length} pagine`,
+    `attese ${ROTTE.length * 2}`,
+  );
+
+  /* `/grid` e' di debug e non deve esserci. */
+  esito(!xml.includes('/grid'), 'non elenca le rotte di debug');
+
+  /*
+   * Il controllo che conta: ogni indirizzo della sitemap deve combaciare col
+   * canonical che quella pagina dichiara di se'. Se discordano, Google riceve
+   * due verita' diverse dalla stessa fonte.
+   */
+  for (const rotta of ROTTE) {
+    for (const locale of ['en', 'it']) {
+      const html = pagine.get(`${locale}${rotta}`);
+      if (!html) continue;
+      const canonico = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
+      const voce = voci.find((v) => v.loc === canonico);
+      esito(Boolean(voce), `${locale} · ${rotta} · nella sitemap col suo canonical`, canonico);
+    }
+  }
+
+  /* Ogni voce porta le due lingue piu' x-default, come la testa delle pagine. */
+  const senzaLingue = voci.filter(
+    (v) =>
+      !v.corpo.includes('hreflang="en"') ||
+      !v.corpo.includes('hreflang="it"') ||
+      !v.corpo.includes('hreflang="x-default"'),
+  );
+  esito(
+    senzaLingue.length === 0,
+    'ogni voce porta en, it e x-default',
+    senzaLingue.map((v) => v.loc).join(', '),
+  );
+}
+
+/*
  * Il registro di quello che resta da tradurre.
  *
  * Non fa fallire niente: e' un elenco, non un errore. Una stringa inglese in

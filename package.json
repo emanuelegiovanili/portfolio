@@ -23,6 +23,7 @@
     "verify:i18n": "node scripts/verify-i18n.mjs"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
     "astro": "^5.14.1",
     "gsap": "^3.13.0",
     "lucide-static": "^1.47.0",
