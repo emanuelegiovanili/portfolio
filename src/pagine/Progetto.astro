@@ -39,6 +39,7 @@ import { dizionario } from '../i18n/dizionario';
 import { contenutoProgetto } from '../lib/progetti';
 import '../styles/pages.css';
 import '../styles/home.css';
+import Righe from '../components/Righe.astro';
 
 interface Props {
   work: CollectionEntry<'works'>;
@@ -151,7 +152,7 @@ const map = {
     }
 
     <Block at={workBlocks.workRelatedTitle} class="related-title" clip>
-      <h2 class="t-display t-display--page">{t.comune.progetto.correlati}</h2>
+      <h2 class="t-display t-display--page"><Righe testo={t.comune.progetto.correlati} /></h2>
     </Block>
 
     <Block at={workBlocks.workRelatedFlame} class="icon-cell" clip>

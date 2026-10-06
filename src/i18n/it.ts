@@ -114,7 +114,7 @@ export const it = {
        * quelli si legge come una svista, non come una scelta. Segnalato
        * (NOTES.md D148): se era voluta, e' una lettera.
        */
-      correlati: 'Altri progetti',
+      correlati: ['Altri', 'progetti'],
       /**
        * Qui frame e file md **non vanno d'accordo**: 423:493 dice "View all",
        * il file md dice "Vedi tutti i progetti". Vince il file md, che e' il

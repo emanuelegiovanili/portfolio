@@ -114,7 +114,17 @@ export const en = {
        */
       visitaVoce: 'Visit {nome}, opens in a new tab',
       continua: 'Keep reading',
-      correlati: 'Related work',
+      /*
+       * Due righe, come ogni altro titolo display del progetto.
+       *
+       * Nel frame 423:476 la casella di testo e' larga 438 dentro un blocco da
+       * 600, e quel vincolo manda "work" a capo. Qui era una stringa sola: il
+       * testo aveva tutti i 560px di spazio utile e ci stava in una riga,
+       * quindi il capo spariva. Non e' un problema di sfori — misurato, 470px
+       * in 560 — e' che il capo nel Figma **e' una decisione di disegno**, e
+       * come tale va scritto, non lasciato decidere alla larghezza.
+       */
+      correlati: ['Related', 'work'],
       vediTutti: 'View all',
     },
   },
