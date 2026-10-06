@@ -169,7 +169,7 @@ export const it = {
 
     titolo: 'Chi sono',
     bioEtichetta: 'Bio',
-    ritrattoAlt: 'Ritratto di Emanuele Giovanili, maglione viola, seduto',
+    ritrattoAlt: 'Ritratto di Emanuele Giovanili, maglietta viola, seduto su un divano',
     /** 416:3405 e' un testo solo: diviso sugli stessi tre stacchi dell'inglese. */
     bio: [
       'Sono un digital designer e, a dirla tutta, anche un po’ nerd. Mi appassiona tutto ciò che ha un processo chiaro e risultati concreti.',

@@ -166,7 +166,7 @@ export const en = {
     titolo: 'About',
     bioEtichetta: 'Bio',
     /** Il testo alternativo del ritratto: era in italiano dentro `lang="en"`. (mia) */
-    ritrattoAlt: 'Portrait of Emanuele Giovanili, in a purple jumper, seated',
+    ritrattoAlt: 'Portrait of Emanuele Giovanili, in a purple t-shirt, seated on a sofa',
     bio: [
       'I’m a digital designer and, to be honest, a bit of a nerd. I’m passionate about anything with a clear process and meaningful results.',
       'I work at the intersection of strategy, design, and technology, that’s where ideas take practical form. Design’s true role is in understanding: making technology feel human and instantly clear to its users.',
