@@ -24,6 +24,17 @@ function excludeDebugRoutes() {
 }
 
 export default defineConfig({
+  /*
+   * L'indirizzo pubblico del sito.
+   *
+   * Serve a una cosa sola ma non rinviabile: gli `hreflang` vogliono URL
+   * **assoluti**, con protocollo e dominio. Finche' il dominio non esisteva
+   * uscivano relativi (`/it/about`), e un motore di ricerca non li collega:
+   * tutto il lavoro sulle due lingue restava invisibile proprio a chi doveva
+   * vederlo. Da qui escono anche il `canonical` e, il giorno che serve, la
+   * sitemap.
+   */
+  site: 'https://emanuelegiovanili.com',
   output: 'static',
   trailingSlash: 'ignore',
   build: { format: 'directory' },

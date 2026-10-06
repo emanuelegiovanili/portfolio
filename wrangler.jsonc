@@ -2,6 +2,29 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "emanuelegiovanili",
   "compatibility_date": "2026-09-01",
+
+  /*
+   * Il dominio su cui gira il sito.
+   *
+   * Dichiarato qui e non aggiunto dal pannello: cosi' sta nel repository,
+   * versionato, e ogni deploy lo riapplica. Una configurazione fatta a click
+   * non lascia traccia, e il giorno che qualcuno la cambia non c'e' niente da
+   * confrontare.
+   *
+   * `custom_domain` e non una route: Cloudflare crea e mantiene da se' il
+   * record DNS e il certificato, senza che nessuno tocchi la zona a mano.
+   *
+   * Solo il dominio nudo. `www` non e' dichiarato di proposito: servire lo
+   * stesso sito a due indirizzi lo fa vedere ai motori come due siti che si
+   * dividono il punteggio. Se lo si vuole, la forma giusta e' una regola di
+   * reindirizzamento da `www` al dominio nudo, non un secondo dominio qui.
+   */
+  "routes": [
+    {
+      "pattern": "emanuelegiovanili.com",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": "./dist",
     /*

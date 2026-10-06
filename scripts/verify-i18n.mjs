@@ -90,7 +90,19 @@ for (const rotta of ROTTE) {
   }
 }
 
-sezione('I due hreflang, e x-default sull’inglese?');
+/*
+ * Gli indirizzi per i motori di ricerca si pretendono **assoluti**.
+ *
+ * `hreflang` e `canonical` vogliono l'URL intero, con protocollo e dominio: con
+ * `/it/about` un motore non collega le due lingue, e tutto il lavoro sul
+ * multilingua resta invisibile proprio a chi dovrebbe vederlo. Finche' il
+ * dominio non esisteva uscivano relativi; adesso esiste, e questa sonda
+ * pretende la forma giusta invece di accettare quella vecchia.
+ */
+const SITO = 'https://emanuelegiovanili.com';
+const url = (percorso) => `${SITO}${percorso === '/' ? '/' : percorso}`;
+
+sezione('Canonical e hreflang, assoluti e su x-default l’inglese?');
 for (const rotta of ROTTE) {
   const html = pagine.get(`en${rotta}`);
   if (!html) continue;
@@ -99,9 +111,25 @@ for (const rotta of ROTTE) {
     (m) => [m[1], m[2]],
   );
   const mappa = Object.fromEntries(alt);
-  esito(mappa.en === rotta, `${rotta} · hreflang en`, `→ ${mappa.en ?? 'assente'}`);
-  esito(mappa.it === itAtteso, `${rotta} · hreflang it`, `→ ${mappa.it ?? 'assente'}`);
-  esito(mappa['x-default'] === rotta, `${rotta} · x-default`, `→ ${mappa['x-default'] ?? 'assente'}`);
+  esito(mappa.en === url(rotta), `${rotta} · hreflang en`, `→ ${mappa.en ?? 'assente'}`);
+  esito(mappa.it === url(itAtteso), `${rotta} · hreflang it`, `→ ${mappa.it ?? 'assente'}`);
+  esito(
+    mappa['x-default'] === url(rotta),
+    `${rotta} · x-default`,
+    `→ ${mappa['x-default'] ?? 'assente'}`,
+  );
+}
+
+/* Il canonico: ogni pagina dichiara **se stessa**, nella propria lingua. */
+sezione('Ogni pagina dichiara il proprio canonical?');
+for (const rotta of ROTTE) {
+  for (const locale of ['en', 'it']) {
+    const html = pagine.get(`${locale}${rotta}`);
+    if (!html) continue;
+    const atteso = url(locale === 'it' ? (rotta === '/' ? '/it' : `/it${rotta}`) : rotta);
+    const trovato = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
+    esito(trovato === atteso, `${locale} · ${rotta}`, `→ ${trovato ?? 'assente'}`);
+  }
 }
 
 sezione('Il comando della lingua porta alla stessa pagina, non alla home?');

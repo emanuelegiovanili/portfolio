@@ -5,7 +5,7 @@ import '../styles/grid.css';
 import '../styles/components.css';
 import MegaMenu from '../components/MegaMenu.astro';
 import StickyHeader from '../components/StickyHeader.astro';
-import { DEFAULT_LOCALE, HTML_LANG, alternates, type Locale } from '../i18n';
+import { DEFAULT_LOCALE, HTML_LANG, alternates, pathFor, type Locale } from '../i18n';
 
 interface Props {
   title: string;
@@ -38,6 +38,23 @@ const { title, description, noindex = false, locale = DEFAULT_LOCALE, percorso }
  * finire in nessun indice.
  */
 const lingueAlternative = percorso ? alternates(percorso) : [];
+
+/*
+ * Da percorso ad **indirizzo assoluto**.
+ *
+ * `hreflang` e `canonical` vogliono l'URL intero: con `/it/about` un motore di
+ * ricerca non sa di quale sito si parli e il collegamento fra le due lingue
+ * non lo fa. `Astro.site` e' quello configurato in `astro.config.mjs`; se
+ * mancasse, `new URL` lancerebbe invece di uscire con un indirizzo monco.
+ */
+const assoluto = (p: string) => new URL(p, Astro.site).href;
+
+/*
+ * L'indirizzo canonico di questa pagina, cioe' quale dei tanti modi di
+ * scriverla e' quello buono. Senza, lo stesso contenuto raggiunto con una
+ * barra finale o un parametro in coda conta come pagina diversa.
+ */
+const canonico = percorso ? assoluto(pathFor(locale, percorso)) : undefined;
 ---
 
 <!doctype html>
@@ -49,12 +66,13 @@ const lingueAlternative = percorso ? alternates(percorso) : [];
     {description && <meta name="description" content={description} />}
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
+    {canonico && <link rel="canonical" href={canonico} />}
     {
       lingueAlternative.map((alt) => (
-        <link rel="alternate" hreflang={HTML_LANG[alt.locale]} href={alt.href} />
+        <link rel="alternate" hreflang={HTML_LANG[alt.locale]} href={assoluto(alt.href)} />
       ))
     }
-    {percorso && <link rel="alternate" hreflang="x-default" href={percorso} />}
+    {percorso && <link rel="alternate" hreflang="x-default" href={assoluto(percorso)} />}
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" sizes="32x32" />
