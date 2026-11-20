@@ -3057,6 +3057,29 @@ voce, e qui vince la richiesta. Ma le due cose ora divergono: il Figma andrebbe
 allineato, o la prossima lettura del file rimettera' la versione vecchia
 credendo di correggere.
 
+### D151. Le immagini di TAMA cambiano, e le alt con loro
+
+Il committente ha rifatto il sito di TAMA e ha caricato cinque schermate nuove.
+Stessa dimensione, 1920x1080, stesso rapporto 1,778: niente da ritagliare e
+niente da rimisurare, il blocco non se ne accorge.
+
+Le **alt** se ne accorgono eccome. Citavano il sito vecchio parola per parola:
+"We make ordinary extraordinary" dove ora c'e' "Rendiamo straordinario
+l'ordinario", "El Rancho Red Bourbon" dove ora c'e' "Kirinyaga - Kenya", "I
+nostri specialty coffee" dove ora c'e' una sezione che non esiste piu'. Un'alt
+non e' copy da riprodurre: e' la descrizione di cio' che si vede, e se descrive
+un'altra immagine e' falsa. Chi usa un lettore di schermo e' l'unico a non
+poterlo verificare. Riscritte tutte e cinque, nelle due lingue, guardando ogni
+file.
+
+Le citazioni **restano in italiano anche nelle alt inglesi**: e' il testo che
+sta sullo schermo, e tradurlo descriverebbe una schermata che non esiste.
+
+Quello che **non** ho toccato e' il corpo del caso studio: parla ancora del
+sito precedente ("il suo vecchio e-commerce", "quattro famiglie di prodotto,
+dagli specialty monorigine alle capsule compatibili"). E' copy del committente
+e si cambia solo con la sua parola. Vedi B29.
+
 ---
 
 ## 5. Blocchi aperti
@@ -3085,3 +3108,4 @@ credendo di correggere.
 | B26 | **Il font display non ha i glifi accentati** | `getai-black.woff2` e' un sottoinsieme senza `U+00C0-U+00FF`: "TAMA caffe'" e' l'unico titolo che ne abbia bisogno oggi, e la sua "e" esce in Poppins Bold per il ripiego di D129. Serve al committente un export dal fornitore che includa almeno il latino esteso; poi si sostituisce il `.woff2`, si toglie `Poppins` da `--font-display`, si rimette il `unicode-range` del fallback a tutto e si svuota `GLIFI_NOTI` in `verify-type.mjs`. Tre righe |
 | B28 | **Una sberla molto decisa puo' saltare la seconda scheda di /about** | `scroll-snap-stop: always` e' dichiarato, ma sul percorso della rotellina Chromium non lo applica e da qui il percorso del dito non si misura (D138). Le schede sono tre e il salto possibile e' uno solo, quindi il danno massimo e' leggere il terzo passaggio senza il secondo. Si chiude con un test su un telefono vero, o rinunciando al nativo e scrivendo lo scorrimento a mano, che e' peggio |
 | B23 | **Safari resta un punto cieco** | Il motore WebKit non e' scaricabile (CDN di Playwright fuori dalla policy di uscita), quindi ogni sonda parla di Chromium. `verify:webkit` (D104) copre **una** differenza, quella costata la caccia di D101-D103, e non va spacciato per una verifica su Safari. Il difetto dei bordi e' chiuso e confermato dal committente sul suo dispositivo |
+| B29 | **Il caso studio di TAMA racconta il sito vecchio** | Le cinque immagini sono quelle del sito rifatto (D151), ma il corpo parla ancora di "il suo vecchio e-commerce", di "quattro famiglie di prodotto" e delle "capsule compatibili". Anche `liveUrl` e' `tamacaffe.com` mentre il pie' di pagina nuovo scrive `info@torrefazionetama.it`: il dominio va confermato. E' copy del committente: va riscritto da lui, non da me |
