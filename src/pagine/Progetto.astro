@@ -33,7 +33,7 @@ import WorkCard from '../components/WorkCard.astro';
 import VisitButton from '../components/VisitButton.astro';
 import PrimaryButton from '../components/PrimaryButton.astro';
 import { headerMap } from '../lib/blocks/chrome';
-import { galleryAt, workBlocks, workFooter, workTagAt } from '../lib/blocks/pages';
+import { galleryAt, workBlocks, workFooterMap, workTagAt } from '../lib/blocks/pages';
 import { pathFor, type Locale } from '../i18n';
 import { dizionario } from '../i18n/dizionario';
 import { contenutoProgetto } from '../lib/progetti';
@@ -54,6 +54,10 @@ const testo = contenutoProgetto(work, locale);
 
 const related = all.filter((w) => w.id !== work.id).sort((a, b) => a.data.order - b.data.order).slice(0, 2);
 const blocks = work.data.caseStudy?.blocks ?? [];
+
+/* A base e md il footer sale o scende con il numero di immagini: sotto la
+   galleria non c'e' nient'altro, e un numero fisso lascerebbe un buco. */
+const workFooter = workFooterMap(blocks.length);
 
 const tagAt = Object.fromEntries(work.data.tags.map((tag, i) => [tag, workTagAt(i)]));
 const galleryPlacements = blocks.map((_, i) => galleryAt(i));
@@ -117,6 +121,11 @@ const map = {
       lo fa anche se lo script non arriva. Il riassunto e' il comando, e il
       testo troncato sta **dentro** al riassunto, cosi' quello che si legge da
       chiuso e' gia' il testo vero e non un'anteprima scritta a parte.
+
+      Aperto, il blocco **cresce** e la pagina sotto scende: di quante righe lo
+      misura `scripts/work-body.ts`, perche' e' un numero che esiste solo dopo
+      l'impaginazione. Senza quello script il testo scorre dentro al blocco,
+      com'era prima (D145, poi D152).
     */}
     {
       work.data.caseStudy && (
@@ -178,3 +187,9 @@ const map = {
     <Footer at={workFooter} current="/works" locale={locale} />
   </Grid>
 </Base>
+
+<script>
+  import { startWorkBody } from '../scripts/work-body';
+
+  startWorkBody();
+</script>

@@ -22,20 +22,26 @@ import { startDevServer, CHROMIUM } from './dev-server.mjs';
 const WIDTHS = [320, 390, 430, 719, 720, 768, 1024, 1199, 1200, 1280, 1440, 1680, 1920];
 
 /**
- * Le pagine interne esistono solo a desktop: misurarle sotto 1200 non dice
- * niente sullo sforo, perche' non c'e' un disegno con cui confrontarsi.
+ * Dove sotto i 1200 non c'e' un disegno con cui confrontarsi.
  *
- * Era un elenco, e l'elenco dimenticava due case study su tre: `verify:build`
- * li misura tutti e li faceva fallire, mentre `/works/seezy` — identico per
- * struttura — passava perche' era scritto nella lista. La regola vera non e'
- * un elenco di indirizzi: **la home e' l'unica pagina con tre tier**, tutto il
- * resto e' disegnato solo a 1440.
+ * Li' lo sforo del contenuto si misura e si stampa, ma non fa fallire niente:
+ * non c'e' niente a cui essere fedeli. L'allineamento alle linee invece resta
+ * un errore ovunque, a qualunque larghezza.
  *
- * L'allineamento alle linee resta un errore ovunque, a qualunque larghezza:
- * qui si allenta solo la misura dello sforo del contenuto.
+ * **Era "tutto tranne la home", e non e' piu' vero da un pezzo.** /about ha
+ * preso il suo tier base con D133, /works con D144, la pagina progetto con
+ * D145: tre pagine disegnate per il telefono in cui qualunque sforo veniva
+ * perdonato in silenzio. Il conto e' arrivato con il pulsante "Visit", che a
+ * base sforava il proprio blocco di una lettera e mezza: la sonda lo
+ * **misurava** — colonna "sfora", valore 1 — e scriveva "ok" accanto. L'ha
+ * visto il committente sul telefono (D152).
+ *
+ * Resta solo /contact, che un frame sotto i 1200 non ce l'ha davvero (B2).
+ * Il giorno che arriva, questa lista si svuota e la riga sparisce.
  */
 const senzaLingua = (route) => route.replace(/^\/it(?=\/|$)/, '') || '/';
-const isDesktopOnly = (route) => senzaLingua(route) !== '/' && !route.startsWith('/grid');
+const SENZA_DISEGNO_MOBILE = ['/contact'];
+const isDesktopOnly = (route) => SENZA_DISEGNO_MOBILE.includes(senzaLingua(route));
 
 /**
  * Il frame piu' piccolo del Figma e' a 390.
@@ -79,11 +85,21 @@ const DEFAULT_PATHS = [
   '/about',
   '/works',
   '/works/seezy',
+  /*
+   * Due progetti e non uno: Seezy e' l'unico **senza** sito online, cioe'
+   * l'unico senza il pulsante "Visit" sulla copertina. Misurando solo lui, il
+   * pulsante non e' mai stato misurato da nessuna parte — e infatti a base
+   * sforava il proprio blocco di una lettera e mezza, con la "V" fuori dal
+   * bordo sinistro, finche' il committente non l'ha visto sul telefono
+   * (D152). Qui c'e' anche TAMA, che il pulsante ce l'ha.
+   */
+  '/works/tama-caffe',
   '/contact',
   '/it',
   '/it/about',
   '/it/works',
   '/it/works/seezy',
+  '/it/works/tama-caffe',
   '/it/contact',
 ];
 const SHOT_DIR = '.verify';
@@ -127,6 +143,8 @@ const { code: probeScript } = await transform(probeSource, {
 const browser = await chromium.launch({ executablePath: CHROMIUM });
 const rows = [];
 let failures = 0;
+/** Quante volte il testo del progetto e' stato misurato da aperto. */
+let aperture = 0;
 
 try {
   for (const route of PATHS)
@@ -228,6 +246,54 @@ try {
       // Si torna allo stato che la pagina dichiara nel markup.
       await page.evaluate(() => document.querySelector('.work-filter[data-filter="all"]').click());
       await page.waitForTimeout(300);
+    }
+
+    /*
+     * Il testo del progetto si misura anche **aperto**.
+     *
+     * "Continua a leggere" allunga il blocco di un numero di righe che misura
+     * work-body.ts, e con esso la griglia, i blocchi sotto e il fondo pagina:
+     * e' un secondo layout, esattamente come uno stato del filtro di /works, e
+     * un layout che non si misura e' un layout di cui non si sa niente.
+     *
+     * Sopra i 720 non c'e' niente da aprire — il testo ci sta — e la riga non
+     * si scrive: per questo in fondo si controlla che almeno una ci sia. Una
+     * sonda che non misura niente stampa lo stesso "tutto bene".
+     */
+    if (senzaLingua(route).startsWith('/works/')) {
+      const comando = '.work-body__summary';
+      if ((await page.locator(comando).count()) > 0) {
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.evaluate((sel) => document.querySelector(sel).click(), comando);
+        await page.waitForTimeout(350);
+
+        const cresciuto = await page.evaluate(
+          () => document.querySelector('.work-grid')?.hasAttribute('data-testo-aperto') ?? false,
+        );
+        if (cresciuto) {
+          const result = await page.evaluate(() => window.__probeGrid?.() ?? null);
+          if (!result) throw new Error(`griglia non trovata su ${route} col testo aperto`);
+
+          const ok = result.maxDrift <= result.tolerance && result.misplaced.length === 0;
+          if (!ok) failures += 1;
+          aperture += 1;
+          rows.push({
+            route: `${route}:aperto`,
+            width,
+            where: 'aperto',
+            ...result,
+            ok,
+            belowDesign: width < SMALLEST_DESIGNED_WIDTH,
+            errors: errors.length,
+          });
+        }
+
+        await page.evaluate(() => {
+          const d = document.querySelector('.work-body__more');
+          if (d) d.open = false;
+        });
+        await page.waitForTimeout(200);
+      }
     }
 
     if (route === MENU_ROUTE) {
@@ -348,6 +414,23 @@ if (svuotate.length > 0) {
   for (const s of svuotate) {
     console.error(`  ${s.route} a ${s.width}px mostra ${s.visible} blocchi su ${s.max}`);
   }
+}
+
+/*
+ * Una sonda che non ha aperto niente non ha verificato niente.
+ *
+ * Il testo cresciuto e' uno stato che esiste solo sotto i 720 e solo se lo
+ * script e' partito: se domani non parte piu', o se il comando cambia nome,
+ * tutte le misure qui sopra restano verdi e di quello stato non si sa piu'
+ * nulla. Questo controllo e' l'unico che se ne accorge.
+ */
+const rotteProgetto = PATHS.filter((route) => senzaLingua(route).startsWith('/works/'));
+if (rotteProgetto.length > 0 && aperture === 0) {
+  failures += 1;
+  console.error(
+    '\nIl testo del progetto non e\' mai stato misurato da aperto: ' +
+      '"Continua a leggere" non ha allungato il blocco a nessuna larghezza.',
+  );
 }
 
 const worst = rows.reduce((a, b) => (b.maxDrift > a.maxDrift ? b : a), rows[0]);

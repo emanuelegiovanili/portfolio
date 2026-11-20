@@ -150,6 +150,27 @@
   font-size: calc(var(--u) * 32);
 }
 
+/*
+ * Uno in meno sulla pagina progetto, e non e' pignoleria.
+ *
+ * Il titolo e' il **nome del progetto**, cioe' un testo che cambia, e il frame
+ * base e' quello di Seezy: cinque lettere. Misurato a 390 con i nomi di oggi:
+ * "Seezy" chiede 108px, "TAMA caffe'" 222, "Noranutrizione" **272,8 dentro
+ * 270**. Tre pixel, cioe' l'ultima "e" tagliata a meta' — e per anni nessuno
+ * se ne e' accorto perche' la sonda perdonava ogni sforo sotto i 1200 su
+ * questa pagina (D152).
+ *
+ * A 31 il nome piu' lungo chiede 264px e ne avanzano sei. Lo scostamento dal
+ * file e' il 3% su una misura che il file non ha mai verificato con questo
+ * nome. A lg restano i 64 del disegno, dove lo spazio e' cinque volte tanto.
+ *
+ * Un nome piu' lungo di una quindicina di lettere tornera' a non starci: quel
+ * giorno non e' un numero da limare, e' una decisione di disegno (B31).
+ */
+.work-grid .page-title h1 {
+  font-size: calc(var(--u) * 31);
+}
+
 .about-grid .label-cell .t-title {
   /* 356:607 */
   font-size: calc(var(--u) * 14);
@@ -948,22 +969,113 @@
 }
 
 /*
- * Aperto, il testo si scorre **dentro** al blocco.
+ * Aperto, il **blocco cresce** e quello che sta sotto scende.
  *
- * Il file disegna solo lo stato chiuso, quindi come debba essere quello aperto
- * e' una decisione, non una lettura. Farlo crescere sarebbe il gesto naturale,
- * ma un blocco che cresce trascina giu' la galleria e il footer, allunga la
- * pagina e chiede linee di griglia che nel markup non ci sono: la regola zero
- * salterebbe in tutti i fotogrammi dell'apertura.
+ * Il file disegna solo lo stato chiuso, quindi lo stato aperto e' una
+ * decisione. La prima era far scorrere il testo dentro al blocco, a pagina
+ * ferma (D145); il committente l'ha bocciata — "non espande il blocco intero
+ * ma solo il testo dentro, e' errato" — e qui cresce il blocco.
  *
- * Scorrere dentro al blocco tiene la pagina ferma, non inventa nessun layout e
- * non e' un gesto estraneo a questo sito: il carosello della ricetta e la barra
- * dei filtri fanno gia' cosi'. Resta una scelta mia, e va confermata — vedi
- * NOTES.md D145.
+ * Crescere non vuol dire allentare la regola zero. Il blocco guadagna un
+ * numero **intero** di celle, la griglia ne guadagna altrettante, i blocchi
+ * sotto scendono dello stesso numero e le linee orizzontali che servono
+ * vengono create: nessuna traccia implicita, nessun mezzo pixel, nessuna
+ * transizione. E' lo stesso impianto del filtro di /works, dove nascondere
+ * una card fa salire tutto il resto di un numero di righe deciso a monte
+ * (works-filter.ts).
+ *
+ * Quante celle lo dice `--espansione-aperta`, che scrive work-body.ts: e' una
+ * misura, e il CSS non sa misurare un testo. Se lo script non arriva, la
+ * variabile non c'e', il ripiego vale zero e il testo torna a scorrere dentro
+ * al blocco: lo stato di prima, che leggibile lo era.
  */
+.work-grid {
+  --espansione: 0;
+}
+
 .work-body__more[open] .work-body__text {
   overflow-y: auto;
   overscroll-behavior-y: contain;
+}
+
+/* Cresciuto il blocco, il testo ci sta: niente barra di scorrimento. */
+.work-grid[data-testo-aperto] .work-body__more[open] .work-body__text {
+  overflow: visible;
+}
+
+/* Dove il testo ci sta gia' tutto, il comando non ha niente da aprire. Succede
+   da circa 520px in su, e lo sa solo chi ha misurato: lo decide lo script. */
+.work-body[data-espandibile='no'] .work-body__cue {
+  display: none;
+}
+
+.work-body[data-espandibile='no'] .work-body__summary {
+  cursor: auto;
+}
+
+/*
+ * Le due meta' dello scostamento, una per tier, dentro le stesse media query
+ * della griglia.
+ *
+ * `--row` e `--r` e non `--row-base` e `--r-base`: quelli stanno nell'attributo
+ * `style` dei blocchi, e uno stile inline vince su qualunque selettore. Sono
+ * le stesse due righe del filtro di /works, per la stessa ragione.
+ *
+ * `.work-body ~ .block` e' "tutto quello che viene dopo il testo": galleria,
+ * progetti correlati, footer. Sono gia' in quest'ordine nel DOM, e cosi' non
+ * c'e' nessun elenco di blocchi da tenere aggiornato a mano il giorno che se
+ * ne aggiunge uno.
+ */
+@media (width < 720px) {
+  .work-grid[data-testo-aperto] {
+    --espansione: var(--espansione-aperta, 0);
+  }
+
+  .grid.work-grid {
+    --rows: calc(var(--rows-base) + var(--espansione));
+  }
+
+  .work-grid .work-body {
+    --r: calc(var(--r-base) + var(--espansione));
+  }
+
+  .work-grid .work-body ~ .block {
+    --row: calc(var(--row-base) + var(--espansione));
+  }
+}
+
+@media (720px <= width < 1200px) {
+  .work-grid[data-testo-aperto] {
+    --espansione: var(--espansione-aperta, 0);
+  }
+
+  .grid.work-grid {
+    --rows: calc(var(--rows-md, var(--rows-base)) + var(--espansione));
+  }
+
+  .work-grid .work-body {
+    --r: calc(var(--r-md, var(--r-base)) + var(--espansione));
+  }
+
+  .work-grid .work-body ~ .block {
+    --row: calc(var(--row-md, var(--row-base)) + var(--espansione));
+  }
+}
+
+/* Spente, le linee in piu' cadrebbero oltre `--rows` e creerebbero righe
+   implicite alte un pixel l'una: la pagina si allungherebbe di N pixel con N
+   linee sparse sotto il footer. */
+.work-grid .grid-line--h[data-extra] {
+  display: none;
+}
+
+/* Dentro la media query: senza, questa regola batterebbe per specificita'
+   quella che spegne le linee fuori tier (grid.css) e le linee di mobile
+   comparirebbero a desktop. */
+@media (width < 1200px) {
+  .work-grid[data-testo-aperto] .grid-line--h[data-extra] {
+    display: block;
+  }
 }
 
 /* A testo aperto il comando ha fatto il suo, e il file non ne disegna un altro. */

@@ -10,7 +10,7 @@
  * `312:1991` stanno a x=114 invece che a 120.
  */
 import type { LayoutMap, Tier } from '../layout';
-import { footerMap } from './chrome';
+import { footerMap, type FooterRows } from './chrome';
 
 /* ---------- /about ---------- */
 
@@ -211,26 +211,29 @@ export const worksFooter = footerMap(WORKS_FOOTER_ROWS);
 
 /* ---------- /works/[slug] ---------- */
 
-export const WORK_FOOTER_ROWS = { base: 79, md: 79, lg: 45 };
-
 export const workBlocks = mdComeBase({
-  workCover: { base: [2, 5, 8, 12], lg: [2, 3, 10, 6] },
+  workCover: { base: [2, 5, 8, 5], lg: [2, 3, 10, 6] },
   /*
-   * Nell'angolo in basso a destra della copertina: le sue ultime due colonne,
-   * la sua ultima riga. Compare solo dove il progetto ha un `liveUrl`.
+   * Nell'angolo in basso a destra della copertina. Compare solo dove il
+   * progetto ha un `liveUrl`.
    *
    * A base il frame non lo disegna — 397:621 e' una copertina e basta — ma
    * quel frame e' di Seezy, che un sito online non ce l'ha, quindi il file non
-   * dice ne' si' ne' no. Qui vale la stessa regola di desktop applicata alla
-   * copertina di mobile, e due celle per due invece di due per una: sotto i
-   * 1200 tutti i comandi quadrati del sito sono 2x2. Scostamento dichiarato in
-   * NOTES.md D145 — l'alternativa era togliere a chi sta sul telefono l'unico
-   * link al sito del progetto.
+   * dice ne' si' ne' no. Scostamento dichiarato in NOTES.md D145 e corretto in
+   * D152.
+   *
+   * **Quattro colonne per due righe, non due per due.** Due per due erano 78px
+   * con 40 di padding: 38px di spazio utile per un contenuto che ne misura 80
+   * (etichetta 36,5 + stacco 20 + freccia 24). La "V" di "Visit" finiva fuori
+   * dal blocco a sinistra e la freccia toccava il bordo destro: misurato,
+   * l'etichetta partiva a -1,3px. Quattro per due fanno 156x78, cioe' 116px
+   * utili per 80, ed e' anche il **rapporto del disegno**: a lg il pulsante e'
+   * 2x1 su celle da 120, cioe' 2:1, come 4x2 su celle da 39.
    */
-  workVisit: { base: [8, 15, 2, 2], lg: [10, 8, 2, 1] },
-  workTitle: { base: [2, 18, 8, 2], lg: [2, 10, 5, 1] },
+  workVisit: { base: [6, 8, 4, 2], lg: [10, 8, 2, 1] },
+  workTitle: { base: [2, 11, 8, 2], lg: [2, 10, 5, 1] },
   /*
-   * Sei righe, non cinque.
+   * A lg, sei righe e non cinque.
    *
    * Nel frame il testo e' un nodo solo alto cinque celle (310:1795), scritto
    * su una versione piu' corta. Il testo che il committente ha fornito e' piu'
@@ -242,8 +245,13 @@ export const workBlocks = mdComeBase({
    * La riga in piu' non sposta niente: sotto, nelle colonne 8-11, le righe 15 e
    * 16 sono libere, perche' la galleria sta nelle colonne 2-6. E' la stessa
    * decisione presa per la citazione di TAMA in D109, che qui costa anche meno.
+   *
+   * A base le dieci righe sono lo stato **chiuso**: il testo non ci sta (ne
+   * chiede da 17 a 26 a seconda di progetto e lingua) e "Continua a leggere"
+   * allunga il blocco di quante righe servono, spostando in giu' quello che
+   * sta sotto. Vedi D152 e `.work-grid` in pages.css.
    */
-  workBody: { base: [2, 22, 8, 10], lg: [8, 10, 4, 6] },
+  workBody: { base: [2, 15, 8, 10], lg: [8, 10, 4, 6] },
   workRelatedTitle: { lg: [2, 37, 5, 2] },
   workRelatedFlame: { lg: [6, 37, 1, 1] },
   workRelatedOne: { lg: [7, 37, 5, 4] },
@@ -254,8 +262,8 @@ export const workBlocks = mdComeBase({
 /** I due tag, celle 1x1 adiacenti a partire da col 8. */
 export function workTagAt(index: number): LayoutMap[string] {
   return {
-    base: [6 + index * 2, 20, 2, 2],
-    md: [6 + index * 2, 20, 2, 2],
+    base: [6 + index * 2, 13, 2, 2],
+    md: [6 + index * 2, 13, 2, 2],
     lg: [8 + index, 9, 1, 1],
   };
 }
@@ -277,23 +285,61 @@ const GALLERY_SLOTS = [
 ] as const;
 
 /*
- * A base le forme non ci sono: cinque riquadri uguali, otto per otto, uno ogni
- * nove righe dalla trentatreesima (397:765, 397:767, 397:769, 397:772,
- * 397:776). Su una colonna sola `wide` e `half` non vogliono dire niente.
+ * A base le forme non ci sono: cinque riquadri uguali, uno ogni sei righe
+ * dalla ventiseiesima (397:765, 397:767, 397:769, 397:772, 397:776). Su una
+ * colonna sola `wide` e `half` non vogliono dire niente.
+ *
+ * **Otto per cinque, non otto per otto.** Il frame li disegna quadrati, ma le
+ * immagini dei progetti sono tutte 16:9 (B9) e `object-fit: cover` dentro un
+ * quadrato ne buttava via il 44% della larghezza: misurato, 554px di immagine
+ * dentro 312 di blocco. Sulle schermate di un sito quel taglio si mangia il
+ * testo, e si vede. Otto colonne a base fanno 312px, e 312/1,778 fa 175,5,
+ * cioe' 4,5 celle: nessun numero intero di righe da' il 16:9. Cinque righe
+ * (195px, rapporto 1,6) tagliano l'11% della larghezza, quattro (156px,
+ * rapporto 2,0) ne tagliano l'11% in altezza. Il committente ha scelto la
+ * riga in piu'. Vedi D152.
  */
-const GALLERY_BASE = [33, 42, 51, 60, 69] as const;
+const GALLERY_BASE = [26, 32, 38, 44, 50] as const;
+
+/** Quante righe e' alto a base e md ciascuno dei riquadri qui sopra. */
+const GALLERY_R_BASE = 5;
 
 export function galleryAt(index: number): LayoutMap[string] {
   const i = Math.min(index, GALLERY_SLOTS.length - 1);
   const riga = GALLERY_BASE[i];
-  return { base: [2, riga, 8, 8], md: [2, riga, 8, 8], lg: GALLERY_SLOTS[i].at };
+  return { base: [2, riga, 8, GALLERY_R_BASE], md: [2, riga, 8, GALLERY_R_BASE], lg: GALLERY_SLOTS[i].at };
 }
 
 export function gallerySlots(): readonly (typeof GALLERY_SLOTS)[number][] {
   return GALLERY_SLOTS;
 }
 
-export const workFooter = footerMap(WORK_FOOTER_ROWS);
+/**
+ * Dove comincia il footer della pagina progetto.
+ *
+ * A lg e' un numero fisso: sotto la galleria ci sono i progetti correlati, che
+ * ci sono sempre e sono alti sempre uguale.
+ *
+ * A base e md **dipende da quante immagini ha il progetto**, perche' li' sotto
+ * la galleria non c'e' nient'altro. La tabella degli slot ne prevede cinque, i
+ * tre progetti di oggi ne hanno quattro, e un numero fisso tarato su cinque
+ * lasciava otto righe vuote — 312px di griglia nuda — fra l'ultima immagine e
+ * il footer. Prima di D152, con i riquadri da otto righe, erano undici.
+ *
+ * Tre righe dopo l'inizio dell'ultima immagine piu' la sua altezza, cioe' due
+ * righe di stacco: le stesse che il frame mette prima del footer.
+ */
+export function workFooterRows(immagini: number): FooterRows {
+  const quante = Math.min(Math.max(immagini, 0), GALLERY_BASE.length);
+  const corpo = workBlocks.workBody!.base!;
+  const fine = quante === 0 ? corpo[1] + corpo[3] - 1 : GALLERY_BASE[quante - 1] + GALLERY_R_BASE - 1;
+  return { base: fine + 3, md: fine + 3, lg: 45 };
+}
+
+/** Il footer della pagina progetto, per un progetto con tante immagini. */
+export function workFooterMap(immagini: number): LayoutMap {
+  return footerMap(workFooterRows(immagini));
+}
 
 /* ---------- /contact ---------- */
 

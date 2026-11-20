@@ -157,7 +157,16 @@ export function probeGrid(root: ParentNode = document): GridProbeResult | null {
 
   const style = getComputedStyle(grid);
   const cols = Number.parseInt(style.getPropertyValue('--cols').trim(), 10);
-  const rows = Number.parseInt(style.getPropertyValue('--rows').trim(), 10);
+  /*
+   * Le righe si contano dalle **tracce risolte**, non da `--rows`.
+   *
+   * Da quando il testo del progetto puo' crescere, `--rows` vale
+   * `calc(56 + 0)`: una custom property non registrata non si risolve da sola,
+   * e `parseInt` su quella stringa da' NaN. Nel report usciva "righe NaN" su
+   * ogni riga di quella pagina. Il numero di tracce e' comunque il dato
+   * migliore: e' quello che il browser ha davvero costruito.
+   */
+  const rows = tracks(style.gridTemplateRows).length;
   const containerWidth = grid.getBoundingClientRect().width;
 
   // Il confine e' il lato della cella, non il pixel in cui la linea e' dipinta:

@@ -191,7 +191,12 @@ if (SETTORI.some((settore) => !WORK_TAGS.includes(settore.tag))) {
       ))
     }
 
-    <Block at={aboutBlocks.recipeSteps} surface="bare" class="recipe-steps">
+    <Block
+      at={aboutBlocks.recipeSteps}
+      surface="bare"
+      class="recipe-steps"
+      data-known-overflow="Stessa costruzione della barra dei filtri: il binario e' un pixel piu' alto del blocco perche' `overflow-x: auto` ritaglia anche in verticale, e quel pixel tiene il filo basso delle schede (D141). Lo sforo e' quel pixel."
+    >
       <div class="recipe-steps__track">
         {t.about.ricetta.map((passo) => (
           <article class="recipe-steps__card">

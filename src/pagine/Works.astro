@@ -162,7 +162,12 @@ const filterCss =
       Il JavaScript del filtro li trova tutti e due i gruppi e li tiene
       allineati, perche' interroga per classe e non per posizione.
     */}
-    <Block at={worksBlocks.worksFilterBar} surface="bare" class="filter-bar">
+    <Block
+      at={worksBlocks.worksFilterBar}
+      surface="bare"
+      class="filter-bar"
+      data-known-overflow="Il binario e' un pixel piu' alto del blocco apposta: `overflow-x: auto` ritaglia anche in verticale, e senza quel pixel il filo basso dei quattro tab sparirebbe (D103, D141). Lo sforo e' quel pixel."
+    >
       <div class="filter-bar__track">
         {states.map((state, i) => (
           <button

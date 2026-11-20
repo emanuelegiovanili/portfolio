@@ -3080,6 +3080,100 @@ sito precedente ("il suo vecchio e-commerce", "quattro famiglie di prodotto,
 dagli specialty monorigine alle capsule compatibili"). E' copy del committente
 e si cambia solo con la sua parola. Vedi B29.
 
+### D152. La pagina progetto sul telefono: tre difetti e una sonda che diceva ok
+
+Il committente l'ha guardata sul telefono. Tre cose, tutte e tre vere.
+
+**1. "Visit" era rotto.** Il blocco era 2x2, cioe' 78x78 con 40 di padding:
+38px di spazio utile per un contenuto che ne misura 80 (etichetta 36,5 +
+stacco 20 + freccia 24). Misurato: l'etichetta partiva a **-1,3px**, cioe' la
+"V" stava fuori dal blocco, e la freccia toccava il bordo destro. Ora e' 4x2,
+156x78, 116px utili per 80 — ed e' anche il rapporto del disegno, perche' a lg
+il pulsante e' 2x1 su celle da 120, cioe' 2:1 come 4x2 su celle da 39.
+
+**2. Le immagini erano tagliate a meta'.** I riquadri della galleria erano
+quadrati (8x8) e la copertina era 8x12, cioe' un ritratto 2:3; le immagini dei
+progetti sono tutte 16:9. Con `object-fit: cover` il conto e' questo:
+
+| blocco | prima | immagine resa | perso |
+|---|---|---|---|
+| copertina | 312x468 | 832x468 | **62% della larghezza** |
+| galleria | 312x312 | 554x312 | **44% della larghezza** |
+
+Su una fotografia si direbbe una inquadratura. Su **schermate di un sito** e'
+testo tagliato a meta': nella prima immagine di TAMA si leggeva "IAMO LE
+PERSONE" e "UELLO CHE SUCCEDE".
+
+Otto colonne a base fanno 312px e 312/1,778 fa 175,5: **nessun numero intero
+di righe da' il 16:9**. Quattro righe (156px) tagliano l'11% in altezza,
+cinque (195px) l'11% in larghezza. Il committente ha deciso: "da mobile meglio
+occupare una riga in piu' per le immagini piuttosto che una in meno". Cinque,
+per la copertina e per la galleria. Dal 44-62% all'11%, e nelle schermate il
+testo si legge tutto.
+
+Tutta la mappa base e md della pagina scende con la copertina, mantenendo gli
+stacchi del frame: titolo 11, tag 13, testo 15, galleria 26-32-38-44-50.
+
+**3. "Continua a leggere" non apriva il blocco.** Apriva il testo dentro al
+blocco, che si metteva a scorrere. L'avevo deciso io in D145, l'avevo
+dichiarato come decisione mia e l'avevo scritto nel CSS: "un blocco che cresce
+trascina giu' la galleria e il footer... la regola zero salterebbe in tutti i
+fotogrammi dell'apertura". **Era una scusa.** La regola zero non chiede che la
+pagina non cambi altezza: chiede che i bordi cadano sulle linee in ogni
+fotogramma. Un blocco che cresce di un numero **intero** di celle, con la
+griglia che ne guadagna altrettante e le linee che si aggiungono, rispetta
+l'invariante in tutti e due gli stati e non ha fotogrammi in mezzo, perche'
+non c'e' transizione.
+
+Di quante celle lo misura `src/scripts/work-body.ts`: e' un numero che esiste
+solo dopo l'impaginazione (da 17 a 26 righe a seconda di progetto e lingua, a
+390). Lo scrive come `--espansione-aperta` e il resto lo fa un `calc` in
+`pages.css` sulla riga che ogni blocco ha gia', con `.work-body ~ .block` per
+dire "tutto quello che viene dopo". E' lo stesso meccanismo del filtro di
+/works. Senza JavaScript la variabile non c'e', il ripiego vale zero e il
+testo torna a scorrere dentro al blocco: il comportamento di prima, che
+leggibile lo era.
+
+Misurato a 390: griglia da 56 a 66 righe, pagina da 2184 a 2574px, blocco da
+390 a 780, scarto dalle linee **0,0000px** in tutti e due gli stati.
+
+**Il footer non sta piu' a riga fissa.** Sotto la galleria, a base, non c'e'
+nient'altro: la tabella degli slot ne prevede cinque, i progetti ne hanno
+quattro, e il numero fisso lasciava otto righe vuote — 312px di griglia nuda —
+prima del footer. Ora `workFooterRows(n)` lo calcola.
+
+#### E la sonda? Diceva ok
+
+Tre difetti visibili a occhio su una pagina che `verify:grid` misura a tredici
+larghezze. Due ragioni, tutte e due mie.
+
+La prima: **l'unico progetto misurato era Seezy, l'unico senza sito online**,
+cioe' l'unico senza il pulsante "Visit". Il pulsante non era mai stato
+misurato da nessuna parte. Ora nella lista c'e' anche TAMA, nelle due lingue.
+
+La seconda e' peggio. `isDesktopOnly` diceva "tutto tranne la home", e serviva
+a non far fallire lo sforo del contenuto dove un disegno mobile non c'era.
+Solo che /about ha preso il suo tier base con D133, /works con D144 e la
+pagina progetto con D145: **tre pagine disegnate per il telefono in cui
+qualunque sforo veniva perdonato in silenzio**. Con TAMA nella lista e il
+vecchio pulsante 2x2, la sonda stampa `sfora 1` e accanto scrive "ok". Lo ha
+misurato e lo ha archiviato. Ora la lista contiene solo /contact, che un frame
+mobile non ce l'ha davvero (B2), e i due sfori da **un pixel** che la regola
+piu' stretta ha fatto emergere — il binario dei filtri e quello della ricetta,
+un pixel in piu' apposta perche' `overflow-x` ritaglia anche in verticale
+(D103, D141) — sono dichiarati con `data-known-overflow`, che e' il posto in
+cui vanno le cose vere.
+
+In piu' la sonda apre il testo e misura anche quello stato, come fa gia' con i
+quattro stati del filtro di /works, e **fallisce se non ha aperto niente**:
+una sonda che non ha aperto niente non ha verificato niente, e senza quel
+controllo il giorno che lo script non parte piu' restano tutte righe verdi.
+
+Ultima cosa, piccola: la colonna "righe" del report diceva `NaN` su quella
+pagina, perche' ora `--rows` vale `calc(56 + 0)` e `parseInt` su quella
+stringa non da' un numero. Adesso le righe si contano dalle tracce risolte,
+che e' comunque il dato migliore: quello che il browser ha davvero costruito.
+
 ---
 
 ## 5. Blocchi aperti
@@ -3109,3 +3203,5 @@ e si cambia solo con la sua parola. Vedi B29.
 | B28 | **Una sberla molto decisa puo' saltare la seconda scheda di /about** | `scroll-snap-stop: always` e' dichiarato, ma sul percorso della rotellina Chromium non lo applica e da qui il percorso del dito non si misura (D138). Le schede sono tre e il salto possibile e' uno solo, quindi il danno massimo e' leggere il terzo passaggio senza il secondo. Si chiude con un test su un telefono vero, o rinunciando al nativo e scrivendo lo scorrimento a mano, che e' peggio |
 | B23 | **Safari resta un punto cieco** | Il motore WebKit non e' scaricabile (CDN di Playwright fuori dalla policy di uscita), quindi ogni sonda parla di Chromium. `verify:webkit` (D104) copre **una** differenza, quella costata la caccia di D101-D103, e non va spacciato per una verifica su Safari. Il difetto dei bordi e' chiuso e confermato dal committente sul suo dispositivo |
 | B29 | **Il caso studio di TAMA racconta il sito vecchio** | Le cinque immagini sono quelle del sito rifatto (D151), ma il corpo parla ancora di "il suo vecchio e-commerce", di "quattro famiglie di prodotto" e delle "capsule compatibili". Anche `liveUrl` e' `tamacaffe.com` mentre il pie' di pagina nuovo scrive `info@torrefazionetama.it`: il dominio va confermato. E' copy del committente: va riscritto da lui, non da me |
+| B30 | **Il testo aperto non ha un comando per richiudersi** | Aperto, "Continua a leggere" sparisce — il frame non ne disegna un secondo — e per richiudere si clicca sul testo, senza che niente lo dica. Scrivere "Mostra meno" vorrebbe dire inventare copy, e la copy non la scrivo io. Serve la parola del committente, o un frame |
+| B31 | **Il titolo della pagina progetto e' il nome del progetto, e a base lo spazio e' quello che e'** | A 31px il nome piu' lungo di oggi, "Noranutrizione", chiede 264px dentro 270 (D152). Da una quindicina di lettere in su non ci sta piu', e limare un altro punto non e' la risposta: il blocco e' largo otto colonne, cioe' tutta la pagina, e il frame base e' disegnato su "Seezy". Serve una decisione — titolo su due righe con un blocco piu' alto, o un nome breve per i progetti lunghi |
