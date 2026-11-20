@@ -5,7 +5,7 @@
     "Web Design"
   ],
   "cover": "../../assets/works/tama-caffe/cover.jpg",
-  "coverAlt": "The TAMA caffè site open on a laptop, on a wooden table",
+  "coverAlt": "The TAMA caffè site open on a laptop: the opening headline “Rendiamo straordinario l’ordinario” over a photo of hands holding green coffee beans",
   "excerpt": "A specialty coffee ecommerce that doesn’t feel like one.",
   "liveUrl": "https://tamacaffe.com",
   "caseStudy": {
@@ -17,39 +17,39 @@
     "blocks": [
       {
         "src": "../../assets/works/tama-caffe/gallery-1.jpg",
-        "alt": "A laptop shows the site opening: “We make ordinary extraordinary” over a photo of the roaster",
+        "alt": "The roastery’s own introduction, “Siamo le persone, le mani, il caffè e tutto quello che succede prima che arrivi nella tua tazza”, above three photographs from the roastery",
         "shape": "half"
       },
       {
         "src": "../../assets/works/tama-caffe/gallery-2.jpg",
-        "alt": "The El Rancho Red Bourbon product page, with the bag, the price and the grind selector",
+        "alt": "The Kirinyaga – Kenya product page, with the price, the table of farm, altitude, variety and process, and the selectors for grind and bag size",
         "shape": "wide"
       },
       {
         "src": "../../assets/works/tama-caffe/gallery-3.jpg",
-        "alt": "The “Our specialty coffees” section, between brewing images and the passage for cafés",
+        "alt": "A dark section, “La qualità si riconosce all’assaggio”, beside a hand holding a glass carafe of coffee",
         "shape": "wide"
       },
       {
         "src": "../../assets/works/tama-caffe/gallery-4.jpg",
-        "alt": "The practical guide: freshness, grind and water in three columns, with brewing methods below",
+        "alt": "The footer, with the TAMA wordmark running the width of the page and four columns of links below it",
         "shape": "half"
       }
     ]
   },
   "it": {
     "excerpt": "Un e-commerce di caffè specialty che non somiglia a un e-commerce.",
-    "coverAlt": "Il sito di TAMA caffè aperto su un portatile, su un tavolo di legno",
+    "coverAlt": "Il sito di TAMA caffè aperto su un portatile: il titolo di apertura “Rendiamo straordinario l’ordinario” su una foto di mani che tengono caffè verde",
     "body": [
       "TAMA è una torrefazione artigianale conosciuta in tutta Italia, ma il suo vecchio e-commerce non era all'altezza: navigazione datata, un catalogo difficile da esplorare e un gestionale che rallentava ogni attività di marketing.",
       "Il redesign parte dal punto in cui le persone si bloccavano di più: trovare il prodotto giusto. Quattro famiglie di prodotto con logiche d'acquisto diverse, dagli specialty monorigine alle capsule compatibili, chiedevano percorsi distinti e una scheda prodotto capace di dare tutte le informazioni tecniche senza allontanare la decisione d'acquisto. Sotto l'interfaccia c'è una struttura dati pensata perché il team possa aggiornare contenuti e prodotti in autonomia: il sito diventa uno strumento di lavoro, non qualcosa da cui dipendere.",
       "A dodici mesi dal lancio, le vendite sono cresciute del 200%."
     ],
     "blockAlts": [
-      "Un portatile mostra l’apertura del sito: “We make ordinary extraordinary” su una foto della tostatrice",
-      "La scheda prodotto di El Rancho Red Bourbon, con il sacchetto, il prezzo e la scelta della macinatura",
-      "La sezione “I nostri specialty coffee”, fra immagini di estrazione e il passaggio dedicato ai locali",
-      "La guida pratica: freschezza, macinatura e acqua in tre colonne, e sotto i metodi di estrazione"
+      "La presentazione della torrefazione, “Siamo le persone, le mani, il caffè e tutto quello che succede prima che arrivi nella tua tazza”, sopra tre fotografie della torrefazione",
+      "La scheda prodotto di Kirinyaga – Kenya, con il prezzo, la tabella di piantagione, altitudine, varietà e lavorazione, e la scelta di macinatura e formato",
+      "Una sezione scura, “La qualità si riconosce all’assaggio”, accanto a una mano che regge una caraffa di vetro con il caffè",
+      "Il piè di pagina, con la scritta TAMA a tutta larghezza e quattro colonne di collegamenti sotto"
     ]
   }
 }
