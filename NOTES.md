@@ -3174,6 +3174,56 @@ pagina, perche' ora `--rows` vale `calc(56 + 0)` e `parseInt` su quella
 stringa non da' un numero. Adesso le righe si contano dalle tracce risolte,
 che e' comunque il dato migliore: quello che il browser ha davvero costruito.
 
+### D153. I dati strutturati, e gli indirizzi che non ho scritto a mano
+
+Il committente ha mandato un JSON-LD gia' scritto — Person, ProfessionalService,
+WebSite — chiedendo di inserirlo e di mettere l'indirizzo della sua foto
+profilo al posto del segnaposto. Il contenuto e' suo e sta come l'ha scritto:
+la descrizione, i servizi, le competenze sono parole sue, non mie.
+
+**La foto.** L'unica foto del committente che il sito abbia e' il ritratto di
+/about, nel suo originale 1440x1800. L'indirizzo esce dall'import
+dell'immagine (`ritratto.src`), quindi porta l'impronta che la build calcola
+sul contenuto: cambia la foto, cambia l'indirizzo, e non resta nessuna copia
+vecchia da aggiornare. L'alternativa — copiarla in `public/` con un nome fisso
+— voleva dire due copie della stessa faccia in due posti, cioe' due cose che
+possono divergere. E' la ragione per cui `CONTACT_EMAIL` sta in un posto solo.
+
+**Gli indirizzi.** Nel file del committente `https://emanuelegiovanili.com/`
+compariva otto volte. Qui discende da `Astro.site`, come canonical e hreflang,
+e i due profili social da `SOCIAL` in `site.ts`, come i link del footer. Il
+dominio e' gia' cambiato una volta, da `.it` a `.com`: con otto copie a mano,
+il giorno del prossimo cambio meta' sito starebbe su un dominio e meta'
+sull'altro, e un `@id` che non combacia con il canonical non collega niente.
+Nessuna pagina si romperebbe, e nessuno se ne accorgerebbe guardando.
+
+**Su ogni pagina indicizzabile, non solo in home.** Il grafo descrive il sito
+e la persona, non la pagina, e chi arriva da una ricerca atterra dove capita.
+Le route di debug non ce l'hanno, per la stessa ragione per cui hanno
+`noindex`.
+
+#### Una cosa che nessuna sonda poteva vedere
+
+I dati strutturati non spostano un pixel. Se il blocco sparisce, se smette di
+essere JSON valido, se punta a una foto che non esiste piu' o se resta su un
+dominio vecchio, **tutte le sonde del progetto restano verdi**: misurano
+posizioni, e qui non c'e' niente da posizionare.
+
+`verify:build` ora li legge dall'HTML servito — statico, senza browser — e per
+ogni rotta controlla che ci sia un blocco solo, che sia JSON valido, che ci
+siano i tre nodi, che i riferimenti incrociati (`founder`, `publisher`) cadano
+dentro il grafo, che la foto risponda 200 **in questa build**, e che la radice
+dichiarata dalla persona combaci con il canonical della pagina.
+
+Provata al contrario, iniettando quattro difetti in `dist/` e rilanciandola:
+foto a 404 in home, blocco tolto da /about, `founder` che punta a un `@id`
+inesistente su /contact, dominio `.it` su /it. Quattro righe FALLITO, una per
+difetto, ognuna con la rotta e il motivo; le altre dodici rotte verdi.
+
+Ultimo dettaglio, piccolo e dello stesso stampo di D152: la riga di riepilogo
+si stampa solo se quella rotta non ha fallito. Una sonda che scrive "foto ok"
+sotto il proprio FALLITO e' lo stesso difetto, in miniatura.
+
 ---
 
 ## 5. Blocchi aperti
@@ -3205,3 +3255,4 @@ che e' comunque il dato migliore: quello che il browser ha davvero costruito.
 | B29 | **Il caso studio di TAMA racconta il sito vecchio** | Le cinque immagini sono quelle del sito rifatto (D151), ma il corpo parla ancora di "il suo vecchio e-commerce", di "quattro famiglie di prodotto" e delle "capsule compatibili". Anche `liveUrl` e' `tamacaffe.com` mentre il pie' di pagina nuovo scrive `info@torrefazionetama.it`: il dominio va confermato. E' copy del committente: va riscritto da lui, non da me |
 | B30 | **Il testo aperto non ha un comando per richiudersi** | Aperto, "Continua a leggere" sparisce — il frame non ne disegna un secondo — e per richiudere si clicca sul testo, senza che niente lo dica. Scrivere "Mostra meno" vorrebbe dire inventare copy, e la copy non la scrivo io. Serve la parola del committente, o un frame |
 | B31 | **Il titolo della pagina progetto e' il nome del progetto, e a base lo spazio e' quello che e'** | A 31px il nome piu' lungo di oggi, "Noranutrizione", chiede 264px dentro 270 (D152). Da una quindicina di lettere in su non ci sta piu', e limare un altro punto non e' la risposta: il blocco e' largo otto colonne, cioe' tutta la pagina, e il frame base e' disegnato su "Seezy". Serve una decisione — titolo su due righe con un blocco piu' alto, o un nome breve per i progetti lunghi |
+| B32 | **Il JSON-LD dice cose che in pagina non ci sono** | Tre punti, tutti del testo fornito dal committente (D153). La `description` della persona non compare da nessuna parte sul sito. Il catalogo dei servizi ne elenca quattro — UX/UI, siti, e-commerce, design system — mentre /about ne racconta tre, e fra questi c'e' **Branding**, che nel catalogo non c'e'. `ProfessionalService` e' un sottotipo di attivita' locale e non dichiara ne' telefono ne' email, che pero' sono gia' pubblici su /contact. Nessuna delle tre e' un errore che rompe qualcosa: sono scostamenti fra quello che il sito mostra e quello che dichiara ai motori, e li decide lui |

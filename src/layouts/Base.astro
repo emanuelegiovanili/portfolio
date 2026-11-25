@@ -5,6 +5,8 @@ import '../styles/grid.css';
 import '../styles/components.css';
 import MegaMenu from '../components/MegaMenu.astro';
 import StickyHeader from '../components/StickyHeader.astro';
+import ritratto from '../assets/about/portrait.jpg';
+import { datiStrutturati } from '../lib/schema';
 import { DEFAULT_LOCALE, HTML_LANG, alternates, pathFor, type Locale } from '../i18n';
 
 interface Props {
@@ -55,6 +57,22 @@ const assoluto = (p: string) => new URL(p, Astro.site).href;
  * barra finale o un parametro in coda conta come pagina diversa.
  */
 const canonico = percorso ? assoluto(pathFor(locale, percorso)) : undefined;
+
+/*
+ * I dati strutturati, su ogni pagina indicizzabile.
+ *
+ * Su ogni pagina e non solo in home: descrivono il **sito e la persona**, non
+ * la pagina, e chi arriva da una ricerca puo' atterrare su /about o su un
+ * progetto come sulla radice. Le route di debug non ne hanno, per la stessa
+ * ragione per cui hanno `noindex`.
+ *
+ * La foto profilo e' il ritratto di /about — l'unica foto del committente che
+ * il sito abbia — nel suo formato originale, 1440x1800. `ritratto.src` e'
+ * l'indirizzo con l'impronta che la build calcola sul contenuto: cambia
+ * l'immagine, cambia l'indirizzo, e non resta nessuna copia vecchia da
+ * aggiornare a mano.
+ */
+const schema = datiStrutturati({ radice: assoluto('/'), immagine: assoluto(ritratto.src) });
 ---
 
 <!doctype html>
@@ -73,6 +91,12 @@ const canonico = percorso ? assoluto(pathFor(locale, percorso)) : undefined;
       ))
     }
     {percorso && <link rel="alternate" hreflang="x-default" href={assoluto(percorso)} />}
+
+    {
+      !noindex && (
+        <script type="application/ld+json" is:inline set:html={JSON.stringify(schema)} />
+      )
+    }
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" sizes="32x32" />

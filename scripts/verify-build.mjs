@@ -239,7 +239,97 @@ try {
   }
 
   /*
-   * 3. La griglia e i fili, sulla build.
+   * 3. I dati strutturati.
+   *
+   * Non si vedono in pagina: nessuna delle altre sonde puo' accorgersi se
+   * spariscono, se smettono di essere JSON valido, o se puntano a una foto che
+   * non esiste piu'. Sono anche l'unica cosa del sito che parla di indirizzi
+   * assoluti **senza** che il browser li risolva: un `@id` rimasto su un
+   * dominio vecchio non rompe niente, collega soltanto la persona sbagliata.
+   *
+   * Si legge l'HTML servito, non il DOM: il blocco e' statico, e passare da un
+   * browser aggiungerebbe solo modi di sbagliare.
+   */
+  console.log('\nDati strutturati');
+  for (const route of ROUTES) {
+    /* Quante ne erano fallite prima di questa rotta: la riga di riepilogo si
+       stampa solo se non ne sono arrivate altre. Una sonda che scrive "foto
+       ok" sotto il proprio FALLITO e' il difetto di D152, in piccolo. */
+    const primaDiQui = failures;
+    const html = await (await fetch(base + route)).text();
+    const blocchi = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+    if (blocchi.length !== 1) {
+      fallito(`${route} ha ${blocchi.length} blocchi ld+json invece di uno`);
+      continue;
+    }
+
+    let dati;
+    try {
+      dati = JSON.parse(blocchi[0][1]);
+    } catch (e) {
+      fallito(`${route} · il blocco ld+json non e' JSON valido: ${e.message}`);
+      continue;
+    }
+
+    const grafo = dati['@graph'] ?? [];
+    const idAttesi = ['#person', '#service', '#website'];
+    const id = grafo.map((n) => n['@id'] ?? '');
+    const mancanti = idAttesi.filter((coda) => !id.some((x) => x.endsWith(coda)));
+    if (mancanti.length > 0) fallito(`${route} · nodi mancanti nel grafo: ${mancanti.join(', ')}`);
+
+    const persona = grafo.find((n) => n['@type'] === 'Person');
+    const canonical = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
+    if (canonical && persona) {
+      const atteso = new URL('/', canonical).href;
+      if (persona.url !== atteso) {
+        fallito(`${route} · la persona dice "${persona.url}", il canonical dice "${atteso}"`);
+      }
+    }
+
+    /*
+     * I riferimenti incrociati devono cadere **dentro** il grafo: un
+     * `founder` che punta a un `@id` che non c'e' non e' un errore per
+     * nessuno, e non collega niente.
+     */
+    for (const nodo of grafo) {
+      for (const [chiave, valore] of Object.entries(nodo)) {
+        const puntato = valore && typeof valore === 'object' && !Array.isArray(valore) && valore['@id'];
+        if (puntato && !id.includes(puntato)) {
+          fallito(`${route} · ${nodo['@type']}.${chiave} punta a "${puntato}", che nel grafo non c'e'`);
+        }
+      }
+    }
+
+    /*
+     * La foto deve esistere **in questa build**, non in generale. L'indirizzo
+     * e' quello di produzione: si rimappa su questo server, che e' la stessa
+     * cartella appena costruita.
+     */
+    if (persona?.image) {
+      let dove;
+      try {
+        dove = new URL(persona.image);
+      } catch {
+        fallito(`${route} · la foto non e' un indirizzo assoluto: "${persona.image}"`);
+      }
+      if (dove) {
+        const res = await fetch(base + dove.pathname, { redirect: 'manual' });
+        if (res.status !== 200) fallito(`${route} · la foto risponde ${res.status}: ${dove.pathname}`);
+      }
+    }
+
+    const social = persona?.sameAs ?? [];
+    for (const profilo of social) {
+      if (!/^https:\/\//.test(profilo)) fallito(`${route} · sameAs non assoluto: "${profilo}"`);
+    }
+
+    if (failures === primaDiQui) {
+      console.log(`  ${route.padEnd(26)} ${grafo.length} nodi · ${social.length} profili · foto ok`);
+    }
+  }
+
+  /*
+   * 4. La griglia e i fili, sulla build.
    *
    * Si riusano le sonde di sempre puntate su questo server: se la misura qui
    * divergesse da quella su `astro dev`, la differenza sarebbe nella build, che
