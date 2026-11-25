@@ -55,6 +55,23 @@ const ROUTES = [
 ];
 /** Deve rispondere 404: se un giorno risponde 200, la route di debug e' finita online. */
 const MUST_404 = ['/grid', '/grid/components'];
+
+/**
+ * File serviti alla radice, con una stringa che deve starci dentro.
+ *
+ * - `robots.txt` senza la riga della sitemap e' un robots.txt che non dice
+ *   dove sono le pagine;
+ * - `sitemap-index.xml` lo genera l'integrazione: se un giorno non lo
+ *   generasse piu', la build resterebbe verde;
+ * - `BingSiteAuth.xml` e' il file con cui Bing verifica che il dominio sia
+ *   del committente. Se sparisce, la verifica decade e nessuno se ne accorge
+ *   da questa parte: il segnale arriva da Bing, settimane dopo.
+ */
+const FILE_PUBBLICI = [
+  ['/robots.txt', 'Sitemap: https://emanuelegiovanili.com/sitemap-index.xml'],
+  ['/sitemap-index.xml', 'sitemap-0.xml'],
+  ['/BingSiteAuth.xml', '<user>'],
+];
 const WIDTHS = [390, 768, 1440];
 
 const args = process.argv.slice(2);
@@ -168,6 +185,24 @@ try {
     const res = await fetch(base + route, { redirect: 'manual' });
     console.log(`  ${route.padEnd(26)} ${res.status} (atteso 404)`);
     if (res.status !== 404) fallito(`${route} risponde: la route di debug sta ancora nella build`);
+  }
+
+  /*
+   * I file alla radice che non sono pagine.
+   *
+   * Nessuno li guarda mai: li leggono robot, e se spariscono dalla build non
+   * se ne accorge nessuno finche' un servizio non smette di funzionare — la
+   * sitemap che non si aggiorna piu', la verifica di Bing che decade. Il
+   * controllo e' banale e vale il suo costo: devono esserci, e devono dire
+   * la cosa che li rende utili.
+   */
+  for (const [file, dentro] of FILE_PUBBLICI) {
+    const res = await fetch(base + file, { redirect: 'manual' });
+    const corpo = res.status === 200 ? await res.text() : '';
+    const ok = res.status === 200 && corpo.includes(dentro);
+    console.log(`  ${file.padEnd(26)} ${res.status}${ok ? '' : ' — manca "' + dentro + '"'}`);
+    if (res.status !== 200) fallito(`${file} risponde ${res.status}`);
+    else if (!corpo.includes(dentro)) fallito(`${file} non contiene "${dentro}"`);
   }
 
   /*
